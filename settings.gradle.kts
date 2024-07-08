@@ -13,5 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
 
-include ':app'
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url = uri("https://oss.sonatype.org/content/repositories/snapshots")
+        }
+    }
+
+}
+
+rootProject.name = "ventas_coolbox"
+include(":app")
