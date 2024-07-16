@@ -57,7 +57,7 @@ class GuideHeadActivity : MenuActivity(), StoragePopUpFragment.newDialoglistener
         super.onCreate(savedInstanceState)
         setContentViewWithMenu(R.layout.guide_head_activity)
         setSupportActionBarMenu(toolbar)
-        showProgress(false)
+        //showProgress(false)
        // parametros = intent.extras
         context = this
         checkSession()
@@ -593,7 +593,7 @@ class GuideHeadActivity : MenuActivity(), StoragePopUpFragment.newDialoglistener
         saleViewModel.getTypeDocumentGuide(typeDocumentRequest, ::setTypeDocumentGuide, ::onError)
     }
     private fun findTypeGuideInit() {
-        showProgress(true)
+        //showProgress(true)
         var typeDocumentRequest = TypeDocumentRequest()
         typeDocumentRequest.empresa = getSession().empresa
         typeDocumentRequest.usuario = getSession().usuario
@@ -730,6 +730,7 @@ fun resultGuia(guideResponse: GuideResponse) {
     }
 
     fun setStorage(storage: List<StorageResponse>) {
+
         showProgress(false)
         if (storage.isNotEmpty()) {
             tielStorageGuide.setText(storage[0].descripcion.toString())
@@ -860,6 +861,7 @@ fun resultGuia(guideResponse: GuideResponse) {
     }
 
     private fun onError(message: String) {
+        showProgress(false)
         Log.e(GuideActivity.TAG, message)
         AlertDialog.Builder(this, R.style.AppTheme_DIALOG)
             .setTitle(R.string.app_name)

@@ -43,7 +43,7 @@ public class BasicApp extends Application {
 
     public static final String DEFAULT_BASE_URL_DEBUG = "https://wsfacturacion.coolbox.com.pe:9443/SKM/";
     //public static final String DEFAULT_BASE_URL_DEBUG = "http://192.168.1.2/SKMWSVentaMovil/api/";
-    public static final String DEFAULT_BASE_URL = "http://192.168.1.2/SKMWSVentaMovil/api/";
+    public static final String DEFAULT_BASE_URL = "https://wsfacturacion.coolbox.com.pe:9443/SKM/";
 
     private CoolboxApi mrepository;
 

@@ -160,7 +160,12 @@ class GuideViewModel(application: Application, private var repository: CoolboxAp
                 ) {
                     showProgress.postValue(false)
                     if (response.isSuccessful) {
-                        response.body()?.let { onSuccess(it) }
+                        if (response.body() == null) {
+                            onError("No hay datos disponibles")
+                        } else {
+                            response.body()?.let { onSuccess(it) }
+                        }
+                       // response.body()?.let { onSuccess(it) }
                     } else {
                         onError("error: code= ${response.code()}")
                     }
@@ -192,7 +197,11 @@ class GuideViewModel(application: Application, private var repository: CoolboxAp
                 ) {
                     showProgress.postValue(false)
                     if (response.isSuccessful) {
-                        response.body()?.let { onSuccess(it) }
+                        if (response.body() == null) {
+                            onError("No hay datos disponibles")
+                        } else {
+                            response.body()?.let { onSuccess(it) }
+                        }
                     } else {
                         onError("error: code= ${response.code()}")
                     }
@@ -222,7 +231,11 @@ class GuideViewModel(application: Application, private var repository: CoolboxAp
                 ) {
                     showProgress.postValue(false)
                     if (response.isSuccessful) {
-                        response.body()?.let { onSuccess(it) }
+                        if (response.body() == null) {
+                            onError("No hay datos disponibles")
+                        } else {
+                            response.body()?.let { onSuccess(it) }
+                        }
                     } else {
                         onError("error: code= ${response.code()}")
                     }
@@ -252,7 +265,11 @@ class GuideViewModel(application: Application, private var repository: CoolboxAp
                 ) {
                     showProgress.postValue(false)
                     if (response.isSuccessful) {
-                        response.body()?.let { onSuccess(it) }
+                        if (response.body() == null) {
+                            onError("No hay datos disponibles")
+                        } else {
+                            response.body()?.let { onSuccess(it) }
+                        }
                     } else {
                         onError("error: code= ${response.code()}")
                     }
@@ -282,7 +299,11 @@ class GuideViewModel(application: Application, private var repository: CoolboxAp
                 ) {
                     showProgress.postValue(false)
                     if (response.isSuccessful) {
-                        response.body()?.let { onSuccess(it) }
+                        if (response.body() == null) {
+                            onError("No hay datos disponibles")
+                        } else {
+                            response.body()?.let { onSuccess(it) }
+                        }
                     } else {
                         onError("error: code= ${response.code()}")
                     }
@@ -311,7 +332,11 @@ class GuideViewModel(application: Application, private var repository: CoolboxAp
                 ) {
                     showProgress.postValue(false)
                     if (response.isSuccessful) {
-                        response.body()?.let { onSuccess(it) }
+                        if (response.body() == null) {
+                            onError("No hay datos disponibles")
+                        } else {
+                            response.body()?.let { onSuccess(it) }
+                        }
                     } else {
                         onError("error: code= ${response.code()}")
                     }
@@ -340,7 +365,11 @@ class GuideViewModel(application: Application, private var repository: CoolboxAp
                 ) {
                     showProgress.postValue(false)
                     if (response.isSuccessful) {
-                        response.body()?.let { onSuccess(it) }
+                        if (response.body() == null) {
+                            onError("No hay datos disponibles")
+                        } else {
+                            response.body()?.let { onSuccess(it) }
+                        }
                     } else {
                         onError("error: code= ${response.code()}")
                     }
@@ -369,7 +398,11 @@ class GuideViewModel(application: Application, private var repository: CoolboxAp
                 ) {
                     showProgress.postValue(false)
                     if (response.isSuccessful) {
-                        response.body()?.let { onSuccess(it) }
+                        if (response.body() == null) {
+                            onError("No hay datos disponibles")
+                        } else {
+                            response.body()?.let { onSuccess(it) }
+                        }
                     } else {
                         onError("error: code= ${response.code()}")
                     }
@@ -398,7 +431,11 @@ class GuideViewModel(application: Application, private var repository: CoolboxAp
                 ) {
                     showProgress.postValue(false)
                     if (response.isSuccessful) {
-                        response.body()?.let { onSuccess(it) }
+                        if (response.body() == null) {
+                            onError("No hay datos disponibles")
+                        } else {
+                            response.body()?.let { onSuccess(it) }
+                        }
                     } else {
                         onError("error: code= ${response.code()}")
                     }
@@ -427,7 +464,11 @@ class GuideViewModel(application: Application, private var repository: CoolboxAp
                 ) {
                     showProgress.postValue(false)
                     if (response.isSuccessful) {
-                        response.body()?.let { onSuccess(it) }
+                        if (response.body() == null) {
+                            onError("No hay datos disponibles")
+                        } else {
+                            response.body()?.let { onSuccess(it) }
+                        }
                     } else {
                         onError("error: code= ${response.code()}")
                     }
@@ -457,7 +498,11 @@ class GuideViewModel(application: Application, private var repository: CoolboxAp
                 ) {
                     showProgress.postValue(false)
                     if (response.isSuccessful) {
-                        response.body()?.let { onSuccess(it) }
+                        if (response.body() == null) {
+                            onError("No hay datos disponibles")
+                        } else {
+                            response.body()?.let { onSuccess(it) }
+                        }
                     } else {
                         onError("error: code= ${response.code()}")
                     }
@@ -487,7 +532,11 @@ class GuideViewModel(application: Application, private var repository: CoolboxAp
                 ) {
                     showProgress.postValue(false)
                     if (response.isSuccessful) {
-                        response.body()?.let { onSuccess(it) }
+                        if (response.body() == null) {
+                            onError("No hay datos disponibles")
+                        } else {
+                            response.body()?.let { onSuccess(it) }
+                        }
                     } else {
                         onError("error: code= ${response.code()}")
                     }

@@ -36,8 +36,8 @@ android {
         applicationId = "com.pedidos.android.persistence"
         minSdk = 25
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.0"
+        versionCode = 7
+        versionName = "2.0"
         testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
     }
 
@@ -65,8 +65,8 @@ android {
         create("root") {
             dimension = "version"
             applicationIdSuffix = ".root"
-            versionCode = 4
-            versionName = "2.0.1"
+            versionCode = 13
+            versionName = "2.0.3-alpha"
             buildConfigField(
                 "String",
                 "URL_SERVER",
