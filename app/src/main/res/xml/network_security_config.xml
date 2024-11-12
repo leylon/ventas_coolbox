@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <domain-config cleartextTrafficPermitted="true">
+    <base-config cleartextTrafficPermitted="true" />
+    <!--<domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">200.48.243.162</domain>
-    </domain-config>
+        <domain includeSubdomains="true">192.168.1.2</domain>
+        <domain includeSubdomains="true">192.168.1.38</domain>
+    </domain-config> -->
 </network-security-config>

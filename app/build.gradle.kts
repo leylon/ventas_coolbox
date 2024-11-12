@@ -65,8 +65,8 @@ android {
         create("root") {
             dimension = "version"
             applicationIdSuffix = ".root"
-            versionCode = 13
-            versionName = "2.0.3-alpha"
+            versionCode = 16
+            versionName = "2.0.6"
             buildConfigField(
                 "String",
                 "URL_SERVER",

@@ -98,6 +98,7 @@
         <activity
             android:name=".ui.payment.PaymentActivity"
             android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"
             android:label="@string/title_activity_payment_activity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity

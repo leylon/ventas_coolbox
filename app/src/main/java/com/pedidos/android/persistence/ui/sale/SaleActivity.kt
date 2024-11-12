@@ -177,6 +177,7 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
 
                         productEntity.imei2 = view?.edtImei?.text.toString()
                         checkResult(productEntity)
+                        dialog?.dismiss()
                     }
                 } else {
                     addItem(productEntity)
@@ -185,6 +186,8 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
                 // get product from search edittext
                 complementProductTempCode = productEntity.codigo
                 addItem(productEntity)
+                if (dialog?.isShowing == true)
+                    dialog?.dismiss()
             }
         } else {
             showProgress(false)
