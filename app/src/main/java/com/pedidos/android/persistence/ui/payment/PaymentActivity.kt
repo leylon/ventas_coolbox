@@ -74,6 +74,7 @@ class PaymentActivity : MenuActivity() {
     private var dialog: AlertDialog? = null
     private var view: View? = null
     private var numVale: String = ""
+    private var isSaleSucceses: Boolean = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithMenu(R.layout.payment_activity)
@@ -89,8 +90,32 @@ class PaymentActivity : MenuActivity() {
         etwMpos.text = Editable.Factory.getInstance().newEditable("")
         //etwFpay.text = Editable.Factory.getInstance().newEditable(saleEntity.total.toString())
         //etwPlink.text = Editable.Factory.getInstance().newEditable(saleEntity.total.toString())
-        rdwFactura.isChecked = saleEntity.clienteTipoDocumento == TipoDocumento.RUC
-        rbwBoleta.isChecked = saleEntity.clienteTipoDocumento != TipoDocumento.RUC
+
+        println("saleEntity.tipodocumentogenera: "+ saleEntity.tipodocumentogenera)
+        when(saleEntity.tipodocumentogenera) {
+            "TIK" -> {
+                rbwTicket.isChecked = true
+                rbwBoleta.isChecked = false
+                rdwFactura.isChecked = false
+            }
+            "BOL" -> {
+                rbwTicket.isChecked = false
+                rbwBoleta.isChecked = true
+                rdwFactura.isChecked = false
+            }
+            "FAC" -> {
+                rbwTicket.isChecked = false
+                rbwBoleta.isChecked = false
+                rdwFactura.isChecked = true
+            }
+            else -> {
+                rbwTicket.isChecked = false
+                rbwBoleta.isChecked = true
+                rdwFactura.isChecked = false
+            }
+        }
+        // rdwFactura.isChecked = saleEntity.clienteTipoDocumento == TipoDocumento.RUC
+        //rbwBoleta.isChecked = saleEntity.clienteTipoDocumento != TipoDocumento.RUC
 
         val factory = PaymentViewModel.Companion.Factory(application, getSettings().urlbase)
         viewModel = ViewModelProviders.of(this, factory)[PaymentViewModel::class.java]
@@ -134,6 +159,7 @@ class PaymentActivity : MenuActivity() {
 
         btnFinalizar.setOnClickListener {
             btnFinalizar.isEnabled = false
+            btnRegresar.isEnabled = false
             if (isValidFlight()) {
                 finalizarPedido(createPaymentEntity())
             }
@@ -169,6 +195,7 @@ class PaymentActivity : MenuActivity() {
             // addItem(productEntity)
         }
     }
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == 100) {
@@ -683,7 +710,11 @@ class PaymentActivity : MenuActivity() {
 
         val codigoCliente = saleEntity.clienteCodigo
         val data = saleEntity
-
+        val listTipoDocumento = viewModel.listTipoDocumento
+        val mapTipoDocumento = LinkedHashMap<Int, String>()
+        for (list in listTipoDocumento.value!!){
+            mapTipoDocumento[list.codigo]= list.description
+        }
         val popUpFragment = ClientPopUpFragment.createFragment(codigoCliente,
             data!!.clienteTipoDocumento,
             getSettings().urlbase,
@@ -697,7 +728,7 @@ class PaymentActivity : MenuActivity() {
                     saleEntity.email = client.email
                     callback.invoke()
                 }
-            })
+            },mapTipoDocumento)
 
         popUpFragment.show(ft, "ClientPopup")
     }

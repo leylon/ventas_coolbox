@@ -577,7 +577,11 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
 
         val codigoCliente = saleViewModel.saleLiveData.value!!.clienteCodigo
         val data = saleViewModel.saleLiveData.value
-
+        val listTipoDocumento = saleViewModel.listTipoDocumento
+        val mapTipoDocumento = LinkedHashMap<Int, String>()
+        for (list in listTipoDocumento.value!!){
+            mapTipoDocumento[list.codigo]= list.description
+        }
         val popUpFragment = ClientPopUpFragment.createFragment(codigoCliente,
                 data!!.clienteTipoDocumento,
                 getSettings().urlbase,
@@ -591,7 +595,7 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
                         data.email = client.email
                         saleViewModel.saleLiveData.postValue(data)
                     }
-                })
+                },mapTipoDocumento)
 
         popUpFragment.show(ft, "ClientPopup")
     }

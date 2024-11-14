@@ -106,6 +106,7 @@
     <string name="tarjeta">TARJETA</string>
     <string name="lbl_tipo_documento">TIPO DE DOCUMENTO</string>
     <string name="rdw_boleta">BOLETA</string>
+    <string name="rdw_ticket">TICKET</string>
     <string name="rdw_factura">FACTURA</string>
 
     <string name="title_sale_mayuscula">PEDIDO VENTA</string>

@@ -10,6 +10,7 @@ import com.pedidos.android.persistence.api.ApiCorreo
 import com.pedidos.android.persistence.api.CoolboxApi
 import com.pedidos.android.persistence.db.entity.SaleEntity
 import com.pedidos.android.persistence.model.SaleSubItem
+import com.pedidos.android.persistence.model.SelectedTipoDocumento
 import com.pedidos.android.persistence.model.sale.*
 import com.pedidos.android.persistence.ui.BasicApp
 import com.pedidos.android.persistence.utils.ApiWrapper
@@ -24,7 +25,12 @@ class SaleViewModel(application: Application, private var repository: CoolboxApi
     var saleLiveData = MutableLiveData<SaleEntity>()
     var showProgress = MutableLiveData<Boolean>()
     var message = MutableLiveData<String>()
+    var listTipoDocumento = MutableLiveData<ArrayList<SelectedTipoDocumento>>()
 
+    init {
+
+        getTipoDocumentoIdentidad()
+    }
     fun saveSale(onSuccess: (entity: SaleEntity) -> Unit, onError: (message: String) -> Unit) {
         //validations
         repository.insertSale(saleLiveData.value!!)
@@ -300,6 +306,31 @@ class SaleViewModel(application: Application, private var repository: CoolboxApi
         saleSubItem.cantidad = 0 //flag to delete
 
         saveDetail(saleSubItem)
+    }
+
+
+    private fun getTipoDocumentoIdentidad() {
+        showProgress.postValue(true)
+        repository.tipoDocumentIdentidad().enqueue(object : Callback<ApiWrapper<ArrayList<SelectedTipoDocumento>>>{
+            override fun onResponse(
+                call: Call<ApiWrapper<ArrayList<SelectedTipoDocumento>>>,
+                response: Response<ApiWrapper<ArrayList<SelectedTipoDocumento>>>
+            ) {
+                if(response.isSuccessful && response.body()!!.result) {
+                    listTipoDocumento.value = response.body()?.data ?: arrayListOf()
+                }
+                showProgress.postValue(false)
+            }
+
+            override fun onFailure(
+                call: Call<ApiWrapper<ArrayList<SelectedTipoDocumento>>>,
+                t: Throwable
+            ) {
+                Log.e(EndingViewModel.TAG, t.message.toString())
+                showProgress.postValue(false)
+            }
+
+        })
     }
 
     companion object {
