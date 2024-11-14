@@ -75,6 +75,7 @@ class PaymentActivity : MenuActivity() {
     private var view: View? = null
     private var numVale: String = ""
     private var isSaleSucceses: Boolean = false
+    private var refTarje: String = ""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithMenu(R.layout.payment_activity)
@@ -263,8 +264,9 @@ class PaymentActivity : MenuActivity() {
         paymentEntity.codigoTarjeta = creditCardSelected
         if (etwTarjeta.text.toString() != "") {
             paymentEntity.montoTarjeta = etwTarjeta.text.toString().toDouble()
+            paymentEntity.retarj = refTarje
         }
-
+        paymentEntity.retarj = refTarje
         paymentEntity.codigoOtro = otherPaymentSelected
         if ( etwOther.text.toString() != "") {
             paymentEntity.montoOtro = etwOther.text.toString().toDouble()
@@ -512,6 +514,7 @@ class PaymentActivity : MenuActivity() {
             .show()
 
         view.tvwAccept.setOnClickListener {
+            refTarje = view.edtAmountOther.text.toString()
             if(view.edtAmount.text.toString().isNullOrEmpty() || view.edtAmount.text.toString() == "0"  || view.edtAmount.text.toString() == "0.0" ) {
                 etwTarjeta.setText("")
 

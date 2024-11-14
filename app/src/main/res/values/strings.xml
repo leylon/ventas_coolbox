@@ -59,7 +59,7 @@
     <string name="btn_register_client">Aceptar</string>
     <string name="btn_seleccionar_client">Seleccionar</string>
     <string name="search_product_result_label">Resultado</string>
-    <string name="dni_ruc">DNI/RUC</string>
+    <string name="dni_ruc">NRO DOCUMENTO</string>
     <string name="nombre_razonsocial">Nombres/Razon Social</string>
     <string name="btn_buscar_cliente">RENIEC/SUNAT</string>
     <string name="cam_permission_request_message">Necesitamos acceso a la camara para poder leer los codigos de barras.</string>
