@@ -418,6 +418,7 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
         saleViewModel.saveSale(::goToResumenPedido, ::onError)
     }
     fun validaProssesSale() {
+        btnProcess.isEnabled =false
         val userInfo = getSession()
         val listProducts = saleAdapter.items
         if (saleViewModel.saleLiveData.value!!.productos.size == 0) {
@@ -623,6 +624,7 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
 
 
     private fun onError(message: String) {
+        btnProcess.isEnabled =true
         Log.e(TAG, message)
 
         AlertDialog.Builder(this, R.style.AppTheme_DIALOG)
