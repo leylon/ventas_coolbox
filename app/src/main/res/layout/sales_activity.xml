@@ -198,7 +198,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="12dp"
                             android:layout_weight="3"
-                            android:gravity="end"
+                            android:gravity="start|center_vertical"
                             android:maxLines="1"
                             android:text="@string/sale_producto_label"
                             android:textColor="@android:color/black"
@@ -223,6 +223,7 @@
                             android:layout_marginEnd="78dp"
                             android:gravity="end"
                             android:text="@string/sale_item_price"
+                            android:visibility="gone"
                             android:textColor="@android:color/black"
                             android:textSize="16sp"
                             android:textStyle="bold" />

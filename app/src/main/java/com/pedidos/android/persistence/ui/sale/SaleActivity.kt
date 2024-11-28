@@ -125,14 +125,15 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
                 //request IMEI
                 if (TextUtils.isEmpty(productEntity.imei)) {
 
-                    view = LayoutInflater.from(this).inflate(R.layout.search_imei_dialog, lltRoot, false)
-                    dialog = AlertDialog.Builder(this)
-                            .setView(view)
+                    val dialogView = LayoutInflater.from(this).inflate(R.layout.search_imei_dialog, lltRoot, false)
+                    dialogView?.textTitle?.setText("${productEntity.codigo}: ${productEntity.descripcion}")
+                    val mydialog = AlertDialog.Builder(this)
+                            .setView(dialogView)
                             .setCancelable(false)
                             .setTitle(R.string.propt_imei_title)
                             .show()
 
-                    view?.btnScan?.setOnClickListener {
+                    dialogView?.btnScan?.setOnClickListener {
                         val integrator = IntentIntegrator(this)
                         integrator.setDesiredBarcodeFormats(IntentIntegrator.ALL_CODE_TYPES)
                         integrator.setPrompt("ESCANEAR IMEI")
@@ -142,27 +143,37 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
                         integrator.setRequestCode(113)
                         integrator.initiateScan()
                     }
-                    view?.tvwAccept?.setOnClickListener {
+                    dialogView?.tvwAccept?.setOnClickListener {
+                        println("ley: IMEI: "+ mydialog?.isShowing)
+                        mydialog?.dismiss()
                         fltLoading.visibility = View.VISIBLE
+                        if (!TextUtils.isEmpty(dialogView?.edtImei?.text)) {
+                            productEntity.imei = dialogView.edtImei?.text.toString()
 
-                        productEntity.imei = view?.edtImei?.text.toString()
+                        }else {
+                            productEntity.imei = view?.edtImei?.text.toString()
+                            //onErrorImei("IMEI VACIO", productEntity)
+                        }
                         checkResult(productEntity)
-                        dialog?.dismiss()
+                    }
+                    dialogView?.tvwCancelar?.setOnClickListener {
+                        showProgress(false)
+                        mydialog?.dismiss()
                     }
                 } else {
-                    searchViewModel.checkAutomatically(productEntity)
+                    searchViewModel.checkAutomatically(productEntity,::onErrorImei)
                 }
             } else if (productEntity.stimei2) {
                 if (TextUtils.isEmpty(productEntity.imei2)) {
                     //request imei2
-                    view = LayoutInflater.from(this).inflate(R.layout.search_imei_dialog, lltRoot, false)
-                    dialog = AlertDialog.Builder(this)
-                            .setView(view)
+                    val dialogView = LayoutInflater.from(this).inflate(R.layout.search_imei_dialog, lltRoot, false)
+                    val mydialog2 = AlertDialog.Builder(this)
+                            .setView(dialogView)
                             .setCancelable(false)
                             .setTitle(R.string.propt_imei_title2)
                             .show()
 
-                    view?.btnScan?.setOnClickListener {
+                    dialogView?.btnScan?.setOnClickListener {
                         val integrator = IntentIntegrator(this)
                         integrator.setDesiredBarcodeFormats(IntentIntegrator.ALL_CODE_TYPES)
                         integrator.setPrompt("Escanear Imei 2")
@@ -172,12 +183,19 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
                         integrator.setRequestCode(115)
                         integrator.initiateScan()
                     }
-                    view?.tvwAccept?.setOnClickListener {
+                    dialogView?.tvwAccept?.setOnClickListener {
                         fltLoading.visibility = View.VISIBLE
-
-                        productEntity.imei2 = view?.edtImei?.text.toString()
+                        if (!dialogView?.edtImei?.text.toString().isEmpty()) {
+                            productEntity.imei2 = dialogView?.edtImei?.text.toString()
+                            mydialog2?.dismiss()
+                        }else {
+                            productEntity.imei2 = view?.edtImei?.text.toString()
+                        }
                         checkResult(productEntity)
-                        dialog?.dismiss()
+                    }
+                    dialogView?.tvwCancelar?.setOnClickListener {
+                        showProgress(false)
+                        mydialog2?.dismiss()
                     }
                 } else {
                     addItem(productEntity)
@@ -186,8 +204,7 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
                 // get product from search edittext
                 complementProductTempCode = productEntity.codigo
                 addItem(productEntity)
-                if (dialog?.isShowing == true)
-                    dialog?.dismiss()
+
             }
         } else {
             showProgress(false)
@@ -512,6 +529,7 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
             currentSaleEntity.productoconcomplemento = entity.productoconcomplemento
             currentSaleEntity.telefono = entity.telefono
             currentSaleEntity.email = saleViewModel.saleLiveData?.value?.email ?: ""
+            currentSaleEntity.tipodocumentogenera = entity.tipodocumentogenera
            // currentSaleEntity.androidimei = "a9731e8ca60a4207"
         }
         //end nulls prevent
@@ -613,6 +631,19 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
                 .setPositiveButton(R.string.aceptar) { d, _ -> d.dismiss() }
                 .setCancelable(false)
                 .create().show()
+    }
+    private fun onErrorImei(message: String, productEntity: ProductEntity) {
+        Log.e(TAG, message)
+        //dialog?.dismiss()
+        AlertDialog.Builder(this, R.style.AppTheme_DIALOG)
+            .setTitle(R.string.app_name)
+            .setMessage(message)
+            .setPositiveButton(R.string.aceptar) { d, _ ->
+                d.dismiss()
+                checkResult(productEntity)
+            }
+            .setCancelable(false)
+            .create().show()
     }
 
     private fun showProgress(show: Boolean) {

@@ -105,10 +105,11 @@ open class MenuActivity : BaseActivity(), NavigationView.OnNavigationItemSelecte
                 finish()
                 startActivity(Intent(this, GeneratedDocumentsActivity::class.java))
             }
-            /*
             R.id.nav_log_out -> {
                 performLogOut()
             }
+            /*
+
             R.id.nav_guia_remision -> {
                 finish()
                 startActivity(Intent(this, GuideHeadActivity::class.java))

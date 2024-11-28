@@ -31,11 +31,19 @@ class SaleAdapter(var items: MutableList<SaleSubItem>, val onItemDelete: (SaleSu
     override fun onBindViewHolder(holder: SaleHolder, position: Int) {
         val subItem = items[position]
         holder.tvwProductName.text = subItem.descripcion
+        holder.tvwProductPrice.text = Formatter.DoubleToString(subItem.precio, subItem.monedaSimbolo)
+        holder.tvwProductCuantity.text = subItem.cantidad.toString()
         holder.tvwProductDiscount.text =
-            Formatter.DoubleToString(subItem.pcdcto, subItem.monedaSimbolo)
+            Formatter.DoubleToString(subItem.pcdcto, "%")
         holder.tvwProductTotalPrice.text =
-            Formatter.DoubleToString(subItem.cantidad * subItem.precio, subItem.monedaSimbolo)
+            Formatter.DoubleToString(subItem.totaldetalle, subItem.monedaSimbolo)
 
+        holder.tvwProductImei.text = subItem.imei
+        if (subItem.imei.isEmpty()) {
+            holder.tvwProductImei.visibility = View.GONE
+        } else {
+            holder.tvwProductImei.visibility = View.VISIBLE
+        }
         if( items[position].productoconcomplemento <= 0) {
             holder.ivbProdComp.visibility = View.GONE
         } else {
@@ -90,14 +98,17 @@ class SaleAdapter(var items: MutableList<SaleSubItem>, val onItemDelete: (SaleSu
         internal val ivbDelete: ImageButton = itemView.findViewById(R.id.ivbDelete)
         internal val lltContainer: LinearLayout = itemView.findViewById(R.id.lltContainer)
         internal val ivbProdComp : ImageButton = itemView.findViewById(R.id.ivbProdComp)
-
+        internal val tvwProductPrice : TextView = itemView.findViewById(R.id.tvwProductPrice)
+        internal val tvwProductCuantity : TextView = itemView.findViewById(R.id.tvwProductCuantity)
+        internal val lltContainerPrice: LinearLayout = itemView.findViewById(R.id.lltContainerPrice)
+        internal val tvwProductImei: TextView = itemView.findViewById(R.id.tvwProductImei)
         init {
             tvwProductName.setOnClickListener {
                 if (itemView.context is AppCompatActivity && !items[adapterPosition].complementaryRowColor.contentEquals(
                         "black"
                     )
                 ) {
-                    if(checkIsAvailableWarrantyAdd(items[adapterPosition].codigoProducto)) {
+                    //if(checkIsAvailableWarrantyAdd(items[adapterPosition].codigoProducto)) {
                         var intent = Intent(itemView.context,GarantiesProductActivity::class.java)
                         intent.putExtra(GarantiesProductActivity.PROD_ID, items[adapterPosition].codigoProducto)
                         intent.putExtra(GarantiesProductActivity.PROD_DESCRIP, items[adapterPosition].descripcion)
@@ -108,14 +119,16 @@ class SaleAdapter(var items: MutableList<SaleSubItem>, val onItemDelete: (SaleSu
                             .startActivityForResult(
                                 intent, SaleActivity.GARANTIE_REQUEST)
 
-                    } else {
-                        AlertDialog.Builder(itemView.context, R.style.AppTheme_DIALOG)
+                    //} else {
+  /*                     AlertDialog.Builder(itemView.context, R.style.AppTheme_DIALOG)
                             .setTitle(R.string.app_name)
                             .setMessage(itemView.context.getString(R.string.warranty_size_wrong))
                             .setPositiveButton(R.string.aceptar) { d, _ -> d.dismiss() }
                             .setCancelable(false)
                             .create().show()
-                    }
+*/
+
+                    //}
 
                 }
 

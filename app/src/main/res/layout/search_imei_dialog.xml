@@ -5,7 +5,22 @@
     android:layout_height="match_parent"
     android:background="@android:color/white"
     android:orientation="vertical">
-
+    <TextView
+        android:id="@+id/textTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="12dp"
+        android:textStyle="bold"
+        tools:text="MGHF3LLA: CEL IPHONE 12, 12+12/12MP"/>
+    <TextView
+        android:id="@+id/textTitleDialog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="12dp"
+        android:textStyle="bold"
+        android:text="IMEI"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -43,5 +58,15 @@
         android:textColor="@color/link"
         android:textSize="20sp"
         android:textStyle="bold" />
-
+    <TextView
+        android:id="@+id/tvwCancelar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_margin="16dp"
+        android:padding="4dp"
+        android:text="Cancelar"
+        android:textColor="@color/visanet_red"
+        android:textSize="20sp"
+        android:textStyle="bold" />
 </LinearLayout>

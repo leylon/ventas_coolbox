@@ -102,9 +102,9 @@ class SaleViewModel(application: Application, private var repository: CoolboxApi
                                         //agregamos el producto al pedido para mostrarlo
                                         currentEntity.productos.addAll(result?.productos ?: mutableListOf())
                                     } else {
-                                        val tempListProducts = saleLiveData.value!!.productos.filter { it.codigoProducto != saleSubItem.codigoProducto }
+                                        val tempListProducts = saleLiveData.value!!.productos//filter { it.codigoProducto != saleSubItem.codigoProducto }
                                         saleLiveData.value!!.productos.removeAll{true}
-                                        currentEntity.productos.addAll( tempListProducts)
+                                        currentEntity.productos.addAll(result?.productos ?: mutableListOf())
                                     }
                                 } else {
                                     //delete all

@@ -82,21 +82,32 @@ class SearchProductViewModel(private var repository: CoolboxApi) : ViewModel() {
     }
 
     //check whether product requires IMEI2 or not
-    fun checkAutomatically(it: ProductEntity) {
+    fun checkAutomatically(it: ProductEntity, onError: (message: String, it: ProductEntity) -> Unit) {
         repository.checkImei(it.codigoVenta, it.imei).enqueue(object : Callback<ApiWrapper<CheckImeiResponse>> {
             override fun onFailure(call: Call<ApiWrapper<CheckImeiResponse>>, t: Throwable) {
-                errorResults.postValue(t.message.toString())
+               // errorResults.postValue(t.message.toString())
+                onError(t.message.toString(), it)
             }
 
             override fun onResponse(call: Call<ApiWrapper<CheckImeiResponse>>, response: Response<ApiWrapper<CheckImeiResponse>>) {
                 if (response.isSuccessful) {
-                    if (response.body()?.data != null) {
-                        it.stimei = false
-                        searchResults.postValue(it)
-                    } else
-                        errorResults.postValue(response.body()?.message)
-                } else
-                    errorResults.postValue(response.body()!!.message)
+                    if (response.body()?.result == true) {
+                        if (response.body()?.data != null) {
+                            it.stimei = false
+                            searchResults.postValue(it)
+                        } else {
+                            onError(response.body()?.message.toString(),it)
+                        }
+                    }else {
+                        it.stimei = true
+                        it.imei = ""
+                        onError(response.body()!!.message,it)
+                    }
+                    //errorResults.postValue(response.body()?.message)
+                } else{
+                    onError(response.body()!!.message,it)
+                }
+
             }
         })
     }
