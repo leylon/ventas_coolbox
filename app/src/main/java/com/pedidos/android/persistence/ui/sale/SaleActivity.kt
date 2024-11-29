@@ -78,7 +78,10 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
         toolbar.title = "${getString(R.string.title_sale_tienda)} ${getSession().tienda}"
         textVersion.text = "Version : " + BasicApp.APP_VERSION
         rvwProducts.adapter = saleAdapter
-        btnProcess.setOnClickListener { validaProssesSale()} //processSale() }
+        btnProcess.isEnabled = true
+        btnProcess.setOnClickListener {
+            btnProcess.isEnabled =false
+            validaProssesSale()} //processSale() }
         imbwAddProductCombined.setOnClickListener { productSearchCombined() }
         imbwAddProductoWithCamera.setOnClickListener {
             flag_pop = false
@@ -108,7 +111,21 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
         initSale()
     }
 
+    override fun onStop() {
+        super.onStop()
+        println("onStop")
+    }
 
+    override fun onResume() {
+        super.onResume()
+        println("onResume")
+    }
+
+    override fun onStart() {
+        super.onStart()
+        println("onStart")
+        //btnProcess.isEnabled = true
+    }
 
     override fun onBackPressed() {
     }
@@ -216,6 +233,7 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        btnProcess.isEnabled = true
         println("result_bar: "+data?.dataString)
         when (requestCode) {
             SEARCH_REQUEST -> {
@@ -377,7 +395,8 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
         viewModel.saleLiveData.observe(this, Observer { newItem ->
             showProgress(false)
             if (newItem != null) {
-                (rvwProducts.adapter as SaleAdapter).items.removeAll { true }
+                //(rvwProducts.adapter as SaleAdapter).items.removeAll { true }
+                (rvwProducts.adapter as SaleAdapter).clearItems()
                 (rvwProducts.adapter as SaleAdapter).addItems(newItem.productos)
                 updateScreen(newItem)
             }
@@ -418,7 +437,7 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
         saleViewModel.saveSale(::goToResumenPedido, ::onError)
     }
     fun validaProssesSale() {
-        btnProcess.isEnabled =false
+        //btnProcess.isEnabled =false
         val userInfo = getSession()
         val listProducts = saleAdapter.items
         if (saleViewModel.saleLiveData.value!!.productos.size == 0) {
@@ -428,6 +447,7 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
                 .setPositiveButton(R.string.aceptar) { d, _ -> d.dismiss() }
                 .setCancelable(false)
                 .create().show()
+            btnProcess.isEnabled = true
             return
         }
         /*
@@ -473,7 +493,7 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
     }
 
     fun showQuestionsConfirm(response: VentaProductoResponse){
-
+        //btnProcess.isEnabled = true
         showProgress(false)
         if(response.muestramensaje){
             val dialgCustom = QuestionPopUpFragment()
@@ -534,7 +554,7 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
            // currentSaleEntity.androidimei = "a9731e8ca60a4207"
         }
         //end nulls prevent
-
+        btnProcess.isEnabled = true
         startActivity(Intent(this, EndingActivity::class.java).apply {
             putExtra(EndingActivity.EXTRA_ENTITY, currentSaleEntity)
         })
