@@ -53,9 +53,11 @@ class PaymentViewModel(private val repository: CoolboxApi) : ViewModel() {
             }
 
             override fun onResponse(call: Call<ApiWrapper<PaymentResponseEntity>>, response: Response<ApiWrapper<PaymentResponseEntity>>) {
-                val responseResult = response.body()!!.data
-                responseResult!!.serviceResultMessage = response.body()!!.message
+                //val responseResult = response.body()!!.data
+                //responseResult!!.serviceResultMessage = response.body()!!.message
                 if (response.isSuccessful && response.body()!!.result) {
+                    val responseResult = response.body()!!.data
+                    responseResult!!.serviceResultMessage = response.body()!!.message
                     val receipt = Base64.decode(responseResult.documentoPrint, Base64.DEFAULT)
                     val qrReceip = responseResult.qrPrint
                     val pieReceip = Base64.decode(responseResult.piedocumentoPrint, Base64.DEFAULT)

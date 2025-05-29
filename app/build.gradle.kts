@@ -73,7 +73,7 @@ android {
                 "\"https://wsfacturacion.coolbox.com.pe:9443/SKM/\""
             )
             buildConfigField("String", "URL_PEDIDO_PAGAR_NUEVO", "\"pedidopagarnuevo\"")
-            buildConfigField("String", "VERSION_APP", "\"27/03/2024\"")
+            buildConfigField("String", "VERSION_APP", "\"10/12/2024\"")
         }
 
         create("skm") {
@@ -87,7 +87,7 @@ android {
                 "\"https://wsfacturacion.coolbox.com.pe:9443/SKM/\""
             )
             buildConfigField("String", "URL_PEDIDO_PAGAR_NUEVO", "\"pedidopagarnuevoskmicg\"")
-            buildConfigField("String", "VERSION_APP", "\"27/03/2024\"")
+            buildConfigField("String", "VERSION_APP", "\"11/12/2024\"")
         }
     }
 

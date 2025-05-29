@@ -9,16 +9,22 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.text.Editable
 import android.text.TextUtils
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
 import com.google.gson.Gson
 import com.google.zxing.integration.android.IntentIntegrator
@@ -76,11 +82,11 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
         }
         saleAdapter.compProductActionCall = {complementProductTempCode = null}
         toolbar.title = "${getString(R.string.title_sale_tienda)} ${getSession().tienda}"
-        textVersion.text = "Version : " + BasicApp.APP_VERSION
+        textVersion.text = """Version : ${BasicApp.APP_VERSION}"""
         rvwProducts.adapter = saleAdapter
-        btnProcess.isEnabled = true
         btnProcess.setOnClickListener {
             btnProcess.isEnabled =false
+            rvwProducts.isEnabled = false
             validaProssesSale()} //processSale() }
         imbwAddProductCombined.setOnClickListener { productSearchCombined() }
         imbwAddProductoWithCamera.setOnClickListener {
@@ -119,6 +125,8 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
     override fun onResume() {
         super.onResume()
         println("onResume")
+        btnProcess.isEnabled = true
+        rvwProducts.isEnabled = true
     }
 
     override fun onStart() {
@@ -444,10 +452,15 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
             AlertDialog.Builder(this, R.style.AppTheme_DIALOG)
                 .setTitle(R.string.app_name)
                 .setMessage(getString(R.string.sale_validation_no_products))
-                .setPositiveButton(R.string.aceptar) { d, _ -> d.dismiss() }
+                .setPositiveButton(R.string.aceptar) { d, _ ->
+                    btnProcess.isEnabled = true
+                    showProgress(false)
+                    d.dismiss()
+
+                }
                 .setCancelable(false)
                 .create().show()
-            btnProcess.isEnabled = true
+            //btnProcess.isEnabled = true
             return
         }
         /*
@@ -554,8 +567,9 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
            // currentSaleEntity.androidimei = "a9731e8ca60a4207"
         }
         //end nulls prevent
-        btnProcess.isEnabled = true
+
         startActivity(Intent(this, EndingActivity::class.java).apply {
+            //btnProcess.isEnabled = true
             putExtra(EndingActivity.EXTRA_ENTITY, currentSaleEntity)
         })
     }
@@ -669,7 +683,8 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
     }
 
     private fun showProgress(show: Boolean) {
-        fltLoading.visibility = if (show) View.VISIBLE else View.GONE
+        //fltLoading.visibility =
+            if (show) showProgressBar() else hideProgressBar()
     }
 
     private fun initSale() {
@@ -840,6 +855,39 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
             //error(data.mensaje)
 
         }
+    }
+    private fun toggleButtons(root: ViewGroup, isEnabled: Boolean) {
+
+        for (i in 0 until root.childCount) {
+            val child = root.getChildAt(i)
+            when (child) {
+                is Button -> child.isEnabled = isEnabled
+                is EditText -> child.isEnabled = isEnabled
+                is RecyclerView -> child.isEnabled = isEnabled
+
+                is ViewGroup -> toggleButtons(child, isEnabled) // Recursión para layouts anidados
+            }
+        }
+    }
+
+    private fun showProgressBar() {
+        val fltLoading = findViewById<View>(R.id.fltLoading)
+        fltLoading.visibility = View.VISIBLE
+
+        val rootLayout = findViewById<ViewGroup>(R.id.lltRoot)
+        toggleButtons(rootLayout, false) // Bloquea botones
+        rvwProducts.isEnabled = false
+        //btnProcess.isEnabled =false
+    }
+
+    private fun hideProgressBar() {
+        val fltLoading = findViewById<View>(R.id.fltLoading)
+        fltLoading.visibility = View.GONE
+
+        val rootLayout = findViewById<ViewGroup>(R.id.lltRoot)
+        toggleButtons(rootLayout, true) // Habilita botones
+        rvwProducts.isEnabled = true
+        //btnProcess.isEnabled =true
     }
 }
 

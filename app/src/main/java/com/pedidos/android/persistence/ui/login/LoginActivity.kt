@@ -54,7 +54,7 @@ class LoginActivity : MenuActivity(), LoaderCallbacks<Cursor> {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
         setSupportActionBar(toolbar)
-        textVersion.text = "Version : " + BasicApp.APP_VERSION
+        textVersion.text = """Version : ${BasicApp.APP_VERSION}"""
         supportActionBar!!.setDisplayShowTitleEnabled(false)
        // IMEI()
         //permissionPhone()

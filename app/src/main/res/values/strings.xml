@@ -33,6 +33,7 @@
     <string name="sales_title_report">Pedidos</string>
     <string name="sales_client_label">Cliente:</string>
     <string name="sales_select_client_button">CLIENTE</string>
+    <string name="sales_select_cotizacion_button">COTIZACIÓN</string>
     <string name="sale_subtotal_label">Subtotal:</string>
     <string name="sale_discount_label">Descuento:</string>
     <string name="sale_tax_label">Impuesto:</string>

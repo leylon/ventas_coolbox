@@ -23,6 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/background_trans"
+        android:clickable="false"
         android:visibility="gone">
 
         <ProgressBar
@@ -55,20 +56,40 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical">
-
-                    <Button
-                        android:id="@+id/btnSelectClient"
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/background_rounded"
-                        android:drawableLeft="@drawable/ic_customer_25"
-                        android:minWidth="0dp"
-                        android:minHeight="0dp"
-                        android:paddingStart="8dp"
-                        android:paddingTop="4dp"
-                        android:paddingEnd="8dp"
-                        android:paddingBottom="4dp"
-                        android:text="@string/sales_select_client_button" />
+                        android:orientation="horizontal"
+                        >
+                        <Button
+                            android:id="@+id/btnSelectClient"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/background_rounded"
+                            android:drawableLeft="@drawable/ic_customer_25"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:paddingStart="8dp"
+                            android:paddingTop="4dp"
+                            android:paddingEnd="8dp"
+                            android:paddingBottom="4dp"
+                            android:text="@string/sales_select_client_button" />
+                        <Button
+                            android:id="@+id/btnSelectCotization"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/background_rounded"
+                            android:drawableLeft="@drawable/ic_type_doc_guide"
+                            android:minWidth="0dp"
+                            android:minHeight="0dp"
+                            android:paddingStart="8dp"
+                            android:layout_marginStart="8dp"
+                            android:paddingTop="4dp"
+                            android:paddingEnd="8dp"
+                            android:paddingBottom="4dp"
+                            android:text="@string/sales_select_cotizacion_button" />
+                    </LinearLayout>
+
 
                     <TextView
                         android:id="@+id/tvwClient"
@@ -299,7 +320,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <Button
+            <TextView
                 android:id="@+id/btnProcess"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -309,6 +330,7 @@
                 android:backgroundTint="@color/colorPrimary"
                 android:drawableLeft="@drawable/ic_resume_white_100"
                 android:text="@string/sale_make_sale_button"
+                style="@style/Widget.AppCompat.Button.Colored"
                 android:textColor="@android:color/white"
                 android:textSize="16sp" />
 
