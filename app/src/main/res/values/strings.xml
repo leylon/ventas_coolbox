@@ -200,6 +200,14 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_packing">Packing</string>
     <string name="title_activity_report_packing">Reporte Pedidos</string>
+    <string name="cotizacion_cliente">CLIENTE</string>
+    <string name="cotizacion_nombre_del_cliente">Codigo del cliente</string>
+    <string name="cotizacion_numero_ticket">NUMERO TICKET</string>
+    <string name="cotizacion_fecha">FECHA</string>
+    <string name="cotizacion_importe_s">IMPORTE S/</string>
+    <string name="cargar_cotizacion">CARGAR COTIZACION</string>
+    <string name="cotizacion_tomar_foto">Tomar foto</string>
+    <string name="cotizacion_buscar">Buscar</string>
     <string-array name="array_modo_transport">
         <item>PUBLICO</item>
         <item>PRIVADO</item>

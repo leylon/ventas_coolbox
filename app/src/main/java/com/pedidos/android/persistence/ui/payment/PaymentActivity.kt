@@ -91,6 +91,7 @@ class PaymentActivity : MenuActivity() {
 
         numeroDocumento = saleEntity.documento
         tvwTotalVenta.text = Formatter.DoubleToString(saleEntity.total, saleEntity.monedaSimbolo)
+        etwFalabellaImporte.setText(saleEntity.total.toString())
         etwMpos.text = Editable.Factory.getInstance().newEditable("")
         //etwFpay.text = Editable.Factory.getInstance().newEditable(saleEntity.total.toString())
         //etwPlink.text = Editable.Factory.getInstance().newEditable(saleEntity.total.toString())
@@ -185,6 +186,9 @@ class PaymentActivity : MenuActivity() {
         linerVales.visibility = isVisbleView(userInfo.vales)
         linerOtosPagos.visibility = isVisbleView(userInfo.otroPago)
         linerMpos.visibility = isVisbleView(userInfo.mPos)
+        textMpos.visibility = isVisbleView(userInfo.mPos)
+        textPagoFalabella.visibility = isVisbleView(userInfo.pagoFalabella)
+        linerPagoFalabella.visibility = isVisbleView(userInfo.pagoFalabella)
     }
 
     private fun isVisbleView(statusView: Boolean) : Int {
@@ -307,7 +311,10 @@ class PaymentActivity : MenuActivity() {
         paymentEntity.idpago_link = getPagoIdPlink()
         paymentEntity.numvale = numVale
         paymentEntity.impvale = if (TextUtils.isEmpty(etwOtherVale.text.toString())) 0.0 else etwOtherVale.text.toString().toDouble()
-
+        paymentEntity.pagofalabellaTienda = etwPagoFalabellaTienda.text.toString()
+        paymentEntity.pagofalabellaImporte = if (TextUtils.isEmpty(etwFalabellaImporte.text.toString())) 0.0 else etwFalabellaImporte.text.toString().toDouble()
+        paymentEntity.pagofalabellaCaja = etwPagoFalabellaCaja.text.toString()
+        paymentEntity.pagofalabellaTransaccion = etwPagoFalabellaTransaccion.text.toString()
         return paymentEntity
     }
 

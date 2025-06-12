@@ -34,6 +34,9 @@ import com.pedidos.android.persistence.db.entity.ProductEntity
 import com.pedidos.android.persistence.db.entity.SaleEntity
 import com.pedidos.android.persistence.db.entity.SaleSubItemEntity
 import com.pedidos.android.persistence.model.SaleSubItem
+import com.pedidos.android.persistence.model.cotizacion.CotizacionCab
+import com.pedidos.android.persistence.model.cotizacion.CotizacionRequest
+import com.pedidos.android.persistence.model.cotizacion.Presupuesto
 import com.pedidos.android.persistence.model.guide.DataResponse
 import com.pedidos.android.persistence.model.sale.*
 import com.pedidos.android.persistence.ui.BasicApp
@@ -41,6 +44,7 @@ import com.pedidos.android.persistence.ui.ClientPopUpFragment
 import com.pedidos.android.persistence.ui.ending.EndingActivity
 import com.pedidos.android.persistence.ui.guide.fragment.CityPopUpFragment
 import com.pedidos.android.persistence.ui.menu.MenuActivity
+import com.pedidos.android.persistence.ui.sale.fragment.CotizacionPopUpFragment
 import com.pedidos.android.persistence.ui.sale.fragment.QuestionPopUpFragment
 import com.pedidos.android.persistence.ui.sale.fragment.SendCodPopUpFragment
 import com.pedidos.android.persistence.ui.search.SearchProductActivity
@@ -57,7 +61,10 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
-class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQuestion,SendCodPopUpFragment.newDialoglistenerSendCod {
+class SaleActivity : MenuActivity(),
+    QuestionPopUpFragment.newDialoglistenerQuestion,
+    SendCodPopUpFragment.newDialoglistenerSendCod,
+CotizacionPopUpFragment.newDialoglistenerCotizacion {
 
     private lateinit var saleViewModel: SaleViewModel
     private lateinit var searchViewModel: SearchProductViewModel
@@ -69,6 +76,8 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
     private var view: View? = null
     lateinit var  dialgCustomSenCod: SendCodPopUpFragment
     var flag_pop: Boolean = false
+    var flag_cotizacion: Boolean = false
+    var listSaleSubItem: MutableList<SaleSubItem> = mutableListOf()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithMenu(R.layout.sales_activity)
@@ -91,10 +100,15 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
         imbwAddProductCombined.setOnClickListener { productSearchCombined() }
         imbwAddProductoWithCamera.setOnClickListener {
             flag_pop = false
+            flag_cotizacion = false
             productSearch() }
         imbwAddProductManualOnly.setOnClickListener { productManualSearch() }
         btnSelectClient.setOnClickListener { showClientPopUp() }
-
+        btnSelectCotization.setOnClickListener {
+            listSaleSubItem = mutableListOf()
+            initSale()
+            showCotizacionConfirm("show",null)
+        }
         //this init the viewModel
         val saleFactory = SaleViewModel.Companion.Factory(application, getSettings().urlbase)
         val searchFactory = SearchProductViewModel.Companion.Factory(application, getSettings().urlbase)
@@ -339,10 +353,16 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
                                     .create().show()
                         } else {
                             showProgress(true)
+
                             if (flag_pop){
                                 sendBarCodManual(result.contents ?: "")
                             }else {
-                                searchViewModel.searchProductDirectly(result.contents ?: "")
+                                if (flag_cotizacion){
+                                    findCotizacion(result.contents ?: "")
+                                }else{
+                                    searchViewModel.searchProductDirectly(result.contents ?: "")
+                                }
+
                             }
                         }
                     } else {
@@ -523,6 +543,30 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
             processSale()
         }
     }
+
+    fun showCotizacionConfirm(option: String, dataPresupuesto: List<CotizacionCab>?){
+        //btnProcess.isEnabled = true
+        showProgress(false)
+       // if(response.muestramensaje){
+            val dialgCustom = CotizacionPopUpFragment()
+            dialgCustom.show(supportFragmentManager, "P")
+            val args = Bundle()
+            args.putString("OptionQuestion",option)
+           //
+           if (option.equals("search")){
+               args.putSerializable("DataList", dataPresupuesto as Serializable)
+           }
+        //
+            dialgCustom.arguments = args
+            val fragment = supportFragmentManager.findFragmentByTag("P")
+            if (fragment != null) {
+                supportFragmentManager.beginTransaction().remove(fragment).commit()
+            }
+        //}else {
+          ///  processSale()
+        //}
+    }
+
     fun showSendCodConfirm(optionData: VentaProductoResponse){
         ventaProductoResponse = optionData
         showProgress(false)
@@ -659,6 +703,9 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
 
     private fun onError(message: String) {
         btnProcess.isEnabled =true
+        etwAddProduct.visibility = View.GONE
+        imbwAddProductoWithCamera.visibility = View.GONE
+        imbwAddProductManualOnly.visibility = View.GONE
         Log.e(TAG, message)
 
         AlertDialog.Builder(this, R.style.AppTheme_DIALOG)
@@ -889,6 +936,85 @@ class SaleActivity : MenuActivity(), QuestionPopUpFragment.newDialoglistenerQues
         rvwProducts.isEnabled = true
         //btnProcess.isEnabled =true
     }
+
+    override fun closeDialogQuestion(datos: String, optionData: CotizacionCab?) {
+        println("closeDialogQuestion: $datos")
+
+
+        when (datos) {
+            "search" -> {
+
+                //saleViewModel.saveCotizacion(optionData, ::goToResumenPedido, ::onError)
+            }
+            "item" -> {
+                println("closeDialogQuestion-item: ${Gson().toJson(optionData)}")
+                addCotizacion(optionData!!)
+                println("se cancelo el dialog questions")
+            }
+            "scanner" -> {
+                flag_cotizacion = true
+                productSearch()
+            }
+            else -> {
+                /*saleViewModel.findCotizacion(CotizacionRequest(
+                    fecha = "20250507",
+                    docCliente = datos
+                ), ::dataPresuesto, ::onError)*/
+                findCotizacion(datos)
+            }
+
+        }
+    }
+    fun findCotizacion(codigo: String) {
+        println("findCotizacion: $codigo")
+        saleViewModel.findCotizacion(CotizacionRequest(
+            fecha = "20250507",
+            docCliente = codigo
+        ), ::dataPresuesto, ::onError)
+    }
+    fun addCotizacion(cotizacionCab: CotizacionCab) {
+        etwAddProduct.visibility = View.GONE
+        imbwAddProductoWithCamera.visibility = View.GONE
+        imbwAddProductManualOnly.visibility = View.GONE
+
+        println("addCotizacion: ${Gson().toJson(cotizacionCab)}")
+        val data = saleViewModel.saleLiveData.value
+        data?.cotizacion = "${cotizacionCab.serie}-${cotizacionCab.numero}"
+        saleViewModel.saleLiveData.postValue(data)
+
+        cotizacionCab.detalles.forEach {
+            println("detalle: ${Gson().toJson(it)}")
+
+            val saleSubItem = SaleSubItemEntity().apply {
+                secuencial = it.numLin.toInt()
+                codigoventa = it.sku
+                codigoProducto = it.sku
+                descripcion = it.descripcion
+                cantidad = it.unidades
+                precio = it.precioIva
+                pcdcto = it.dto
+                ean = it.ean.toString()
+                monedaSimbolo = ""
+                complementaryRowColor = ""
+                totaldetalle = it.total
+
+
+            }
+            listSaleSubItem.add(saleSubItem)
+
+        }
+        saleViewModel.saveDetail(listSaleSubItem)
+
+
+    }
+
+    fun dataPresuesto(data: Presupuesto) {
+        println("dataPresuesto: ${Gson().toJson(data.presupuestos)}")
+        val listaCotizacion: List<CotizacionCab>? = data.presupuestos
+
+        showCotizacionConfirm("search", data.presupuestos)
+    }
+
 }
 
 

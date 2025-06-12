@@ -679,6 +679,70 @@
                         android:textSize="18sp" />
                 </LinearLayout>
 
+                <TextView
+                    android:id="@+id/textPagoFalabella"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/darkBlue"
+                    android:paddingTop="5dp"
+                    android:paddingBottom="5dp"
+                    android:text="Pago Falabella"
+                    android:textAlignment="center"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:visibility="visible"
+                    android:textStyle="bold" />
+                <EditText
+                    android:id="@+id/etwPagoFalabellaTienda"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:hint="Pago Falabella Tienda"/>
+                <EditText
+                    android:id="@+id/etwPagoFalabellaCaja"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:hint="Pago Falabella Caja"/>
+                <EditText
+                    android:id="@+id/etwPagoFalabellaTransaccion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:hint="Pago Falabella Transaccion"/>
+                <LinearLayout
+                    android:id="@+id/linerPagoFalabella"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="@dimen/margin_medium"
+                    android:layout_marginEnd="@dimen/margin_medium"
+                    android:orientation="horizontal"
+                    android:visibility="visible"
+                    android:weightSum="2">
+
+                    <ImageButton
+                        android:id="@+id/btnFalabella"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:layout_weight="1"
+                        android:src="@mipmap/ic_falabella"
+                        android:backgroundTint="@color/white"
+                        android:drawableStart="@mipmap/ic_falabella"
+                        android:textAlignment="center"
+                        android:textColor="@android:color/black"
+                        android:textSize="16sp" />
+
+                    <EditText
+                        android:id="@+id/etwFalabellaImporte"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ems="10"
+                        android:inputType="numberDecimal"
+                        android:textAlignment="textEnd"
+                        android:textSize="18sp" />
+                </LinearLayout>
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"

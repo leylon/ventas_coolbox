@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class Formatter {
@@ -13,9 +15,16 @@ class Formatter {
         @SuppressLint("SimpleDateFormat")
         val dateFormat = SimpleDateFormat("yyyyMMdd")
 
+        @SuppressLint("SimpleDateFormat")
+        val dateFormatStandar = SimpleDateFormat("dd/MM/yyyy")
+
         fun DateToString(date: Date): String {
             return dateFormat.format(date)
         }
+        fun DateToStringStandar(date: Date): String {
+            return dateFormatStandar.format(date)
+        }
+
 
         fun DoubleToString(input: Double): String {
             return decimalFormat.format(input)

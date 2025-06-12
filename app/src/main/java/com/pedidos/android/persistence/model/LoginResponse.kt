@@ -32,5 +32,7 @@ class LoginResponse(var cajacodigo: String,
                     @SerializedName("PagoLink")
                     var pagoLink: Boolean,
                     @SerializedName("Fpay")
-                    var fpay: Boolean
+                    var fpay: Boolean,
+                    @SerializedName("PagoFalabella")
+                    var pagoFalabella: Boolean
                     )

@@ -30,6 +30,11 @@ class SaleAdapter(var items: MutableList<SaleSubItem>, val onItemDelete: (SaleSu
 
     override fun onBindViewHolder(holder: SaleHolder, position: Int) {
         val subItem = items[position]
+        if (subItem.estadoCotizacion == 0) {
+            holder.ivbDelete.visibility = View.VISIBLE
+        } else {
+            holder.ivbDelete.visibility = View.GONE
+        }
         holder.tvwProductName.text = subItem.descripcion
         holder.tvwProductPrice.text = Formatter.DoubleToString(subItem.precio, subItem.monedaSimbolo)
         holder.tvwProductCuantity.text = subItem.cantidad.toString()

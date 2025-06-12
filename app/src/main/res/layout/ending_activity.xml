@@ -279,7 +279,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_margin="10sp"
-            android:rowCount="3"
+            android:rowCount="5"
             android:columnCount="2">
 
 
@@ -329,6 +329,8 @@
             android:textColor="@android:color/white"
             android:drawableStart="@drawable/ic_cash_white"
             android:textSize="16sp" />
+
+
 
         </GridLayout>
 

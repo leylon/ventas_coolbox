@@ -51,4 +51,8 @@ class PaymentEntity(
     override var numvale: String = ""
     override var impvale: Double = 0.0
     override var retarj: String = ""
+    override var pagofalabellaTienda: String = ""
+    override var pagofalabellaCaja : String = ""
+    override var pagofalabellaTransaccion : String = ""
+    override var pagofalabellaImporte : Double = 0.0
 }

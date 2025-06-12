@@ -2,10 +2,13 @@ package com.pedidos.android.persistence.utils
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.os.Build
 import android.util.Log
 import android.widget.ImageView
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 
 var complementProductTempCode :String ?= null // cuando un producto es traido desde el search se guarda para abrir en automatico sus complementos
@@ -96,6 +99,7 @@ class Extensions {
         }
         return hexList
     }
+
 
     fun myBinaryStrToHexString(binaryStr: String): String {
         var hex = ""

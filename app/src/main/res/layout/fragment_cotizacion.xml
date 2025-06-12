@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    >
+
+    <TextView
+        android:id="@+id/textViewClienteLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/cotizacion_cliente"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/editTextCliente"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:autofillHints="Nombre del cliente"
+        android:hint="@string/cotizacion_nombre_del_cliente"
+        android:inputType="number"
+        android:background="@drawable/edittext_border"
+        android:padding="10dp"
+        app:layout_constraintEnd_toStartOf="@+id/imageButtonCamera"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewClienteLabel"
+        app:layout_constraintBottom_toBottomOf="@+id/imageButtonCamera"/>
+
+    <ImageButton
+        android:id="@+id/imageButtonCamera"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+
+        android:src="@drawable/ic_menu_camera"
+        android:contentDescription="@string/cotizacion_tomar_foto"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toStartOf="@+id/imageButtonSearch"
+        app:layout_constraintTop_toTopOf="@+id/editTextCliente"
+        app:layout_constraintBottom_toBottomOf="@+id/editTextCliente"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="8dp"/>
+
+    <ImageButton
+        android:id="@+id/imageButtonSearch"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:src="@drawable/ic_search_black"
+        android:contentDescription="@string/cotizacion_buscar"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/editTextCliente"
+        app:layout_constraintBottom_toBottomOf="@+id/editTextCliente"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="8dp"/>
+
+    <TextView
+        android:id="@+id/textViewNumeroTicketHeader"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="@string/cotizacion_numero_ticket"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:padding="8dp"
+        app:layout_constraintEnd_toStartOf="@+id/guideline_fecha"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextCliente" />
+
+    <TextView
+        android:id="@+id/textViewFechaHeader"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/cotizacion_fecha"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:padding="8dp"
+        android:gravity="center"
+        app:layout_constraintEnd_toStartOf="@+id/guideline_importe"
+        app:layout_constraintStart_toEndOf="@+id/guideline_fecha"
+        app:layout_constraintTop_toTopOf="@+id/textViewNumeroTicketHeader" />
+
+    <TextView
+        android:id="@+id/textViewImporteHeader"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/cotizacion_importe_s"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:padding="8dp"
+        android:gravity="end"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/guideline_importe"
+        app:layout_constraintTop_toTopOf="@+id/textViewNumeroTicketHeader" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerViewTickets"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/textViewNumeroTicketHeader"
+        app:layout_constraintBottom_toTopOf="@+id/buttonCargarCotizacion"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_cotizacion"
+        tools:itemCount="5"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/buttonCargarCotizacion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/cargar_cotizacion"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:background="@color/colorPrimary"
+        android:paddingHorizontal="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline_fecha"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.4" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline_importe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.7" />
+
+</android.support.constraint.ConstraintLayout>

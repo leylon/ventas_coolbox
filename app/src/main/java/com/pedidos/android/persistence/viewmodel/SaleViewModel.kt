@@ -11,6 +11,9 @@ import com.pedidos.android.persistence.api.CoolboxApi
 import com.pedidos.android.persistence.db.entity.SaleEntity
 import com.pedidos.android.persistence.model.SaleSubItem
 import com.pedidos.android.persistence.model.SelectedTipoDocumento
+import com.pedidos.android.persistence.model.cotizacion.CotizacionCab
+import com.pedidos.android.persistence.model.cotizacion.CotizacionRequest
+import com.pedidos.android.persistence.model.cotizacion.Presupuesto
 import com.pedidos.android.persistence.model.sale.*
 import com.pedidos.android.persistence.ui.BasicApp
 import com.pedidos.android.persistence.utils.ApiWrapper
@@ -130,6 +133,50 @@ class SaleViewModel(application: Application, private var repository: CoolboxApi
                         message.postValue(t.message)
                     }
                 })
+    }
+    fun saveDetail(saleSubItem: MutableList<SaleSubItem>) {
+        val entityToSave = SaleEntity(saleLiveData.value!!)
+        entityToSave.productos = saleSubItem
+        showProgress.postValue(true)
+        repository.insertSaleSubItem(entityToSave)
+            .enqueue(object : Callback<ApiWrapper<SaleEntity>> {
+                override fun onResponse(call: Call<ApiWrapper<SaleEntity>>, response: Response<ApiWrapper<SaleEntity>>) {
+                    if (response.isSuccessful) {
+                        if (response.body()!!.result) {
+                            val result = response.body()!!.data
+                            val currentEntity = SaleEntity(saleLiveData.value!!)
+
+                            //actualizamos documento, total, subtotal, etc
+                            currentEntity.documento = result?.documento ?: ""
+                            currentEntity.subTotal = result?.subTotal ?: 0.0
+                            currentEntity.descuento = result?.descuento ?: 0.0
+                            currentEntity.impuesto = result?.impuesto ?: 0.0
+                            currentEntity.total = result?.total ?: 0.0
+                            currentEntity.monedaSimbolo = result?.monedaSimbolo ?: ""
+                            currentEntity.complementaryRowColor = result?.complementaryRowColor ?: ""
+                            currentEntity.productoconcomplemento = result?.productoconcomplemento ?: 0
+                            currentEntity.clienteCodigo = result?.clienteCodigo ?: ""
+                            currentEntity.clienteNombres = result?.clienteNombres ?: ""
+
+
+                            saleLiveData.value!!.productos.removeAll { true }
+                            currentEntity.productos.addAll(result?.productos ?: mutableListOf())
+                            saleLiveData.postValue(currentEntity)
+                            showProgress.postValue(false)
+                        } else {
+                            Log.e(TAG, "result false ${response.body()!!.message}")
+                            showProgress.postValue(false)
+                            message.postValue(response.body()!!.message)
+                        }
+                    }
+                }
+
+                override fun onFailure(call: Call<ApiWrapper<SaleEntity>>, t: Throwable) {
+                    Log.e(TAG, "fail request at ${t.message}")
+                    showProgress.postValue(false)
+                    message.postValue(t.message)
+                }
+            })
     }
     fun ventaProducto(
         request: List<VentaProductoRequest>,
@@ -331,6 +378,48 @@ class SaleViewModel(application: Application, private var repository: CoolboxApi
             }
 
         })
+    }
+    fun findCotizacion(
+        cotizacionRequest: CotizacionRequest,
+        onSuccess: (presupuesto: Presupuesto) -> Unit,
+        onError: (message: String) -> Unit
+    ){
+        showProgress.postValue(true)
+        repository.obtenerCotizacionesCliente(cotizacionRequest).enqueue(
+            object : Callback<Presupuesto> {
+                override fun onResponse(
+                    call: Call<Presupuesto>,
+                    response: Response<Presupuesto>
+                ) {
+                    showProgress.postValue(false)
+                    if (response.isSuccessful) {
+                        if (response.body()!!.success) {
+                            val presupuesto = response.body()!!
+                            if (presupuesto.presupuestos == null) {
+                                onError(presupuesto.message)
+                            }else {
+                                onSuccess(presupuesto)
+                            }
+
+                        } else {
+                            onError(response.body()!!.message)
+                        }
+                    } else {
+                        onError("error: code= ${response.code()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<Presupuesto>, t: Throwable) {
+                    Log.e(TAG, "error at ${t.message}")
+                    showProgress.postValue(false)
+                    // Mensaje en pequeño de pantalla
+                    message.postValue(t.message!!)
+                    // Mensaje poppup
+                    onError(t.message!!)
+                }
+            }
+        )
+
     }
 
     companion object {

@@ -5,6 +5,8 @@ import com.pedidos.android.persistence.db.entity.*
 import com.pedidos.android.persistence.model.*
 import com.pedidos.android.persistence.utils.ApiWrapper
 import com.google.gson.GsonBuilder
+import com.pedidos.android.persistence.model.cotizacion.CotizacionRequest
+import com.pedidos.android.persistence.model.cotizacion.Presupuesto
 import com.pedidos.android.persistence.model.guide.*
 import com.pedidos.android.persistence.model.inventary.InventaryGenerateRequest
 import com.pedidos.android.persistence.model.inventary.InventaryRequest
@@ -226,6 +228,9 @@ interface CoolboxApi {
 
     @POST(BasicApp.DEFAULT_API_PICKING+"guiascompletas")
     fun reportPickado(@Body body: PedidoRequest): Call<ReportPickingResponse>
+
+    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"ObtenerCotizacionesCliente")
+    fun obtenerCotizacionesCliente(@Body body: CotizacionRequest): Call<Presupuesto>
 
     companion object {
         fun create(urlBase: String): CoolboxApi = create(HttpUrl.parse(urlBase)!!)

@@ -21,4 +21,8 @@ interface Payment {
     var numvale: String
     var impvale: Double
     var retarj: String
+    var pagofalabellaTienda: String
+    var pagofalabellaCaja: String
+    var pagofalabellaTransaccion  : String
+    var pagofalabellaImporte : Double
 }

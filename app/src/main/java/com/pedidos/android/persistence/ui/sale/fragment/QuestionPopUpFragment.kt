@@ -36,7 +36,7 @@ class QuestionPopUpFragment : DialogFragment, OnClickListenerCustom<VentaProduct
 
         texto_dialogo.text = ventaProductoResponse.mensaje
         boton_aceptar.setOnClickListener {
-            val activity = activity as QuestionPopUpFragment.newDialoglistenerQuestion
+            val activity = activity as newDialoglistenerQuestion
                 activity.closeDialogQuestion("SI",ventaProductoResponse)
                 this.dismiss()
 
