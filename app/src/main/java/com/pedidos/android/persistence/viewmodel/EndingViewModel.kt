@@ -12,6 +12,9 @@ import com.pedidos.android.persistence.db.entity.SaleEntity
 import com.pedidos.android.persistence.model.ReceiptRequest
 import com.pedidos.android.persistence.model.SelectedCreditCard
 import com.pedidos.android.persistence.model.SelectedOtherPayment
+import com.pedidos.android.persistence.model.cotizacion.CotizacionPrint
+import com.pedidos.android.persistence.model.cotizacion.CotizacionPrintRequest
+import com.pedidos.android.persistence.model.cotizacion.CotizacionRequest
 import com.pedidos.android.persistence.ui.BasicApp
 import com.pedidos.android.persistence.utils.ApiWrapper
 import com.pedidos.android.persistence.utils.Defaults
@@ -40,7 +43,9 @@ class EndingViewModel(private val repository: CoolboxApi) : ViewModel() {
     var receiptLiveData = MutableLiveData<ReceiptEntity>()
     var receiptQrLiveData = MutableLiveData<ReceiptEntity>()
     var errorMessages = MutableLiveData<String>()
-
+    var receiptPrintCotizacionLiveData = MutableLiveData<CotizacionPrint>()
+    var saveCotizacionLiveData = MutableLiveData<CotizacionPrint>()
+    var message = MutableLiveData<String>()
     init {
         val newSale = SaleEntity().apply {
             clienteCodigo = Defaults.Cliente.documentNumber
@@ -129,6 +134,54 @@ class EndingViewModel(private val repository: CoolboxApi) : ViewModel() {
 
         })
     }
+    fun getSaleReceiptPrintCotizacion(cotizacionRequest: CotizacionPrintRequest) {
+        showProgress.postValue(true)
+        repository.imprimirCotizacion(cotizacionRequest).enqueue(object : Callback<CotizacionPrint> {
+            override fun onFailure(call: Call<CotizacionPrint>, t: Throwable) {
+                Log.e(TAG, t.message.toString())
+            }
+
+            override fun onResponse(call: Call<CotizacionPrint>, response: Response<CotizacionPrint>) {
+                if (response.isSuccessful && response.body()!!.success) {
+                    val cotizacionPrint = response.body()!!
+                    if (cotizacionPrint != null) {
+                        receiptPrintCotizacionLiveData.postValue(cotizacionPrint)
+                    } else {
+                        errorMessages.postValue(response.body()!!.message.toString())
+                    }
+                } else {
+                    errorMessages.postValue(response.body()!!.message.toString())
+                }
+
+                showProgress.postValue(false)
+            }
+
+        })
+    }
+    fun saveCotizacion(cotizacionRequest: CotizacionPrintRequest) {
+        showProgress.postValue(true)
+        repository.crearCotizacion(cotizacionRequest).enqueue(object : Callback<CotizacionPrint> {
+            override fun onFailure(call: Call<CotizacionPrint>, t: Throwable) {
+                Log.e(TAG, t.message.toString())
+            }
+
+            override fun onResponse(call: Call<CotizacionPrint>, response: Response<CotizacionPrint>) {
+                if (response.isSuccessful && response.body()!!.success) {
+                    val cotizacionPrint = response.body()!!
+                    if (cotizacionPrint != null) {
+                        saveCotizacionLiveData.postValue(cotizacionPrint)
+                    } else {
+                        errorMessages.postValue(response.body()!!.message.toString())
+                    }
+                } else {
+                    errorMessages.postValue(response.body()!!.message.toString())
+                }
+
+                showProgress.postValue(false)
+            }
+
+        })
+    }
 
     fun getSaleReceiptPDF(numeroDocumento: String) {
         showProgress.postValue(true)
@@ -177,4 +230,5 @@ class EndingViewModel(private val repository: CoolboxApi) : ViewModel() {
     fun cobrarPedido() {
 
     }
+
 }

@@ -54,5 +54,20 @@ class Formatter {
             aux1 = cad + auxi
             return aux1
         }
+        fun convertirFecha(fechaOriginal: String): String {
+            return try {
+                var fechaOriginal = "${fechaOriginal}Z"
+                val formatoEntrada  = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+                formatoEntrada .timeZone = TimeZone.getTimeZone("UTC")
+                val formatoSalida = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
+                // Parsear la fecha original y formatearla al nuevo formato
+                val fecha = formatoEntrada.parse(fechaOriginal)
+                return formatoSalida.format(fecha)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return "" // o manejar el error como prefieras
+            }
+        }
     }
 }

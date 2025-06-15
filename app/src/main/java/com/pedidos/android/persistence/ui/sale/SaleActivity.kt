@@ -91,7 +91,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         }
         saleAdapter.compProductActionCall = {complementProductTempCode = null}
         toolbar.title = "${getString(R.string.title_sale_tienda)} ${getSession().tienda}"
-        textVersion.text = """Version : ${BasicApp.APP_VERSION}"""
+        textVersion.text = """Version : ${getSession().version}"""
         rvwProducts.adapter = saleAdapter
         btnProcess.setOnClickListener {
             btnProcess.isEnabled =false
@@ -101,6 +101,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         imbwAddProductoWithCamera.setOnClickListener {
             flag_pop = false
             flag_cotizacion = false
+            tvwCotizacion.text = ""
             productSearch() }
         imbwAddProductManualOnly.setOnClickListener { productManualSearch() }
         btnSelectClient.setOnClickListener { showClientPopUp() }
@@ -596,7 +597,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
             currentSaleEntity.impuesto = entity.impuesto
             currentSaleEntity.impuesto2 = entity.impuesto2
             currentSaleEntity.impuesto3 = entity.impuesto3
-
+           // currentSaleEntity.cotizacion = entity.cotizacion
             currentSaleEntity.nombreimpuesto1 = entity.nombreimpuesto1
             currentSaleEntity.nombreimpuesto2 = entity.nombreimpuesto2
             currentSaleEntity.nombreimpuesto3 = entity.nombreimpuesto3
@@ -980,6 +981,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         println("addCotizacion: ${Gson().toJson(cotizacionCab)}")
         val data = saleViewModel.saleLiveData.value
         data?.cotizacion = "${cotizacionCab.serie}-${cotizacionCab.numero}"
+        tvwCotizacion.text = data?.cotizacion
         saleViewModel.saleLiveData.postValue(data)
 
         cotizacionCab.detalles.forEach {

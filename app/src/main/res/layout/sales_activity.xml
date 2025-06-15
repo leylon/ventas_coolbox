@@ -114,7 +114,13 @@
                         android:gravity="end|center_vertical"
                         android:textSize="14sp"
                         tools:text="B901-0000058931" />
-
+                    <TextView
+                        android:id="@+id/tvwCotizacion"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="end|center_vertical"
+                        android:textSize="14sp"
+                        tools:text="B901-0000058931" />
                     <TextView
                         android:id="@+id/tvwOrderDate"
                         android:layout_width="match_parent"

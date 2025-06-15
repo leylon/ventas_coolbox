@@ -5,6 +5,8 @@ import com.pedidos.android.persistence.db.entity.*
 import com.pedidos.android.persistence.model.*
 import com.pedidos.android.persistence.utils.ApiWrapper
 import com.google.gson.GsonBuilder
+import com.pedidos.android.persistence.model.cotizacion.CotizacionPrint
+import com.pedidos.android.persistence.model.cotizacion.CotizacionPrintRequest
 import com.pedidos.android.persistence.model.cotizacion.CotizacionRequest
 import com.pedidos.android.persistence.model.cotizacion.Presupuesto
 import com.pedidos.android.persistence.model.guide.*
@@ -231,6 +233,14 @@ interface CoolboxApi {
 
     @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"ObtenerCotizacionesCliente")
     fun obtenerCotizacionesCliente(@Body body: CotizacionRequest): Call<Presupuesto>
+
+    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"imprimircotizacion")
+    fun imprimirCotizacion(@Body body: CotizacionPrintRequest): Call<CotizacionPrint>
+
+
+    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"insertarcotizacionescliente")
+    fun crearCotizacion(@Body body: CotizacionPrintRequest): Call<CotizacionPrint>
+
 
     companion object {
         fun create(urlBase: String): CoolboxApi = create(HttpUrl.parse(urlBase)!!)

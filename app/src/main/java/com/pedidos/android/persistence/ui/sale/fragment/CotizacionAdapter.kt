@@ -29,7 +29,7 @@ class CotizacionAdapter: RecyclerView.Adapter<CotizacionAdapter.CotizacionViewHo
     override fun onBindViewHolder(holder: CotizacionViewHolder, position: Int) {
         val dataStorage = listData!![position]
         holder.tvNumeroTicket.text = "${dataStorage.serie}-${dataStorage.numero}"
-        holder.tvFecha.text  = dataStorage.fecha
+        holder.tvFecha.text  = Formatter.convertirFecha(dataStorage.fecha)
         holder.tvImporte.text = "${String.format("%.2f",dataStorage.totalNeto)}"
         holder.itemView.setOnClickListener {
             if (clickListener != null) {

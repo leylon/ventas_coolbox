@@ -27,7 +27,7 @@
         android:layout_marginEnd="8dp"
         android:autofillHints="Nombre del cliente"
         android:hint="@string/cotizacion_nombre_del_cliente"
-        android:inputType="number"
+        android:inputType="text"
         android:background="@drawable/edittext_border"
         android:padding="10dp"
         app:layout_constraintEnd_toStartOf="@+id/imageButtonCamera"

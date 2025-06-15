@@ -6,20 +6,28 @@ import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.util.Log
 import android.view.View
 import com.pedidos.android.persistence.R
 import com.pedidos.android.persistence.db.entity.ReceiptEntity
 import com.pedidos.android.persistence.db.entity.SaleEntity
 import com.pedidos.android.persistence.db.entity.SaleSubItemEntity
+import com.pedidos.android.persistence.model.cotizacion.CotizacionPrint
+import com.pedidos.android.persistence.model.cotizacion.CotizacionPrintRequest
 import com.pedidos.android.persistence.ui.menu.MenuActivity
 import com.pedidos.android.persistence.ui.payment.PaymentActivity
 import com.pedidos.android.persistence.ui.sale.SaleActivity
+import com.pedidos.android.persistence.ui.sale.SaleActivity.Companion
 import com.pedidos.android.persistence.utils.Formatter
 import com.pedidos.android.persistence.viewmodel.EndingViewModel
 import kotlinx.android.synthetic.main.ending_activity.*
 import kotlinx.android.synthetic.main.ending_activity.fltLoading
 import kotlinx.android.synthetic.main.ending_activity.toolbar
+import kotlinx.android.synthetic.main.sales_activity.btnProcess
+import kotlinx.android.synthetic.main.sales_activity.etwAddProduct
+import kotlinx.android.synthetic.main.sales_activity.imbwAddProductManualOnly
+import kotlinx.android.synthetic.main.sales_activity.imbwAddProductoWithCamera
 
 
 class EndingActivity : MenuActivity() {
@@ -45,11 +53,29 @@ class EndingActivity : MenuActivity() {
         viewModel.showProgress.observe(this, Observer { it -> showLoading(it!!) })
         viewModel.saleLiveData.observe(this, Observer { updateScreen(it) })
         viewModel.receiptLiveData.observe(this, Observer { saleEntity?.let { it1 -> performAfterOperations(it, it1.documento) } })
+        viewModel.receiptPrintCotizacionLiveData.observe( this, Observer { it -> performAfterOperationsCoti(it!!) })
+        viewModel.errorMessages.observe(this, Observer { it ->
+            if (it != null) {
+                onError(it)
+            }
+        })
+        viewModel.saveCotizacionLiveData.observe(this, Observer { it ->
+            if (it != null && it.success) {
 
+                Log.d(TAG, "Cotizacion guardada correctamente")
+                onError("Cotizacion guardada correctamente")
+                //obtenerCotizacion()
+            } else {
+                Log.e(TAG, "")
+                onError("Error al guardar la cotizacion")
+            }
+        })
         viewModel.saleLiveData.postValue(saleEntity)
         btnCobrar.setOnClickListener { cobrarPedido() }
         btnEliminar.setOnClickListener { eliminarPedido() }
-        btnImprimir.setOnClickListener { optenerPedido() }
+        btnImprimir.setOnClickListener { obtenerPedido() }
+        btnCotizacion.setOnClickListener { obtenerCotizacion() }
+        btnSaveCotizacion.setOnClickListener { savePedido() }
         btnRegresar.setOnClickListener { onBackPressed() }
         btnVisa.setOnClickListener { cobrarPedido() }
     }
@@ -64,10 +90,21 @@ class EndingActivity : MenuActivity() {
         startActivity(Intent(this, SaleActivity::class.java))
     }
 
-    private fun optenerPedido() {
+    private fun obtenerPedido() {
         viewModel.getSaleReceipt(viewModel.saleLiveData.value!!.documento)
         //PDF
         //viewModel.getSaleReceiptPDF(viewModel.saleLiveData.value!!.documento)
+    }
+    private fun savePedido() {
+        viewModel.saveCotizacion(CotizacionPrintRequest(tipo = "PED",
+            documento = viewModel.saleLiveData.value!!.documento))
+        //PDF
+        //viewModel.getSaleReceiptPDF(viewModel.saleLiveData.value!!.documento)
+    }
+    private fun obtenerCotizacion(){
+
+        viewModel.getSaleReceiptPrintCotizacion(CotizacionPrintRequest(tipo = "PED",
+            documento = viewModel.saleLiveData.value!!.documento))
     }
 
     private fun cobrarPedido() {
@@ -116,5 +153,46 @@ class EndingActivity : MenuActivity() {
                 }
             }
         }
+    }
+    private fun performPrintingOrShare(documentoPrint: String): Boolean {
+        return performPrinting(documentoPrint)
+        //saveAndShareFile(Base64.decode(documentoPrint, Base64.DEFAULT), numeroDocumento)
+    }
+
+    private fun performPrintingOrShareQR(documentoPrint: String): Boolean {
+        return performPrintingQr(documentoPrint)
+        //saveAndShareFile(Base64.decode(documentoPrint, Base64.DEFAULT), numeroDocumento)
+    }
+    private fun performAfterOperationsCoti(receiptEntity: CotizacionPrint) {
+        if (receiptEntity != null) {
+            //PDF
+            //saveAndShareFile(receiptEntity.pdfBytes, numeroDocumento)
+
+            //Normal
+            if (performPrintingOrShare(receiptEntity.cotiCabecera)) {
+                if (performPrintingOrShareQR(receiptEntity.cotiBarraNumero)) {
+                    if (performPrintingOrShare(receiptEntity.cotiCuerpo)) {
+                        if (performPrintingOrShareQR(receiptEntity.cotiBarraCliente)) {
+                            if (performPrinting(receiptEntity.cotiPie)) {
+                                startActivity(Intent(this, SaleActivity::class.java))
+                            }
+                        }
+                    }
+                }
+            }
+            /*if (performPrintingCotizacionNormal(receiptEntity)){
+                startActivity(Intent(this, SaleActivity::class.java))
+            }*/
+        }
+    }
+    private fun onError(message: String) {
+               Log.e(SaleActivity.TAG, message)
+
+        AlertDialog.Builder(this, R.style.AppTheme_DIALOG)
+            .setTitle(R.string.app_name)
+            .setMessage(message)
+            .setPositiveButton(R.string.aceptar) { d, _ -> d.dismiss() }
+            .setCancelable(false)
+            .create().show()
     }
 }

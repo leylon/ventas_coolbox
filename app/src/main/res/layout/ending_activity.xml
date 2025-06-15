@@ -279,61 +279,77 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_margin="10sp"
-            android:rowCount="5"
+            android:rowCount="6"
             android:columnCount="2">
 
+            <Button
+                android:id="@+id/btnRegresar"
+                android:layout_gravity="fill"
+                android:layout_columnWeight="1"
+                android:layout_height="65sp"
+                android:backgroundTint="@color/colorPrimary"
+                android:text="@string/btn_regresar"
+                android:textColor="@android:color/white"
+                android:drawableStart="@drawable/ic_back_white_50"
+                android:textSize="16sp" />
 
+            <Button
+                android:id="@+id/btnEliminar"
+                android:layout_gravity="fill"
+                android:layout_columnWeight="1"
+                android:layout_height="65sp"
+                android:backgroundTint="@color/colorPrimary"
+                android:text="ELIMINAR"
+                android:textColor="@android:color/white"
+                android:drawableStart="@drawable/ic_delete_white_100"
+                android:textSize="16sp" />
 
-        <Button
-            android:id="@+id/btnRegresar"
-            android:layout_gravity="fill"
-            android:layout_columnWeight="1"
-            android:layout_height="65sp"
-            android:backgroundTint="@color/colorPrimary"
-            android:text="@string/btn_regresar"
-            android:textColor="@android:color/white"
-            android:drawableStart="@drawable/ic_back_white_50"
-            android:textSize="16sp" />
+            <Button
+                android:id="@+id/btnImprimir"
+                android:layout_gravity="fill"
+                android:layout_columnWeight="1"
+                android:layout_height="65sp"
+                android:backgroundTint="@color/colorPrimary"
+                android:text="IMPRIMIR"
+                android:textColor="@android:color/white"
+                android:drawableStart="@drawable/ic_print_white_100"
+                android:textSize="16sp" />
 
-        <Button
-            android:id="@+id/btnEliminar"
-            android:layout_gravity="fill"
-            android:layout_columnWeight="1"
-            android:layout_height="65sp"
-            android:backgroundTint="@color/colorPrimary"
-            android:text="ELIMINAR"
-            android:textColor="@android:color/white"
-            android:drawableStart="@drawable/ic_delete_white_100"
-            android:textSize="16sp" />
+            <Button
+                android:id="@+id/btnCobrar"
 
-        <Button
-            android:id="@+id/btnImprimir"
-            android:layout_gravity="fill"
-            android:layout_columnWeight="1"
-            android:layout_height="65sp"
-            android:backgroundTint="@color/colorPrimary"
-            android:text="IMPRIMIR"
-            android:textColor="@android:color/white"
-            android:drawableStart="@drawable/ic_print_white_100"
-            android:textSize="16sp" />
+                android:layout_gravity="fill"
+                android:layout_columnWeight="1"
+                android:layout_height="65sp"
+                android:backgroundTint="@color/colorPrimary"
+                android:text="COBRAR"
+                android:textColor="@android:color/white"
+                android:drawableStart="@drawable/ic_cash_white"
+                android:textSize="16sp" />
+            <Button
+                android:id="@+id/btnCotizacion"
+                android:layout_gravity="fill"
+                android:layout_columnWeight="1"
+                android:layout_height="65sp"
+                android:backgroundTint="@color/colorPrimary"
 
+                android:text="COTIZACION"
+                android:textColor="@android:color/white"
+                android:drawableStart="@drawable/ic_cash_white"
+                android:textSize="16sp" />
+            <Button
+                android:id="@+id/btnSaveCotizacion"
+                android:layout_gravity="fill"
+                android:layout_columnWeight="1"
+                android:layout_height="65sp"
+                android:backgroundTint="@color/colorPrimary"
 
-
-        <Button
-            android:id="@+id/btnCobrar"
-            android:layout_gravity="fill"
-            android:layout_columnWeight="1"
-            android:layout_height="65sp"
-            android:backgroundTint="@color/colorPrimary"
-            android:text="COBRAR"
-            android:textColor="@android:color/white"
-            android:drawableStart="@drawable/ic_cash_white"
-            android:textSize="16sp" />
-
-
+                android:text="SAVE-COTI"
+                android:textColor="@android:color/white"
+                android:drawableStart="@drawable/ic_cash_white"
+                android:textSize="16sp" />
 
         </GridLayout>
-
         <ImageView
             android:id="@+id/btnVisa"
             android:layout_width="wrap_content"

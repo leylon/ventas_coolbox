@@ -8,6 +8,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.preference.PreferenceManager
+import android.support.design.widget.TextInputEditText
 import android.support.v7.app.AlertDialog
 import android.text.Editable
 import android.text.TextUtils
@@ -79,6 +80,7 @@ class PaymentActivity : MenuActivity() {
     private var numVale: String = ""
     private var isSaleSucceses: Boolean = false
     private var refTarje: String = ""
+    lateinit var editEfectivo: TextInputEditText
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithMenu(R.layout.payment_activity)
@@ -93,6 +95,7 @@ class PaymentActivity : MenuActivity() {
         tvwTotalVenta.text = Formatter.DoubleToString(saleEntity.total, saleEntity.monedaSimbolo)
         etwFalabellaImporte.setText(saleEntity.total.toString())
         etwMpos.text = Editable.Factory.getInstance().newEditable("")
+        editEfectivo = findViewById(R.id.etwEfectivo)
         //etwFpay.text = Editable.Factory.getInstance().newEditable(saleEntity.total.toString())
         //etwPlink.text = Editable.Factory.getInstance().newEditable(saleEntity.total.toString())
 
@@ -145,18 +148,21 @@ class PaymentActivity : MenuActivity() {
         } catch (ex: Exception) {
             Log.d("VISANET-APP", ex.message, ex)
         }
-
-        btnTarjeta.setOnClickListener { btnOnClickCreditCard(endingViewModel.cardsAccepted.value ?: arrayListOf()) }
-        btnOther.setOnClickListener { btnOnClickOthers(endingViewModel.otherPayments.value ?: arrayListOf()) }
-        btnMakeAndWish.setOnClickListener { onClickMakeAndWish() }
-        btnMpos.setOnClickListener { cobrarMPOS() }
-        btnFpay.setOnClickListener { btnOnClickFpay() }
-        btnPlink.setOnClickListener { btnOnClickPLink() }
-        btnOtherVale.setOnClickListener{ btnOnClickVale()}
-        btnMposMasterCard.setOnClickListener {
-            isMposVISA = false
-            printOnSnackBar("En construccion")
+        if (saleEntity.cotizacion.isEmpty()){
+            btnTarjeta.setOnClickListener { btnOnClickCreditCard(endingViewModel.cardsAccepted.value ?: arrayListOf()) }
+            btnOther.setOnClickListener { btnOnClickOthers(endingViewModel.otherPayments.value ?: arrayListOf()) }
+            btnMakeAndWish.setOnClickListener { onClickMakeAndWish() }
+            btnMpos.setOnClickListener { cobrarMPOS() }
+            btnFpay.setOnClickListener { btnOnClickFpay() }
+            btnPlink.setOnClickListener { btnOnClickPLink() }
+            btnOtherVale.setOnClickListener{ btnOnClickVale()}
+            btnMposMasterCard.setOnClickListener {
+                isMposVISA = false
+                printOnSnackBar("En construccion")
+            }
         }
+
+
 
 
         // -- Agregado CPV
@@ -174,6 +180,27 @@ class PaymentActivity : MenuActivity() {
 
     private fun setupVisualizacionTipoPago() {
         val userInfo = getSession()
+        if(saleEntity.cotizacion.isNotEmpty()){
+            val rootLayout = findViewById<ViewGroup>(R.id.payment_activity_root)
+            toggleButtons(rootLayout, false)
+            editEfectivo.isEnabled = false
+            editEfectivo.isFocusable = false
+            etwInputEfectivo.isEnabled = false
+            textPagoFalabella.visibility = isVisbleView(userInfo.pagoFalabella)
+            linerPagoFalabella.visibility = isVisbleView(userInfo.pagoFalabella)
+        }else {
+            val rootLayout = findViewById<ViewGroup>(R.id.payment_activity_root)
+            toggleButtons(rootLayout, true)
+            editEfectivo.isEnabled = true
+            editEfectivo.isFocusable = true
+            etwInputEfectivo.isEnabled = true
+            textPagoFalabella.visibility = isVisbleView(false)
+            linerPagoFalabella.visibility = isVisbleView(false)
+            etwPagoFalabellaTienda.visibility = isVisbleView(false)
+            etwPagoFalabellaCaja.visibility = isVisbleView(false)
+            etwPagoFalabellaTransaccion.visibility = isVisbleView(false)
+
+        }
         linerEfectivo.visibility = isVisbleView(userInfo.efectivo)
         linerCobranzaEfectivo.visibility = isVisbleView(userInfo.efectivo)
         linerFpay.visibility = isVisbleView(userInfo.fpay)
@@ -187,8 +214,8 @@ class PaymentActivity : MenuActivity() {
         linerOtosPagos.visibility = isVisbleView(userInfo.otroPago)
         linerMpos.visibility = isVisbleView(userInfo.mPos)
         textMpos.visibility = isVisbleView(userInfo.mPos)
-        textPagoFalabella.visibility = isVisbleView(userInfo.pagoFalabella)
-        linerPagoFalabella.visibility = isVisbleView(userInfo.pagoFalabella)
+
+
     }
 
     private fun isVisbleView(statusView: Boolean) : Int {
@@ -285,8 +312,8 @@ class PaymentActivity : MenuActivity() {
         val paymentEntity = PaymentEntity()
         paymentEntity.tipoDocumento = if (rbwBoleta.isChecked) Defaults.BOLETA else Defaults.FACTURA
         paymentEntity.numeroDocumento = numeroDocumento
-        if (etwEfectivo.text.toString() != "") {
-            paymentEntity.montoEfectivo = etwEfectivo.text.toString().toDouble()
+        if (editEfectivo.text.toString() != "") {
+            paymentEntity.montoEfectivo = editEfectivo.text.toString().toDouble()
         }
 
         paymentEntity.codigoTarjeta = creditCardSelected
