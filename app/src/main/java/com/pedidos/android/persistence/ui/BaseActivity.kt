@@ -23,6 +23,7 @@ import com.pedidos.android.persistence.R
 import com.pedidos.android.persistence.api.CoolboxApi
 import com.pedidos.android.persistence.db.entity.SettingsEntity
 import com.pedidos.android.persistence.model.Settings
+import com.pedidos.android.persistence.model.cotizacion.CotizacionPrint
 import com.pedidos.android.persistence.ui.cancel.CancelActivity
 import com.pedidos.android.persistence.ui.menu.MenuActivity
 import com.pedidos.android.persistence.utils.BluetoothConnector
@@ -185,12 +186,12 @@ open class BaseActivity : AppCompatActivity() {
            // printOnSnackBar(getString(R.string.printer_error) + ": " + ex.message)
         }
 
+
         return false
         //saveAndShareFile(Base64.decode(documentoPrint, Base64.DEFAULT), numeroDocumento)
     }
 
-
-    protected fun performPrintingQr(qrPrint: String): Boolean {
+        protected fun performPrintingQr(qrPrint: String): Boolean {
         if (qrPrint == "") {
             Log.i(CancelActivity.TAG, "no existe valor en el documento")
             printOnSnackBar(getString(R.string.payment_no_receipt))
@@ -224,6 +225,88 @@ open class BaseActivity : AppCompatActivity() {
         //saveAndShareFile(Base64.decode(documentoPrint, Base64.DEFAULT), numeroDocumento)
     }
 
+     fun performPrintingCotizacion(qrPrint: String): Boolean {
+        if (qrPrint == "") {
+            Log.i(CancelActivity.TAG, "no existe valor en el documento")
+            printOnSnackBar(getString(R.string.payment_no_receipt))
+            return false
+        }
+        try {
+
+            val blueToothWrapper = this.setupPrinter()
+            if (blueToothWrapper != null) {
+                val qrByte = Base64.decode(qrPrint,Base64.DEFAULT)
+                val qrBitmap = BitmapFactory.decodeByteArray(qrByte,0, qrByte.size)
+                val documentPrint = Extensions().decodeBitmap(qrBitmap)
+
+                blueToothWrapper.outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
+                blueToothWrapper.outputStream.write(documentPrint)
+                Thread.sleep(1500)
+                blueToothWrapper.outputStream.close()
+                blueToothWrapper.inputStream.close()
+                blueToothWrapper.close()
+                return true
+            } else {
+                printOnSnackBar(getString(R.string.printer_error))
+            }
+        } catch (ex: Exception) {
+            Log.e(CancelActivity.TAG, "ley : "+ex.message)
+
+            //printOnSnackBar(getString(R.string.printer_error) + ": " + ex.message)
+        }
+
+        return false
+        //saveAndShareFile(Base64.decode(documentoPrint, Base64.DEFAULT), numeroDocumento)
+    }
+    protected fun performPrintingCotizacionNormal(cotizacionPrint: CotizacionPrint): Boolean {
+        if (cotizacionPrint.cotiCabecera == "") {
+            Log.i(CancelActivity.TAG, "no existe valor en el documento: Cabecera de Cotizacion")
+            printOnSnackBar(getString(R.string.payment_no_receipt))
+            return false
+        }
+        if (cotizacionPrint.cotiBarraNumero == "") {
+            Log.i(CancelActivity.TAG, "no existe valor en el documento: Barra Numero")
+            printOnSnackBar(getString(R.string.payment_no_receipt))
+            return false
+        }
+        if (cotizacionPrint.cotiCuerpo == "") {
+            Log.i(CancelActivity.TAG, "no existe valor en el documento: Cuerpo de Cotizacion")
+            printOnSnackBar(getString(R.string.payment_no_receipt))
+            return false
+        }
+        if (cotizacionPrint.cotiBarraCliente == "") {
+            Log.i(CancelActivity.TAG, "no existe valor en el documento: Barra Cliente")
+            printOnSnackBar(getString(R.string.payment_no_receipt))
+            return false
+        }
+        if (cotizacionPrint.cotiPie == "") {
+            Log.i(CancelActivity.TAG, "no existe valor en el documento: Pie de Cotizacion")
+            printOnSnackBar(getString(R.string.payment_no_receipt))
+            return false
+        }
+
+        try {
+            val blueToothWrapper = this.setupPrinter()
+            if (blueToothWrapper != null) {
+                blueToothWrapper.outputStream.write(cotizacionPrint.cotiCabecera.toByteArray(Charsets.ISO_8859_1))
+                blueToothWrapper.outputStream.write(cotizacionPrint.cotiBarraNumero.toByteArray(Charsets.ISO_8859_1))
+                blueToothWrapper.outputStream.write(cotizacionPrint.cotiCuerpo.toByteArray(Charsets.ISO_8859_1))
+                blueToothWrapper.outputStream.write(cotizacionPrint.cotiBarraCliente.toByteArray(Charsets.ISO_8859_1))
+                blueToothWrapper.outputStream.write(cotizacionPrint.cotiPie.toByteArray(Charsets.ISO_8859_1))
+                Thread.sleep(1500)
+                blueToothWrapper.outputStream.close()
+                blueToothWrapper.inputStream.close()
+                blueToothWrapper.close()
+                return true
+            } else {
+                printOnSnackBar(getString(R.string.printer_error))
+            }
+        } catch (ex: Exception) {
+            Log.e(CancelActivity.TAG,"ley: "+ ex.message)
+            // printOnSnackBar(getString(R.string.printer_error) + ": " + ex.message)
+        }
+        return false
+    }
     protected fun saveAndShareFile(bytes: ByteArray, fileName: String) {
         //delete all files
         val file = File.createTempFile(fileName, ".pdf", cacheDir)
