@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.support.design.widget.Snackbar
 import android.support.v4.content.FileProvider
@@ -118,7 +119,65 @@ open class BaseActivity : AppCompatActivity() {
                 .create().show()
 
     }
+    private fun setupPrinter(): BluetoothConnector.BluetoothSocketWrapper? {
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
+        // Verificar si la versión de Android es 12 o superior
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            // Verificar si el permiso BLUETOOTH_CONNECT está otorgado
+            if (checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED  ||
+                checkSelfPermission(android.Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf( android.Manifest.permission.BLUETOOTH_CONNECT,
+                    android.Manifest.permission.BLUETOOTH_SCAN), 1)
+                Log.e(CancelActivity.TAG, "Error checkSelfPermission: ${getString(R.string.bluetooth_permission_required)}")
+                printOnSnackBar(getString(R.string.bluetooth_permission_required))
+                return null
+            }
+        }
+
+
+        val pairedDevices = bluetoothAdapter.bondedDevices
+        Log.i(CancelActivity.TAG, "Paired devices: ${pairedDevices.size}")
+        // Verificar si hay dispositivos emparejados
+        Log.i(CancelActivity.TAG, "Paired devices: ${pairedDevices.map { it.name }}")
+
+
+        if (pairedDevices == null || pairedDevices.isEmpty()) {
+            Log.e(CancelActivity.TAG,
+                "Error pairedDevices: ${getString(R.string.no_devices_paired)}")
+
+            printOnSnackBar(getString(R.string.no_devices_paired))
+            return null
+        }
+
+        val settings = getSettings()
+        if (settings.impresora.isEmpty()) {
+            Log.e(CancelActivity.TAG,
+                "Error settings: ${getString(R.string.printer_not_configured)}")
+
+            printOnSnackBar(getString(R.string.printer_not_configured))
+            return null
+        }else{
+            Log.i(CancelActivity.TAG, "Impresora configurada: ${settings.impresora}")
+        }
+
+        val device = pairedDevices.first { it.name == settings.impresora }
+
+        if (device == null) {
+            Log.e(CancelActivity.TAG, "Error device: ${getString(R.string.printer_not_found)}")
+            printOnSnackBar(getString(R.string.printer_not_found))
+            return null
+        }
+
+        return try {
+            BluetoothConnector(device, false, bluetoothAdapter, null).connect()
+        } catch (e: Exception) {
+            Log.e(CancelActivity.TAG, "Error connecting to printer: ${e.message}")
+            printOnSnackBar(getString(R.string.printer_error))
+            null
+        }
+    }
+    /* version antigua de la impresora
     private fun setupPrinter(): BluetoothConnector.BluetoothSocketWrapper? {
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         val pairedDevices = bluetoothAdapter.bondedDevices
@@ -142,7 +201,9 @@ open class BaseActivity : AppCompatActivity() {
         }
 
         return BluetoothConnector(device, false, bluetoothAdapter, null).connect()
-    }
+    }*/
+
+
 
     protected fun performPrinting(bytes: ByteArray): Boolean {
         try {
@@ -183,7 +244,7 @@ open class BaseActivity : AppCompatActivity() {
             }
         } catch (ex: Exception) {
             Log.e(CancelActivity.TAG,"ley: "+ ex.message)
-           // printOnSnackBar(getString(R.string.printer_error) + ": " + ex.message)
+            printOnSnackBar(getString(R.string.printer_error) + ": " + ex.message)
         }
 
 
@@ -225,39 +286,38 @@ open class BaseActivity : AppCompatActivity() {
         //saveAndShareFile(Base64.decode(documentoPrint, Base64.DEFAULT), numeroDocumento)
     }
 
-     fun performPrintingCotizacion(qrPrint: String): Boolean {
-        if (qrPrint == "") {
-            Log.i(CancelActivity.TAG, "no existe valor en el documento")
-            printOnSnackBar(getString(R.string.payment_no_receipt))
-            return false
-        }
-        try {
+    protected fun performPrintingCotizacion(documentoPrint: String): Boolean {
+         if (documentoPrint == "") {
+             Log.i(CancelActivity.TAG, "no existe valor en el documento")
+             printOnSnackBar(getString(R.string.payment_no_receipt))
+             return false
+         }
+         try {
+             val blueToothWrapper = this.setupPrinter()
+             if (blueToothWrapper != null) {
+                 val documentoPrintByte = Base64.decode(documentoPrint,Base64.DEFAULT)
+                 blueToothWrapper.outputStream.write(documentoPrintByte)
+                 Thread.sleep(1500)
+                 blueToothWrapper.outputStream.close()
+                 blueToothWrapper.inputStream.close()
+                 blueToothWrapper.close()
+                 return true
+             } else {
+                 printOnSnackBar(getString(R.string.printer_error))
+             }
+         } catch (ex: Exception) {
+             Log.e(CancelActivity.TAG,"ley: "+ ex.message)
+             printOnSnackBar(getString(R.string.printer_error) + ": " + ex.message)
+         }
 
-            val blueToothWrapper = this.setupPrinter()
-            if (blueToothWrapper != null) {
-                val qrByte = Base64.decode(qrPrint,Base64.DEFAULT)
-                val qrBitmap = BitmapFactory.decodeByteArray(qrByte,0, qrByte.size)
-                val documentPrint = Extensions().decodeBitmap(qrBitmap)
-
-                blueToothWrapper.outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
-                blueToothWrapper.outputStream.write(documentPrint)
-                Thread.sleep(1500)
-                blueToothWrapper.outputStream.close()
-                blueToothWrapper.inputStream.close()
-                blueToothWrapper.close()
-                return true
-            } else {
-                printOnSnackBar(getString(R.string.printer_error))
-            }
-        } catch (ex: Exception) {
-            Log.e(CancelActivity.TAG, "ley : "+ex.message)
+         return false
 
             //printOnSnackBar(getString(R.string.printer_error) + ": " + ex.message)
-        }
+     }
 
-        return false
+
         //saveAndShareFile(Base64.decode(documentoPrint, Base64.DEFAULT), numeroDocumento)
-    }
+
     protected fun performPrintingCotizacionNormal(cotizacionPrint: CotizacionPrint): Boolean {
         if (cotizacionPrint.cotiCabecera == "") {
             Log.i(CancelActivity.TAG, "no existe valor en el documento: Cabecera de Cotizacion")
