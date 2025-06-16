@@ -333,18 +333,18 @@
                 android:layout_height="65sp"
                 android:backgroundTint="@color/colorPrimary"
 
-                android:text="COTIZACION"
+                android:text="IMPRIMIR\nCOTIZACION"
                 android:textColor="@android:color/white"
                 android:drawableStart="@drawable/ic_cash_white"
                 android:textSize="16sp" />
             <Button
+
                 android:id="@+id/btnSaveCotizacion"
                 android:layout_gravity="fill"
                 android:layout_columnWeight="1"
-                android:layout_height="65sp"
+                android:layout_height="wrap_content"
                 android:backgroundTint="@color/colorPrimary"
-
-                android:text="SAVE-COTI"
+                android:text="GENERAR\nCOTIZACION"
                 android:textColor="@android:color/white"
                 android:drawableStart="@drawable/ic_cash_white"
                 android:textSize="16sp" />

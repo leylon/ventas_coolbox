@@ -969,7 +969,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
     fun findCotizacion(codigo: String) {
         println("findCotizacion: $codigo")
         saleViewModel.findCotizacion(CotizacionRequest(
-            fecha = "20250507",
+            fecha = Formatter.DateToString(Date()),
             docCliente = codigo
         ), ::dataPresuesto, ::onError)
     }

@@ -150,12 +150,19 @@ class EndingActivity : MenuActivity() {
                 //print qr
                 if(performPrintingQr(receiptEntity.qrbase64)) {
                     startActivity(Intent(this, SaleActivity::class.java))
+                }else{
+                    Log.e(TAG, "Error al imprimir QR")
+                    onError("Error al imprimir QR")
                 }
+
+            }else {
+                Log.e(TAG, "Error al imprimir documento")
+                onError("Error al imprimir documento")
             }
         }
     }
     private fun performPrintingOrShare(documentoPrint: String): Boolean {
-        return performPrinting(documentoPrint)
+        return performPrintingCotizacion(documentoPrint)
         //saveAndShareFile(Base64.decode(documentoPrint, Base64.DEFAULT), numeroDocumento)
     }
 
@@ -173,7 +180,7 @@ class EndingActivity : MenuActivity() {
                 if (performPrintingOrShareQR(receiptEntity.cotiBarraNumero)) {
                     if (performPrintingOrShare(receiptEntity.cotiCuerpo)) {
                         if (performPrintingOrShareQR(receiptEntity.cotiBarraCliente)) {
-                            if (performPrinting(receiptEntity.cotiPie)) {
+                            if (performPrintingOrShare(receiptEntity.cotiPie)) {
                                 startActivity(Intent(this, SaleActivity::class.java))
                             }
                         }

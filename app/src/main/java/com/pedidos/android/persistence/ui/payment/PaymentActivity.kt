@@ -93,7 +93,7 @@ class PaymentActivity : MenuActivity() {
 
         numeroDocumento = saleEntity.documento
         tvwTotalVenta.text = Formatter.DoubleToString(saleEntity.total, saleEntity.monedaSimbolo)
-        etwFalabellaImporte.setText(saleEntity.total.toString())
+
         etwMpos.text = Editable.Factory.getInstance().newEditable("")
         editEfectivo = findViewById(R.id.etwEfectivo)
         //etwFpay.text = Editable.Factory.getInstance().newEditable(saleEntity.total.toString())
@@ -181,6 +181,7 @@ class PaymentActivity : MenuActivity() {
     private fun setupVisualizacionTipoPago() {
         val userInfo = getSession()
         if(saleEntity.cotizacion.isNotEmpty()){
+            etwFalabellaImporte.setText(saleEntity.total.toString())
             val rootLayout = findViewById<ViewGroup>(R.id.payment_activity_root)
             toggleButtons(rootLayout, false)
             editEfectivo.isEnabled = false
@@ -189,6 +190,7 @@ class PaymentActivity : MenuActivity() {
             textPagoFalabella.visibility = isVisbleView(userInfo.pagoFalabella)
             linerPagoFalabella.visibility = isVisbleView(userInfo.pagoFalabella)
         }else {
+            etwFalabellaImporte.setText("")
             val rootLayout = findViewById<ViewGroup>(R.id.payment_activity_root)
             toggleButtons(rootLayout, true)
             editEfectivo.isEnabled = true
@@ -429,7 +431,23 @@ class PaymentActivity : MenuActivity() {
                             it.dismiss()
                             startNewSale()
                         })
+                    }else{
+                        Log.e(TAG, "Error al imprimir el pie del recibo")
+                        AlertDialog.Builder(this)
+                                .setTitle(R.string.app_name)
+                                .setMessage("Error al imprimir el pie del recibo")
+                                .setPositiveButton(R.string.aceptar) { d, _ -> d.dismiss() }
+                                .setCancelable(false)
+                                .create().show()
                     }
+                }else {
+                    Log.e(TAG, "Error al imprimir el QR del recibo")
+                    AlertDialog.Builder(this)
+                            .setTitle(R.string.app_name)
+                            .setMessage("Error al imprimir el QR del recibo")
+                            .setPositiveButton(R.string.aceptar) { d, _ -> d.dismiss() }
+                            .setCancelable(false)
+                            .create().show()
                 }
             } else {
                 confirmResultMessage(entity.serviceResultMessage, onOk = {
@@ -437,6 +455,14 @@ class PaymentActivity : MenuActivity() {
                     startNewSale()
                 })
             }
+        }else {
+            Log.e(TAG, "Error al obtener el recibo")
+            AlertDialog.Builder(this)
+                    .setTitle(R.string.app_name)
+                    .setMessage("Error al obtener el recibo")
+                    .setPositiveButton(R.string.aceptar) { d, _ -> d.dismiss() }
+                    .setCancelable(false)
+                    .create().show()
         }
     }
 

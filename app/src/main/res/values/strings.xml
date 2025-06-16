@@ -180,6 +180,7 @@
     <string name="printer_not_found">Impresora configurada no encontrada</string>
     <string name="printer_not_configured">No se configuró la impresora</string>
     <string name="no_devices_paired">No hay dispositivos pareados</string>
+    <string name="bluetooth_permission_required">Tiene que darle permisos de bluetooth a la app</string>
     <string name="btn_regresar">REGRESAR</string>
     <string name="c_digo_del_producto">Código del producto : </string>
     <string name="descripci_n">Descripción : </string>
