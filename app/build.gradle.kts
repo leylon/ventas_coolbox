@@ -65,15 +65,15 @@ android {
         create("root") {
             dimension = "version"
             applicationIdSuffix = ".root"
-            versionCode = 21
-            versionName = "2.0.11"
+            versionCode = 22
+            versionName = "2.0.12"
             buildConfigField(
                 "String",
                 "URL_SERVER",
                 "\"https://wsfacturacion.coolbox.com.pe:9443/SKM/\""
             )
             buildConfigField("String", "URL_PEDIDO_PAGAR_NUEVO", "\"pedidopagarnuevo\"")
-            buildConfigField("String", "VERSION_APP", "\"16/06/2024\"")
+            buildConfigField("String", "VERSION_APP", "\"20/06/2024\"")
         }
 
         create("skm") {

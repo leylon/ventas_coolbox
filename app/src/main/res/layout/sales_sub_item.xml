@@ -19,18 +19,33 @@
             android:orientation="horizontal"
             android:padding="8dp">
 
-            <TextView
-                android:id="@+id/tvwProductName"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="3"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:layout_marginEnd="8dp"
-                android:textColor="@android:color/black"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                tools:text="USB 5000TB" />
+                android:orientation="vertical"
+                android:layout_weight="3">
+                <TextView
+                    android:id="@+id/tvwCodeProducto"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/black"
+                    tools:text="1234234"
+                    />
+                <TextView
+                    android:id="@+id/tvwProductName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:layout_marginEnd="8dp"
+                    android:textColor="@android:color/black"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    tools:text="USB 5000TB" />
+            </LinearLayout>
+
 
 
             <ImageButton

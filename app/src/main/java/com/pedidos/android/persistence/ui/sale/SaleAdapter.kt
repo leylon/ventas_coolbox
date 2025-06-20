@@ -35,6 +35,7 @@ class SaleAdapter(var items: MutableList<SaleSubItem>, val onItemDelete: (SaleSu
         } else {
             holder.ivbDelete.visibility = View.GONE
         }
+        holder.tvwCodeProducto.text = subItem.codigoProducto
         holder.tvwProductName.text = subItem.descripcion
         holder.tvwProductPrice.text = Formatter.DoubleToString(subItem.precio, subItem.monedaSimbolo)
         holder.tvwProductCuantity.text = subItem.cantidad.toString()
@@ -101,6 +102,8 @@ class SaleAdapter(var items: MutableList<SaleSubItem>, val onItemDelete: (SaleSu
 
     inner class SaleHolder(view: View) : RecyclerView.ViewHolder(view) {
         internal val tvwProductName: TextView = itemView.findViewById(R.id.tvwProductName)
+        internal val tvwCodeProducto: TextView =
+            itemView.findViewById(R.id.tvwCodeProducto)
         internal val tvwProductDiscount: TextView = itemView.findViewById(R.id.tvwProductDiscount)
         internal val tvwProductTotalPrice: TextView =
             itemView.findViewById(R.id.tvwProductTotalPrice)

@@ -699,7 +699,18 @@
                     android:textColor="@color/white"
                     android:textSize="18sp"
                     android:visibility="visible"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:layout_marginBottom="5dp"/>
+                <TextView
+                    android:id="@+id/etwPagoFalabellaCotizacion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:textColor="@color/colorDark"
+                    android:layout_marginStart="5dp"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    tools:text="Cotizacion: 2213-1231"/>
                 <EditText
                     android:id="@+id/etwPagoFalabellaTienda"
                     android:layout_width="match_parent"
@@ -721,6 +732,8 @@
                     android:inputType="text"
                     android:maxLength="4"
                     android:hint="Pago Falabella Transaccion"/>
+
+
                 <LinearLayout
                     android:id="@+id/linerPagoFalabella"
                     android:layout_width="match_parent"

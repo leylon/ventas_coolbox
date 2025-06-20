@@ -184,11 +184,13 @@ class PaymentActivity : MenuActivity() {
             etwFalabellaImporte.setText(saleEntity.total.toString())
             val rootLayout = findViewById<ViewGroup>(R.id.payment_activity_root)
             toggleButtons(rootLayout, false)
+            etwPagoFalabellaCotizacion.text = "Cotización: ${saleEntity.cotizacion}"
             editEfectivo.isEnabled = false
             editEfectivo.isFocusable = false
             etwInputEfectivo.isEnabled = false
             textPagoFalabella.visibility = isVisbleView(userInfo.pagoFalabella)
             linerPagoFalabella.visibility = isVisbleView(userInfo.pagoFalabella)
+            etwPagoFalabellaCotizacion.visibility = isVisbleView(userInfo.pagoFalabella)
         }else {
             etwFalabellaImporte.setText("")
             val rootLayout = findViewById<ViewGroup>(R.id.payment_activity_root)
@@ -201,7 +203,7 @@ class PaymentActivity : MenuActivity() {
             etwPagoFalabellaTienda.visibility = isVisbleView(false)
             etwPagoFalabellaCaja.visibility = isVisbleView(false)
             etwPagoFalabellaTransaccion.visibility = isVisbleView(false)
-
+            etwPagoFalabellaCotizacion.visibility = isVisbleView(false)
         }
         linerEfectivo.visibility = isVisbleView(userInfo.efectivo)
         linerCobranzaEfectivo.visibility = isVisbleView(userInfo.efectivo)
