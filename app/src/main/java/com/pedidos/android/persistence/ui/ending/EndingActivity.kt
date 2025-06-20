@@ -64,7 +64,7 @@ class EndingActivity : MenuActivity() {
 
                 Log.d(TAG, "Cotizacion guardada correctamente")
                 onError(it.message.toString())
-                obtenerCotizacion()
+                obtenerCotizacion("")
             } else {
                 Log.e(TAG, "")
                 onError(it?.message.toString())
@@ -74,7 +74,7 @@ class EndingActivity : MenuActivity() {
         btnCobrar.setOnClickListener { cobrarPedido() }
         btnEliminar.setOnClickListener { eliminarPedido() }
         btnImprimir.setOnClickListener { obtenerPedido() }
-        btnCotizacion.setOnClickListener { obtenerCotizacion() }
+        btnCotizacion.setOnClickListener { obtenerCotizacion("1") }
         btnSaveCotizacion.setOnClickListener { savePedido() }
         btnRegresar.setOnClickListener { onBackPressed() }
         btnVisa.setOnClickListener { cobrarPedido() }
@@ -97,14 +97,15 @@ class EndingActivity : MenuActivity() {
     }
     private fun savePedido() {
         viewModel.saveCotizacion(CotizacionPrintRequest(tipo = "PED",
-            documento = viewModel.saleLiveData.value!!.documento))
+            documento = viewModel.saleLiveData.value!!.documento,""))
         //PDF
         //viewModel.getSaleReceiptPDF(viewModel.saleLiveData.value!!.documento)
     }
-    private fun obtenerCotizacion(){
+    private fun obtenerCotizacion(numero : String){
 
         viewModel.getSaleReceiptPrintCotizacion(CotizacionPrintRequest(tipo = "PED",
-            documento = viewModel.saleLiveData.value!!.documento))
+            documento = viewModel.saleLiveData.value!!.documento,
+            numero = numero))
     }
 
     private fun cobrarPedido() {
