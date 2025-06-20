@@ -303,29 +303,6 @@
                 android:textColor="@android:color/white"
                 android:drawableStart="@drawable/ic_delete_white_100"
                 android:textSize="16sp" />
-
-            <Button
-                android:id="@+id/btnImprimir"
-                android:layout_gravity="fill"
-                android:layout_columnWeight="1"
-                android:layout_height="65sp"
-                android:backgroundTint="@color/colorPrimary"
-                android:text="IMPRIMIR"
-                android:textColor="@android:color/white"
-                android:drawableStart="@drawable/ic_print_white_100"
-                android:textSize="16sp" />
-
-            <Button
-                android:id="@+id/btnCobrar"
-
-                android:layout_gravity="fill"
-                android:layout_columnWeight="1"
-                android:layout_height="65sp"
-                android:backgroundTint="@color/colorPrimary"
-                android:text="COBRAR"
-                android:textColor="@android:color/white"
-                android:drawableStart="@drawable/ic_cash_white"
-                android:textSize="16sp" />
             <Button
                 android:id="@+id/btnCotizacion"
                 android:layout_gravity="fill"
@@ -348,6 +325,29 @@
                 android:textColor="@android:color/white"
                 android:drawableStart="@drawable/ic_cash_white"
                 android:textSize="16sp" />
+            <Button
+                android:id="@+id/btnImprimir"
+                android:layout_gravity="fill"
+                android:layout_columnWeight="1"
+                android:layout_height="65sp"
+                android:backgroundTint="@color/colorPrimary"
+                android:text="IMPRIMIR"
+                android:textColor="@android:color/white"
+                android:drawableStart="@drawable/ic_print_white_100"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/btnCobrar"
+
+                android:layout_gravity="fill"
+                android:layout_columnWeight="1"
+                android:layout_height="65sp"
+                android:backgroundTint="@color/colorPrimary"
+                android:text="COBRAR"
+                android:textColor="@android:color/white"
+                android:drawableStart="@drawable/ic_cash_white"
+                android:textSize="16sp" />
+
 
         </GridLayout>
         <ImageView

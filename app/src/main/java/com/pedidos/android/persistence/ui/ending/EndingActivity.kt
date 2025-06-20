@@ -63,11 +63,11 @@ class EndingActivity : MenuActivity() {
             if (it != null && it.success) {
 
                 Log.d(TAG, "Cotizacion guardada correctamente")
-                onError("Cotizacion guardada correctamente")
-                //obtenerCotizacion()
+                onError(it.message.toString())
+                obtenerCotizacion()
             } else {
                 Log.e(TAG, "")
-                onError("Error al guardar la cotizacion")
+                onError(it?.message.toString())
             }
         })
         viewModel.saleLiveData.postValue(saleEntity)
