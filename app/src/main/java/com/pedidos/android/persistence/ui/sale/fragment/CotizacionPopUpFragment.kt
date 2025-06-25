@@ -12,6 +12,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
+import com.google.gson.Gson
 import com.google.zxing.integration.android.IntentIntegrator
 import com.pedidos.android.persistence.R
 import com.pedidos.android.persistence.model.cotizacion.CotizacionCab
@@ -44,6 +45,8 @@ class CotizacionPopUpFragment : DialogFragment,OnClickListenerCustom<CotizacionC
         optionQuestion = arguments?.getString("OptionQuestion").toString()
         if (optionQuestion.equals("search")){
             listCotizacionCab = arguments?.get("DataList") as List<CotizacionCab>
+            println("listCotizacionCab: ${listCotizacionCab.size}")
+            println("listaCotizacion: ${Gson().toJson(listCotizacionCab)}")
         }
         recyclerViewTickets = view.findViewById(R.id.recyclerViewTickets)
         imageButtonSearch  = view.findViewById(R.id.imageButtonSearch)
@@ -71,12 +74,14 @@ class CotizacionPopUpFragment : DialogFragment,OnClickListenerCustom<CotizacionC
     }
     override fun onStart() {
         super.onStart()
-        dialog?.window?.let { window ->
-            // Establecer el ancho a MATCH_PARENT
-            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            // Centrar el diálogo verticalmente
-            window.setGravity(Gravity.CENTER)
+        val displayMetrics = resources.displayMetrics
+        val screenHeight = displayMetrics.heightPixels
+        // Por ejemplo, que el diálogo ocupe el 80% de la altura de la pantalla
+        val dialogHeight = (screenHeight * 0.8).toInt()
 
+        dialog?.window?.let { window ->
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, dialogHeight)
+            window.setGravity(Gravity.CENTER)
         }
     }
 

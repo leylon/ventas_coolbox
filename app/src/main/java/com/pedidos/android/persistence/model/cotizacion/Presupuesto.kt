@@ -5,5 +5,5 @@ import java.io.Serializable
 data class Presupuesto(
     val success: Boolean,
     val message: String,
-    val presupuestos: List<CotizacionCab>?
+    val presupuestos: MutableList<CotizacionCab>?
 ): Serializable

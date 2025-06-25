@@ -744,6 +744,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         newSaleEntity.clienteTipoDocumento = Defaults.Cliente.identityDocumentType
         newSaleEntity.email = Defaults.Cliente.email
         newSaleEntity.telefono = Defaults.Cliente.phone
+        newSaleEntity.papelSize = getSettings().pageSize
         saleViewModel.saleLiveData.postValue(newSaleEntity)
     }
 
@@ -756,6 +757,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         saleEntity.cajaCodigo = userInfo.cajacodigo
         saleEntity.tienda = userInfo.tienda
         saleEntity.androidimei = userInfo.imei
+        saleEntity.papelSize = getSettings().pageSize
        // saleEntity.email = userInfo.email
         return saleEntity
     }
@@ -1012,8 +1014,9 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
 
     fun dataPresuesto(data: Presupuesto) {
         println("dataPresuesto: ${Gson().toJson(data.presupuestos)}")
-        val listaCotizacion: List<CotizacionCab>? = data.presupuestos
-
+        val listaCotizacion: MutableList<CotizacionCab>? = data.presupuestos
+        println("size dataPresupuesto: ${Gson().toJson(data.presupuestos?.size)}")
+        println("listaCotizacion: ${Gson().toJson(listaCotizacion)}")
         showCotizacionConfirm("search", data.presupuestos)
     }
 

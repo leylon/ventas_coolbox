@@ -52,6 +52,8 @@ class SaleEntity() : Sale {
     override var androidimei: String = ""
     override var tipodocumentogenera: String = ""
     override var cotizacion: String = ""
+    @SerializedName("tamaño_papel")
+    override var papelSize: String = ""
     @Ignore
     var productos: MutableList<SaleSubItem> = mutableListOf()
 
@@ -87,6 +89,7 @@ class SaleEntity() : Sale {
         androidimei = parcel.readString().toString()
         tipodocumentogenera = parcel.readString().toString()
         cotizacion = parcel.readString().toString()
+        papelSize = parcel.readString().toString()
     }
 
     constructor(sale: Sale) : this() {
@@ -118,6 +121,7 @@ class SaleEntity() : Sale {
         androidimei = sale.androidimei
         tipodocumentogenera = sale.tipodocumentogenera
         cotizacion = sale.cotizacion
+        papelSize = sale.papelSize
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -149,6 +153,7 @@ class SaleEntity() : Sale {
         parcel.writeString(androidimei)
         parcel.writeString(tipodocumentogenera)
         parcel.writeString(cotizacion)
+        parcel.writeString(papelSize)
     }
 
     override fun describeContents(): Int {

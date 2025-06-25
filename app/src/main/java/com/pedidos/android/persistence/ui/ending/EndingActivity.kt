@@ -13,6 +13,7 @@ import com.pedidos.android.persistence.R
 import com.pedidos.android.persistence.db.entity.ReceiptEntity
 import com.pedidos.android.persistence.db.entity.SaleEntity
 import com.pedidos.android.persistence.db.entity.SaleSubItemEntity
+import com.pedidos.android.persistence.model.LoginResponse
 import com.pedidos.android.persistence.model.cotizacion.CotizacionPrint
 import com.pedidos.android.persistence.model.cotizacion.CotizacionPrintRequest
 import com.pedidos.android.persistence.ui.menu.MenuActivity
@@ -32,7 +33,6 @@ import kotlinx.android.synthetic.main.sales_activity.imbwAddProductoWithCamera
 
 class EndingActivity : MenuActivity() {
     private lateinit var viewModel: EndingViewModel
-
     companion object {
         val TAG = EndingActivity::class.java.simpleName!!
         const val EXTRA_ENTITY = "ui.ending.EndingActivity.SaleEntity"
@@ -43,6 +43,7 @@ class EndingActivity : MenuActivity() {
         setContentViewWithMenu(R.layout.ending_activity)
         setSupportActionBarMenu(toolbar)
         checkSession()
+
         val saleEntity = intent.getParcelableExtra(EXTRA_ENTITY) as SaleEntity?
         lateinit var factory : EndingViewModel.Companion.Factory
         try {
@@ -70,6 +71,7 @@ class EndingActivity : MenuActivity() {
                 onError(it?.message.toString())
             }
         })
+
         viewModel.saleLiveData.postValue(saleEntity)
         btnCobrar.setOnClickListener { cobrarPedido() }
         btnEliminar.setOnClickListener { eliminarPedido() }
@@ -97,7 +99,7 @@ class EndingActivity : MenuActivity() {
     }
     private fun savePedido() {
         viewModel.saveCotizacion(CotizacionPrintRequest(tipo = "PED",
-            documento = viewModel.saleLiveData.value!!.documento,""))
+            documento = viewModel.saleLiveData.value!!.documento,"",""))
         //PDF
         //viewModel.getSaleReceiptPDF(viewModel.saleLiveData.value!!.documento)
     }
@@ -105,7 +107,8 @@ class EndingActivity : MenuActivity() {
 
         viewModel.getSaleReceiptPrintCotizacion(CotizacionPrintRequest(tipo = "PED",
             documento = viewModel.saleLiveData.value!!.documento,
-            numero = numero))
+            numero = numero,
+            papelSize = getSettings().pageSize))
     }
 
     private fun cobrarPedido() {

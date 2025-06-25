@@ -11,6 +11,13 @@ runtimeVersion = "1.1.1"
 rxbinding = "1.0.0"
 support = "27.1.1"
 zxing = "3.6.0"
+junit = "4.13.2"
+junitVersion = "1.2.1"
+mockk = "1.13.17"
+mockwebserver = "4.11.0"
+turbine = "0.7.0"
+truth = "1.1.3"
+coroutines = "1.9.0"
 
 [libraries]
 compiler = { module = "android.arch.lifecycle:compiler", version.ref = "runtime" }
@@ -29,6 +36,15 @@ room-compiler = { module = "android.arch.persistence.room:compiler", version.ref
 room-runtime = { module = "android.arch.persistence.room:runtime", version.ref = "runtimeVersion" }
 rules = { module = "com.android.support.test:rules", version.ref = "runner" }
 runner = { module = "com.android.support.test:runner", version.ref = "runner" }
+
+#Testing
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "mockwebserver" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
+
 runtime = { module = "android.arch.lifecycle:runtime", version.ref = "runtime" }
 rxbinding = { module = "com.jakewharton.rxbinding:rxbinding", version.ref = "rxbinding" }
 support-annotations = { module = "com.android.support:support-annotations", version.ref = "support" }

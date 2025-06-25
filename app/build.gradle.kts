@@ -65,8 +65,8 @@ android {
         create("root") {
             dimension = "version"
             applicationIdSuffix = ".root"
-            versionCode = 22
-            versionName = "2.0.12"
+            versionCode = 25
+            versionName = "2.0.15"
             buildConfigField(
                 "String",
                 "URL_SERVER",
@@ -79,8 +79,8 @@ android {
         create("skm") {
             dimension = "version"
             applicationIdSuffix = ".skm"
-            versionCode = 140
-            versionName = "2.1.4-test"
+            versionCode = 143
+            versionName = "2.1.7-test"
             buildConfigField(
                 "String",
                 "URL_SERVER",
@@ -123,6 +123,15 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.logging.interceptor)
+
+    //Test dependencies
+    testImplementation(libs.junit)
+    testImplementation(libs.truth)
+    testImplementation(libs.mockk)
+    testImplementation(libs.mockwebserver)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
+
 
     // Android Testing Support Library's runner and rules
     androidTestImplementation(libs.runner)
