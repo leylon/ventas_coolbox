@@ -154,6 +154,8 @@
     <string name="generate_operations_report">Generar Reporte</string>
     <string name="tvw_impresora">Impresora:</string>
     <string name="hint_impresora">Mi Impresora...</string>
+    <string name="hint_size_impresora">Tamaño Papel...</string>
+    <string name="tvw_size_impresora">Tamaño Papel Impresora:</string>
     <string name="propt_imei_title2">IMEI 2</string>
     <string name="imei_scan_alert2">Escanear el IMEI 2</string>
     <string name="vuelo">VUELO</string>
@@ -212,5 +214,11 @@
     <string-array name="array_modo_transport">
         <item>PUBLICO</item>
         <item>PRIVADO</item>
+    </string-array>
+    <string-array name="paper_sizes">
+        <item>80mm</item>
+        <item>58mm</item>
+        <item>50.8mm</item>
+        <item>48mm</item>
     </string-array>
 </resources>

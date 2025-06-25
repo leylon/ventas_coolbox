@@ -58,7 +58,7 @@ class Formatter {
             return try {
                 var fechaOriginal = "${fechaOriginal}Z"
                 val formatoEntrada  = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
-                formatoEntrada .timeZone = TimeZone.getTimeZone("UTC")
+                //formatoEntrada.timeZone = TimeZone.getTimeZone("UTC")
                 val formatoSalida = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
                 // Parsear la fecha original y formatearla al nuevo formato
