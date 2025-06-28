@@ -65,8 +65,8 @@ android {
         create("root") {
             dimension = "version"
             applicationIdSuffix = ".root"
-            versionCode = 25
-            versionName = "2.0.15"
+            versionCode = 29
+            versionName = "2.0.19"
             buildConfigField(
                 "String",
                 "URL_SERVER",
@@ -79,8 +79,8 @@ android {
         create("skm") {
             dimension = "version"
             applicationIdSuffix = ".skm"
-            versionCode = 143
-            versionName = "2.1.7-test"
+            versionCode = 145
+            versionName = "2.1.9-test"
             buildConfigField(
                 "String",
                 "URL_SERVER",

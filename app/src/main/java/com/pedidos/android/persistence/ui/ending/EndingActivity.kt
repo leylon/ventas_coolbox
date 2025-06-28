@@ -71,7 +71,13 @@ class EndingActivity : MenuActivity() {
                 onError(it?.message.toString())
             }
         })
-
+        if (getSession().pagoFalabella) {
+            btnSaveCotizacion.visibility = View.VISIBLE
+            btnCotizacion.visibility = View.VISIBLE
+        } else {
+            btnSaveCotizacion.visibility = View.GONE
+            btnCotizacion.visibility = View.GONE
+        }
         viewModel.saleLiveData.postValue(saleEntity)
         btnCobrar.setOnClickListener { cobrarPedido() }
         btnEliminar.setOnClickListener { eliminarPedido() }
@@ -165,8 +171,8 @@ class EndingActivity : MenuActivity() {
             }
         }
     }
-    private fun performPrintingOrShare(documentoPrint: String): Boolean {
-        return performPrintingCotizacion(documentoPrint)
+    private fun performPrintingOrShare(documentoPrint: String,tipo: Int): Boolean {
+        return performPrintingCotizacion(documentoPrint,tipo)
         //saveAndShareFile(Base64.decode(documentoPrint, Base64.DEFAULT), numeroDocumento)
     }
 
@@ -180,20 +186,21 @@ class EndingActivity : MenuActivity() {
             //saveAndShareFile(receiptEntity.pdfBytes, numeroDocumento)
 
             //Normal
-            if (performPrintingOrShare(receiptEntity.cotiCabecera)) {
+            /*if (performPrintingOrShare(receiptEntity.cotiCabecera, 1)) {
                 if (performPrintingOrShareQR(receiptEntity.cotiBarraNumero)) {
-                    if (performPrintingOrShare(receiptEntity.cotiCuerpo)) {
+                    if (performPrintingOrShare(receiptEntity.cotiCuerpo,1)) {
                         if (performPrintingOrShareQR(receiptEntity.cotiBarraCliente)) {
-                            if (performPrintingOrShare(receiptEntity.cotiPie)) {
+                            if (performPrintingOrShare(receiptEntity.cotiPie,0)) {
                                 startActivity(Intent(this, SaleActivity::class.java))
                             }
                         }
                     }
                 }
-            }
-            /*if (performPrintingCotizacionNormal(receiptEntity)){
-                startActivity(Intent(this, SaleActivity::class.java))
             }*/
+            if (performPrintingCotizacionNormal(receiptEntity)){
+
+                startActivity(Intent(this, SaleActivity::class.java))
+            }
         }
     }
     private fun onError(message: String) {

@@ -218,7 +218,6 @@
     <string-array name="paper_sizes">
         <item>80mm</item>
         <item>58mm</item>
-        <item>50.8mm</item>
         <item>48mm</item>
     </string-array>
 </resources>

@@ -55,4 +55,5 @@ class PaymentEntity(
     override var pagofalabellaCaja : String = ""
     override var pagofalabellaTransaccion : String = ""
     override var pagofalabellaImporte : Double = 0.0
+    override var pagofalabellaTicket: String = ""
 }

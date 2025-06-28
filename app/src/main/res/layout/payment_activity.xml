@@ -712,6 +712,12 @@
                     android:textSize="16sp"
                     tools:text="Cotizacion: 2213-1231"/>
                 <EditText
+                    android:id="@+id/etwPagoFalabellaTicket"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:hint="Ticket Falabella"/>
+                <EditText
                     android:id="@+id/etwPagoFalabellaTienda"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

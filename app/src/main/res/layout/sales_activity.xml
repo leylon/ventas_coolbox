@@ -83,6 +83,7 @@
                             android:minWidth="0dp"
                             android:minHeight="0dp"
                             android:paddingStart="8dp"
+                            android:visibility="gone"
                             android:layout_marginStart="8dp"
                             android:paddingTop="4dp"
                             android:paddingEnd="8dp"
@@ -175,6 +176,8 @@
                         android:inputType="text"
                         android:maxLines="1"
                         android:hint="@string/sale_add_product_button"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
                         android:text=""/>
 
                     <android.support.v7.widget.AppCompatImageButton

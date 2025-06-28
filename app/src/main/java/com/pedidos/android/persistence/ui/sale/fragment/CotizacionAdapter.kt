@@ -31,6 +31,7 @@ class CotizacionAdapter: RecyclerView.Adapter<CotizacionAdapter.CotizacionViewHo
         holder.tvNumeroTicket.text = "${dataStorage.serie}-${dataStorage.numero}"
         holder.tvFecha.text  = Formatter.convertirFecha(dataStorage.fecha)
         holder.tvImporte.text = "${String.format("%.2f",dataStorage.totalNeto)}"
+        holder.tvEstado.text = dataStorage.estado ?: "N/A"
         holder.itemView.setOnClickListener {
             if (clickListener != null) {
                 clickListener!!.onClickDataListener(dataStorage)
@@ -48,5 +49,6 @@ class CotizacionAdapter: RecyclerView.Adapter<CotizacionAdapter.CotizacionViewHo
         val tvNumeroTicket : TextView = itemView.findViewById(R.id.tvNumeroTicket)
         val tvFecha: TextView = itemView.findViewById(R.id.tvFecha)
         val tvImporte: TextView = itemView.findViewById(R.id.tvImporte)
+        val tvEstado: TextView = itemView.findViewById(R.id.tvEstado)
     }
 }

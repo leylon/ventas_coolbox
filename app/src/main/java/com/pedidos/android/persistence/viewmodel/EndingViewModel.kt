@@ -138,6 +138,7 @@ class EndingViewModel(private val repository: CoolboxApi) : ViewModel() {
         showProgress.postValue(true)
         repository.imprimirCotizacion(cotizacionRequest).enqueue(object : Callback<CotizacionPrint> {
             override fun onFailure(call: Call<CotizacionPrint>, t: Throwable) {
+                showProgress.postValue(false)
                 Log.e(TAG, t.message.toString())
             }
 
@@ -162,6 +163,7 @@ class EndingViewModel(private val repository: CoolboxApi) : ViewModel() {
         showProgress.postValue(true)
         repository.crearCotizacion(cotizacionRequest).enqueue(object : Callback<CotizacionPrint> {
             override fun onFailure(call: Call<CotizacionPrint>, t: Throwable) {
+                showProgress.postValue(false)
                 Log.e(TAG, t.message.toString())
             }
 

@@ -30,7 +30,7 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(R.layout.settings_activity)
         setSupportActionBar(toolbar)
         val spinner: Spinner = findViewById(R.id.spnSizeImpresora)
-        val sizes = arrayOf("80mm", "58mm", "50.8mm","48mm")
+        val sizes = arrayOf("80mm", "58mm", "48mm")
         val adapter = ArrayAdapter(
             this, // Contexto
             android.R.layout.simple_spinner_item, // Layout por defecto

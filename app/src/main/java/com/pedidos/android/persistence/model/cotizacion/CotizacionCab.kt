@@ -18,5 +18,6 @@ data class CotizacionCab(
     val nombreCliente: String,
     @SerializedName("totalneto")
     val totalNeto: Double,
-    val detalles: List<CotizacionDet>
+    val detalles: List<CotizacionDet>,
+    val estado: String?
 ): Serializable

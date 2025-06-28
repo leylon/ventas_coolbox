@@ -309,7 +309,7 @@
                 android:layout_columnWeight="1"
                 android:layout_height="65sp"
                 android:backgroundTint="@color/colorPrimary"
-
+                android:visibility="gone"
                 android:text="IMPRIMIR\nCOTIZACION"
                 android:textColor="@android:color/white"
                 android:drawableStart="@drawable/ic_cash_white"
@@ -322,6 +322,7 @@
                 android:layout_height="wrap_content"
                 android:backgroundTint="@color/colorPrimary"
                 android:text="GENERAR\nCOTIZACION"
+                android:visibility="gone"
                 android:textColor="@android:color/white"
                 android:drawableStart="@drawable/ic_cash_white"
                 android:textSize="16sp" />

@@ -1,14 +1,19 @@
 package com.pedidos.android.persistence.ui.payment
 
+import android.Manifest
 import android.app.Activity
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.design.widget.TextInputEditText
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.text.Editable
 import android.text.TextUtils
@@ -34,6 +39,8 @@ import com.pedidos.android.persistence.ui.BasicApp
 import com.pedidos.android.persistence.ui.ClientPopUpFragment
 import com.pedidos.android.persistence.ui.menu.MenuActivity
 import com.pedidos.android.persistence.ui.sale.SaleActivity
+import com.pedidos.android.persistence.ui.sale.SaleActivity.Companion
+import com.pedidos.android.persistence.ui.search.SearchProductActivity
 import com.pedidos.android.persistence.utils.Defaults
 import com.pedidos.android.persistence.utils.Formatter
 import com.pedidos.android.persistence.viewmodel.EndingViewModel
@@ -175,12 +182,18 @@ class PaymentActivity : MenuActivity() {
                 finalizarPedido(createPaymentEntity())
             }
         }
+        etwPagoFalabellaTicket.requestFocus()
+        btnFalabella.setOnClickListener {
+            productSearch()
+        }
         setupVisualizacionTipoPago()
     }
 
     private fun setupVisualizacionTipoPago() {
         val userInfo = getSession()
         if(saleEntity.cotizacion.isNotEmpty()){
+            etwPagoFalabellaTicket.visibility = isVisbleView(userInfo.pagoFalabella)
+            etwPagoFalabellaTicket.requestFocus()
             etwFalabellaImporte.setText(saleEntity.total.toString())
             val rootLayout = findViewById<ViewGroup>(R.id.payment_activity_root)
             toggleButtons(rootLayout, false)
@@ -258,6 +271,11 @@ class PaymentActivity : MenuActivity() {
 
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        println("result_bar: "+data?.dataString)
+        println("resultCode: "+resultCode)
+        println("requestCode: "+requestCode)
+        println("result_bar_code: "+data?.getParcelableExtra(SearchProductActivity.PRODUCT_KEY))
+
         if (requestCode == 100) {
             if (resultCode == Activity.RESULT_CANCELED) {
                 finish()
@@ -270,6 +288,29 @@ class PaymentActivity : MenuActivity() {
             }
         } else if (requestCode == 113){
             validarPagoVale(resultCode.toString())
+        }else if (requestCode == 114) {
+            if (data != null) {
+                val result = IntentIntegrator.parseActivityResult(IntentIntegrator.REQUEST_CODE, resultCode, data)
+                if (result != null) {
+                    if (result.contents == null) {
+
+                        AlertDialog.Builder(this, R.style.AppTheme_DIALOG)
+                            .setTitle(R.string.app_name)
+                            .setMessage("Lectura cancelada")
+                            .setPositiveButton(R.string.aceptar) { d, _ -> d.dismiss() }
+                            .setCancelable(false)
+                            .create().show()
+                    } else {
+                        etwPagoFalabellaTicket.setText(result.contents)
+
+
+                    }
+                } else {
+                    Log.d(SaleActivity.TAG, "result returned null")
+                }
+            } else {
+                Log.d(SaleActivity.TAG, "data returned null")
+            }
         }
 
         if (::manager.isInitialized)
@@ -291,6 +332,7 @@ class PaymentActivity : MenuActivity() {
                 .setCancelable(false)
                 .create().show()
     }
+
 
     private fun validarPagoVale(codigo: String){
         etwOtherVale.setText("")
@@ -346,6 +388,7 @@ class PaymentActivity : MenuActivity() {
         paymentEntity.pagofalabellaImporte = if (TextUtils.isEmpty(etwFalabellaImporte.text.toString())) 0.0 else etwFalabellaImporte.text.toString().toDouble()
         paymentEntity.pagofalabellaCaja = etwPagoFalabellaCaja.text.toString()
         paymentEntity.pagofalabellaTransaccion = etwPagoFalabellaTransaccion.text.toString()
+        paymentEntity.pagofalabellaTicket = etwPagoFalabellaTicket.text.toString()
         return paymentEntity
     }
 
@@ -847,6 +890,35 @@ class PaymentActivity : MenuActivity() {
 
         val rootLayout = findViewById<ViewGroup>(R.id.payment_activity_root)
         toggleButtons(rootLayout, true) // Habilita botones
+    }
+
+    private fun productSearch() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+                showMessageForCamPermission()
+            } else {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), SearchProductActivity.CAMERA_REQUEST_ID)
+            }
+        } else {
+            val integrator = IntentIntegrator(this)
+            integrator.setDesiredBarcodeFormats(IntentIntegrator.ALL_CODE_TYPES)
+            integrator.setPrompt("Escanear producto")
+            integrator.setOrientationLocked(false)
+            integrator.setBeepEnabled(true)
+            integrator.setBarcodeImageEnabled(true)
+            integrator.setRequestCode(114)
+            integrator.initiateScan()
+        }
+    }
+    private fun showMessageForCamPermission(messageType: Boolean = false) {
+        AlertDialog.Builder(this, R.style.AppTheme_DIALOG)
+            .setTitle(R.string.app_name)
+            .setMessage(if (messageType) R.string.cam_permission_request_message_dont_show else R.string.cam_permission_request_message)
+            .setPositiveButton(R.string.ok) { _, _ ->
+                if (!messageType)
+                    ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), SearchProductActivity.CAMERA_REQUEST_ID)
+            }.show()
     }
 
 

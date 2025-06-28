@@ -70,7 +70,7 @@
         android:text="@string/cotizacion_numero_ticket"
         android:textStyle="bold"
         android:textColor="@android:color/black"
-        android:padding="8dp"
+        android:padding="4dp"
         app:layout_constraintEnd_toStartOf="@+id/guideline_fecha"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextCliente" />
@@ -82,25 +82,36 @@
         android:text="@string/cotizacion_fecha"
         android:textStyle="bold"
         android:textColor="@android:color/black"
-        android:padding="8dp"
+        android:padding="4dp"
         android:gravity="center"
         app:layout_constraintEnd_toStartOf="@+id/guideline_importe"
         app:layout_constraintStart_toEndOf="@+id/guideline_fecha"
         app:layout_constraintTop_toTopOf="@+id/textViewNumeroTicketHeader" />
 
-    <TextView
-        android:id="@+id/textViewImporteHeader"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/cotizacion_importe_s"
-        android:textStyle="bold"
-        android:textColor="@android:color/black"
-        android:padding="8dp"
-        android:gravity="end"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/guideline_importe"
-        app:layout_constraintTop_toTopOf="@+id/textViewNumeroTicketHeader" />
-
+  <TextView
+      android:id="@+id/textViewImporteHeader"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:text="@string/cotizacion_importe_s"
+      android:textStyle="bold"
+      android:textColor="@android:color/black"
+      android:padding="4dp"
+      android:gravity="end"
+      app:layout_constraintEnd_toStartOf="@+id/textViewEstadoHeader"
+      app:layout_constraintStart_toEndOf="@+id/guideline_importe"
+      app:layout_constraintTop_toTopOf="@+id/textViewNumeroTicketHeader" />
+  <TextView
+      android:id="@+id/textViewEstadoHeader"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:text="ESTADO"
+      android:textStyle="bold"
+      android:textColor="@android:color/black"
+      android:padding="4dp"
+      android:gravity="end"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toEndOf="@+id/textViewImporteHeader"
+      app:layout_constraintTop_toTopOf="@+id/textViewNumeroTicketHeader" />
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recyclerViewTickets"
         android:layout_width="0dp"
@@ -116,7 +127,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.4" />
+        app:layout_constraintGuide_percent="0.3" />
 
     <android.support.constraint.Guideline
         android:id="@+id/guideline_importe"
@@ -124,6 +135,6 @@
         android:layout_height="wrap_content"
 
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.7" />
+        app:layout_constraintGuide_percent="0.6" />
 
 </android.support.constraint.ConstraintLayout>

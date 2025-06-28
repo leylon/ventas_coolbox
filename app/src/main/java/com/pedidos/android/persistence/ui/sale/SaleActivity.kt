@@ -82,7 +82,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         super.onCreate(savedInstanceState)
         setContentViewWithMenu(R.layout.sales_activity)
         setSupportActionBarMenu(toolbar)
-
+        println("onCreate")
         checkSession()
 
         rvwProducts.layoutManager = LinearLayoutManager(this)
@@ -105,6 +105,11 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
             productSearch() }
         imbwAddProductManualOnly.setOnClickListener { productManualSearch() }
         btnSelectClient.setOnClickListener { showClientPopUp() }
+        if (getSession().pagoFalabella){
+            btnSelectCotization.visibility = View.VISIBLE
+        }else {
+            btnSelectCotization.visibility = View.GONE
+        }
         btnSelectCotization.setOnClickListener {
             listSaleSubItem = mutableListOf()
             initSale()
@@ -119,7 +124,10 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         searchViewModel.errorResults.observe(this, Observer { showError(it) })
 
         subscribeToModel(saleViewModel)
+        //etwAddProduct.focusable = View.FOCUSABLE
 
+        etwAddProduct.isFocusable = true
+        etwAddProduct.requestFocus()
         RxTextView.textChanges(etwAddProduct)
                 .filter { it.length > 2 }
                 .debounce(600, TimeUnit.MILLISECONDS)
@@ -147,6 +155,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
     override fun onStart() {
         super.onStart()
         println("onStart")
+        etwAddProduct.requestFocus()
         //btnProcess.isEnabled = true
     }
 
@@ -260,6 +269,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         println("result_bar: "+data?.dataString)
         when (requestCode) {
             SEARCH_REQUEST -> {
+                println("SEARCH_REQUEST: "+data?.dataString)
                 if (Activity.RESULT_OK == resultCode) {
                     val productEntity: ProductEntity? = data?.getParcelableExtra(SearchProductActivity.PRODUCT_KEY)
                     if(productEntity != null) addItem(productEntity)
@@ -267,6 +277,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
             }
 
             GARANTIE_REQUEST -> {
+                println("GARANTIE_REQUEST: "+data?.dataString)
                 if (Activity.RESULT_OK == resultCode) {
                     val productEntityExt: ProductEntity? = data?.getParcelableExtra(SearchProductActivity.PRODUCT_KEY_EXT)
                     val productEntityDamage: ProductEntity? = data?.getParcelableExtra(SearchProductActivity.PRODUCT_KEY_DAMAGE)
@@ -444,10 +455,12 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
 
     @SuppressLint("SetTextI18n")
     private fun updateScreen(entity: SaleEntity) {
+        println("updateScreen")
         tvwOrderNumber.text = entity.documento
         tvwOrderDate.text = entity.fecha //format
         tvwSaleTotal.text = Formatter.DoubleToString(entity.total, entity.monedaSimbolo)
         tvwClient.text = "${entity.clienteCodigo} ${entity.clienteNombres}"
+        etwAddProduct.requestFocus()
         etwAddProduct.text = Editable.Factory.getInstance().newEditable("")
     }
 
