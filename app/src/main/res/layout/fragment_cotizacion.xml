@@ -70,7 +70,7 @@
         android:text="@string/cotizacion_numero_ticket"
         android:textStyle="bold"
         android:textColor="@android:color/black"
-        android:padding="4dp"
+        android:paddingVertical="8dp"
         app:layout_constraintEnd_toStartOf="@+id/guideline_fecha"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextCliente" />
@@ -82,7 +82,7 @@
         android:text="@string/cotizacion_fecha"
         android:textStyle="bold"
         android:textColor="@android:color/black"
-        android:padding="4dp"
+        android:paddingVertical="8dp"
         android:gravity="center"
         app:layout_constraintEnd_toStartOf="@+id/guideline_importe"
         app:layout_constraintStart_toEndOf="@+id/guideline_fecha"
@@ -95,7 +95,7 @@
       android:text="@string/cotizacion_importe_s"
       android:textStyle="bold"
       android:textColor="@android:color/black"
-      android:padding="4dp"
+      android:paddingVertical="8dp"
       android:gravity="end"
       app:layout_constraintEnd_toStartOf="@+id/textViewEstadoHeader"
       app:layout_constraintStart_toEndOf="@+id/guideline_importe"
@@ -107,7 +107,7 @@
       android:text="ESTADO"
       android:textStyle="bold"
       android:textColor="@android:color/black"
-      android:padding="4dp"
+      android:paddingVertical="8dp"
       android:gravity="end"
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintStart_toEndOf="@+id/textViewImporteHeader"
@@ -135,6 +135,6 @@
         android:layout_height="wrap_content"
 
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.6" />
+        app:layout_constraintGuide_percent="0.5" />
 
 </android.support.constraint.ConstraintLayout>

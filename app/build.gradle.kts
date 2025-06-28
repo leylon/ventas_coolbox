@@ -89,6 +89,19 @@ android {
             buildConfigField("String", "URL_PEDIDO_PAGAR_NUEVO", "\"pedidopagarnuevoskmicg\"")
             buildConfigField("String", "VERSION_APP", "\"16/06/2024\"")
         }
+        create("root-red") {
+            dimension = "version"
+            applicationIdSuffix = ".root-red"
+            versionCode = 30
+            versionName = "2.0.20"
+            buildConfigField(
+                "String",
+                "URL_SERVER",
+                "\"https://wsfacturacion.coolbox.com.pe:9443/SKM/\""
+            )
+            buildConfigField("String", "URL_PEDIDO_PAGAR_NUEVO", "\"pedidopagarnuevo\"")
+            buildConfigField("String", "VERSION_APP", "\"20/06/2024\"")
+        }
     }
 
 
