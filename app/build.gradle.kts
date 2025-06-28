@@ -89,9 +89,9 @@ android {
             buildConfigField("String", "URL_PEDIDO_PAGAR_NUEVO", "\"pedidopagarnuevoskmicg\"")
             buildConfigField("String", "VERSION_APP", "\"16/06/2024\"")
         }
-        create("root-red") {
+        create("rootred") {
             dimension = "version"
-            applicationIdSuffix = ".root-red"
+            applicationIdSuffix = ".rootred"
             versionCode = 30
             versionName = "2.0.20"
             buildConfigField(
