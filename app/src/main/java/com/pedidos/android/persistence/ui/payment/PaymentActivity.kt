@@ -10,6 +10,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.preference.PreferenceManager
 import android.support.design.widget.TextInputEditText
 import android.support.v4.app.ActivityCompat
@@ -21,6 +23,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -88,6 +92,12 @@ class PaymentActivity : MenuActivity() {
     private var isSaleSucceses: Boolean = false
     private var refTarje: String = ""
     lateinit var editEfectivo: TextInputEditText
+    lateinit var etwPagoFalabellaTienda : TextInputEditText
+    lateinit var etwPagoFalabellaCaja : TextInputEditText
+    lateinit var etwPagoFalabellaTransaccion: TextInputEditText
+    lateinit var etwPagoFalabellaTicket  : TextInputEditText
+    private var isEnablePagoFalabella: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithMenu(R.layout.payment_activity)
@@ -105,6 +115,13 @@ class PaymentActivity : MenuActivity() {
         editEfectivo = findViewById(R.id.etwEfectivo)
         //etwFpay.text = Editable.Factory.getInstance().newEditable(saleEntity.total.toString())
         //etwPlink.text = Editable.Factory.getInstance().newEditable(saleEntity.total.toString())
+        etwPagoFalabellaTransaccion = findViewById(R.id.etwPagoFalabellaTransaccion)
+        etwPagoFalabellaTienda = findViewById(R.id.etwPagoFalabellaTienda)
+        etwPagoFalabellaCaja = findViewById(R.id.etwPagoFalabellaCaja)
+
+        etwPagoFalabellaTicket = findViewById(R.id.etwPagoFalabellaTicket)
+        etwPagoFalabellaTicket.isFocusable = true
+        etwPagoFalabellaTicket.requestFocus()
 
         println("saleEntity.tipodocumentogenera: "+ saleEntity.tipodocumentogenera)
         when(saleEntity.tipodocumentogenera) {
@@ -182,18 +199,76 @@ class PaymentActivity : MenuActivity() {
                 finalizarPedido(createPaymentEntity())
             }
         }
-        etwPagoFalabellaTicket.requestFocus()
+        etwPagoFalabellaTicket.isFocusable = true
+        etwPagoFalabellaTicket.isFocusableInTouchMode = true
+
+
         btnFalabella.setOnClickListener {
             productSearch()
         }
+        //etwPagoFalabellaTienda.isEnabled = false
+        //etwPagoFalabellaCaja.isEnabled = false
+        //etwPagoFalabellaTransaccion.isEnabled = false
+        btnPagoFalabellaTicket.setOnClickListener {
+            if(isEnablePagoFalabella){
+                btnPagoFalabellaTicket.background = ContextCompat.getDrawable(this, R.mipmap.ic_arrow_abajo)
+                isEnablePagoFalabella = false
+                //etwPagoFalabellaTienda.isEnabled =false
+                //etwPagoFalabellaCaja.isEnabled = false
+                //etwPagoFalabellaTransaccion.isEnabled = false
+                disableFalabellaPaymentFields()
+
+            }else {
+                btnPagoFalabellaTicket.background = ContextCompat.getDrawable(this, R.mipmap.ic_arrow_arriba)
+                isEnablePagoFalabella = true
+                etwPagoFalabellaTienda.visibility = View.VISIBLE
+                etwPagoFalabellaCaja.visibility = View.VISIBLE
+                etwPagoFalabellaTransaccion.visibility = View.VISIBLE
+
+            }
+
+        }
         setupVisualizacionTipoPago()
+        disableFalabellaPaymentFields()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        println("onResume")
+        etwPagoFalabellaTicket.isFocusable = true
+        //etwPagoFalabellaTicket.isFocusableInTouchMode = true
+        etwPagoFalabellaTicket.requestFocus()
+        //disableFalabellaPaymentFields()
+    }
+    override fun onStart() {
+        super.onStart()
+        println("onStart")
+        etwPagoFalabellaTicket.isFocusable = true
+        etwPagoFalabellaTicket.requestFocus()
+    }
+    override fun onPause() {
+        super.onPause()
+        println("onStart")
+        etwPagoFalabellaTicket.isFocusable = true
+        etwPagoFalabellaTicket.requestFocus()
+    }
+
+    private fun disableFalabellaPaymentFields() {
+        println("ley: disableFalabellaPaymentFields")
+        etwPagoFalabellaTienda.visibility = View.GONE
+        etwPagoFalabellaCaja.visibility = View.GONE
+        etwPagoFalabellaTransaccion.visibility = View.GONE
+       // isEnablePagoFalabella = false
     }
 
     private fun setupVisualizacionTipoPago() {
         val userInfo = getSession()
         if(saleEntity.cotizacion.isNotEmpty()){
+            btnPagoFalabellaTicket.visibility = isVisbleView(userInfo.pagoFalabella)
             etwPagoFalabellaTicket.visibility = isVisbleView(userInfo.pagoFalabella)
-            etwPagoFalabellaTicket.requestFocus()
+
+            etwPagoFalabellaTicket.text = Editable.Factory.getInstance().newEditable("")
+
             etwFalabellaImporte.setText(saleEntity.total.toString())
             val rootLayout = findViewById<ViewGroup>(R.id.payment_activity_root)
             toggleButtons(rootLayout, false)
@@ -204,6 +279,23 @@ class PaymentActivity : MenuActivity() {
             textPagoFalabella.visibility = isVisbleView(userInfo.pagoFalabella)
             linerPagoFalabella.visibility = isVisbleView(userInfo.pagoFalabella)
             etwPagoFalabellaCotizacion.visibility = isVisbleView(userInfo.pagoFalabella)
+            etwPagoFalabellaTienda.isEnabled = false
+            //etwPagoFalabellaCaja.isEnabled = false
+            //etwPagoFalabellaTransaccion.isEnabled = false
+            disableFalabellaPaymentFields()
+            etwInputPagoFalabellaTicket.isEnabled = false
+            etwPagoFalabellaTicket.isFocusable = true
+            //etwPagoFalabellaTicket.requestFocus()
+            // Forzar el teclado
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+
+            // Usar un Handler con retraso
+            Handler(Looper.getMainLooper()).postDelayed({
+                etwPagoFalabellaTicket.requestFocus()
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.showSoftInput(etwPagoFalabellaTicket, InputMethodManager.SHOW_IMPLICIT)
+            }, 300)
+
         }else {
             etwFalabellaImporte.setText("")
             val rootLayout = findViewById<ViewGroup>(R.id.payment_activity_root)
@@ -211,6 +303,8 @@ class PaymentActivity : MenuActivity() {
             editEfectivo.isEnabled = true
             editEfectivo.isFocusable = true
             etwInputEfectivo.isEnabled = true
+            btnPagoFalabellaTicket.visibility = isVisbleView(false)
+            etwPagoFalabellaTicket.visibility = isVisbleView(false)
             textPagoFalabella.visibility = isVisbleView(false)
             linerPagoFalabella.visibility = isVisbleView(false)
             etwPagoFalabellaTienda.visibility = isVisbleView(false)
@@ -234,6 +328,7 @@ class PaymentActivity : MenuActivity() {
 
 
     }
+
 
     private fun isVisbleView(statusView: Boolean) : Int {
         return if(statusView) View.VISIBLE else View.GONE
@@ -384,8 +479,8 @@ class PaymentActivity : MenuActivity() {
         paymentEntity.idpago_link = getPagoIdPlink()
         paymentEntity.numvale = numVale
         paymentEntity.impvale = if (TextUtils.isEmpty(etwOtherVale.text.toString())) 0.0 else etwOtherVale.text.toString().toDouble()
-        paymentEntity.pagofalabellaTienda = etwPagoFalabellaTienda.text.toString()
         paymentEntity.pagofalabellaImporte = if (TextUtils.isEmpty(etwFalabellaImporte.text.toString())) 0.0 else etwFalabellaImporte.text.toString().toDouble()
+        paymentEntity.pagofalabellaTienda = etwPagoFalabellaTienda.text.toString()
         paymentEntity.pagofalabellaCaja = etwPagoFalabellaCaja.text.toString()
         paymentEntity.pagofalabellaTransaccion = etwPagoFalabellaTransaccion.text.toString()
         paymentEntity.pagofalabellaTicket = etwPagoFalabellaTicket.text.toString()
