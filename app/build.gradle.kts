@@ -92,8 +92,8 @@ android {
         create("rootred") {
             dimension = "version"
             applicationIdSuffix = ".rootred"
-            versionCode = 30
-            versionName = "2.0.20"
+            versionCode = 31
+            versionName = "2.0.21"
             buildConfigField(
                 "String",
                 "URL_SERVER",

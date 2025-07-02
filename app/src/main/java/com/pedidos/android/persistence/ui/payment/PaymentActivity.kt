@@ -213,6 +213,9 @@ class PaymentActivity : MenuActivity() {
             if(isEnablePagoFalabella){
                 btnPagoFalabellaTicket.background = ContextCompat.getDrawable(this, R.mipmap.ic_arrow_abajo)
                 isEnablePagoFalabella = false
+
+                etwPagoFalabellaTicket.isEnabled = true
+                etwPagoFalabellaTicket.requestFocus()
                 //etwPagoFalabellaTienda.isEnabled =false
                 //etwPagoFalabellaCaja.isEnabled = false
                 //etwPagoFalabellaTransaccion.isEnabled = false
@@ -221,6 +224,8 @@ class PaymentActivity : MenuActivity() {
             }else {
                 btnPagoFalabellaTicket.background = ContextCompat.getDrawable(this, R.mipmap.ic_arrow_arriba)
                 isEnablePagoFalabella = true
+                etwPagoFalabellaTicket.setText("")
+                etwPagoFalabellaTicket.isEnabled = false
                 etwPagoFalabellaTienda.visibility = View.VISIBLE
                 etwPagoFalabellaCaja.visibility = View.VISIBLE
                 etwPagoFalabellaTransaccion.visibility = View.VISIBLE
@@ -258,6 +263,9 @@ class PaymentActivity : MenuActivity() {
         etwPagoFalabellaTienda.visibility = View.GONE
         etwPagoFalabellaCaja.visibility = View.GONE
         etwPagoFalabellaTransaccion.visibility = View.GONE
+        etwPagoFalabellaTienda.setText("")
+        etwPagoFalabellaCaja.setText("")
+        etwPagoFalabellaTransaccion.setText("")
        // isEnablePagoFalabella = false
     }
 
