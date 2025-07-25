@@ -35,6 +35,7 @@ import com.pedidos.android.persistence.db.entity.SaleEntity
 import com.pedidos.android.persistence.db.entity.SaleSubItemEntity
 import com.pedidos.android.persistence.model.SaleSubItem
 import com.pedidos.android.persistence.model.cotizacion.CotizacionCab
+import com.pedidos.android.persistence.model.cotizacion.CotizacionDet
 import com.pedidos.android.persistence.model.cotizacion.CotizacionRequest
 import com.pedidos.android.persistence.model.cotizacion.Presupuesto
 import com.pedidos.android.persistence.model.guide.DataResponse
@@ -78,6 +79,10 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
     var flag_pop: Boolean = false
     var flag_cotizacion: Boolean = false
     var listSaleSubItem: MutableList<SaleSubItem> = mutableListOf()
+    var flagAddCoti = false
+    var imeiCotizacion = ""
+    var detalllesCotizacion: CotizacionDet? = null
+    var listDetalletCotizacion: MutableList<CotizacionDet> = mutableListOf()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithMenu(R.layout.sales_activity)
@@ -106,8 +111,10 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         imbwAddProductManualOnly.setOnClickListener { productManualSearch() }
         btnSelectClient.setOnClickListener { showClientPopUp() }
         if (getSession().pagoFalabella){
+            chkGenerateCotization.visibility = View.VISIBLE
             btnSelectCotization.visibility = View.VISIBLE
         }else {
+            chkGenerateCotization.visibility = View.GONE
             btnSelectCotization.visibility = View.GONE
         }
         btnSelectCotization.setOnClickListener {
@@ -120,9 +127,13 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         val searchFactory = SearchProductViewModel.Companion.Factory(application, getSettings().urlbase)
         saleViewModel = ViewModelProviders.of(this, saleFactory).get(SaleViewModel::class.java)
         searchViewModel = ViewModelProviders.of(this, searchFactory).get(SearchProductViewModel::class.java)
-        searchViewModel.searchResults.observe(this, Observer { checkResult(it) })
+        searchViewModel.searchResults.observe(this, Observer {
+            checkResult(it)
+        })
         searchViewModel.errorResults.observe(this, Observer { showError(it) })
-
+        searchViewModel.searchResultsCotizacion.observe(this, Observer {
+            checkResult(it,detalllesCotizacion!!)
+        })
         subscribeToModel(saleViewModel)
         //etwAddProduct.focusable = View.FOCUSABLE
 
@@ -247,17 +258,149 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
                         mydialog2?.dismiss()
                     }
                 } else {
-                    addItem(productEntity)
+                    if (!flag_cotizacion) {
+                        addItem(productEntity)
+
+                    } else {
+                        addItem(productEntity,detalllesCotizacion!!)
+                    }
+
                 }
             } else {
                 // get product from search edittext
                 complementProductTempCode = productEntity.codigo
+                if (!flag_cotizacion) {
+
+                }else {
+
+                }
                 addItem(productEntity)
 
             }
         } else {
             showProgress(false)
             val intent = Intent(this, SearchProductActivity::class.java)
+            intent.putExtra("STATUS_COTIZACION",if(chkGenerateCotization.isChecked) 1 else 0)
+            startActivityForResult(intent, SEARCH_REQUEST)
+        }
+
+    }
+    private fun checkResult(productEntity: ProductEntity?,detalles: CotizacionDet) {
+        if (productEntity != null) {
+            if (productEntity.stimei) {
+                //request IMEI
+                if (TextUtils.isEmpty(productEntity.imei)) {
+
+                    val dialogView = LayoutInflater.from(this).inflate(R.layout.search_imei_dialog, lltRoot, false)
+                    dialogView?.textTitle?.setText("${productEntity.codigo}: ${productEntity.descripcion}")
+                    val mydialog = AlertDialog.Builder(this)
+                        .setView(dialogView)
+                        .setCancelable(false)
+                        .setTitle(R.string.propt_imei_title)
+                        .show()
+
+                    dialogView?.btnScan?.setOnClickListener {
+                        val integrator = IntentIntegrator(this)
+                        integrator.setDesiredBarcodeFormats(IntentIntegrator.ALL_CODE_TYPES)
+                        integrator.setPrompt("ESCANEAR IMEI")
+                        integrator.setOrientationLocked(false)
+                        integrator.setBeepEnabled(true)
+                        integrator.setBarcodeImageEnabled(true)
+                        integrator.setRequestCode(113)
+                        integrator.initiateScan()
+                    }
+                    dialogView?.tvwAccept?.setOnClickListener {
+                        println("ley: IMEI: "+ mydialog?.isShowing)
+                        mydialog?.dismiss()
+                        fltLoading.visibility = View.VISIBLE
+                        if (!TextUtils.isEmpty(dialogView?.edtImei?.text)) {
+                            productEntity.imei = dialogView.edtImei?.text.toString()
+
+                        }else {
+                            productEntity.imei = view?.edtImei?.text.toString()
+                            //onErrorImei("IMEI VACIO", productEntity)
+                        }
+                        if (!flag_cotizacion){
+                            checkResult(productEntity)
+                        }else {
+                            checkResult(productEntity,detalles)
+                        }
+
+                    }
+                    dialogView?.tvwCancelar?.setOnClickListener {
+                        showProgress(false)
+                        mydialog?.dismiss()
+                    }
+                } else {
+                    if (!flag_cotizacion) {
+                        searchViewModel.checkAutomatically(productEntity,::onErrorImei)
+                    } else {
+                        searchViewModel.checkAutomatically(productEntity,::onErrorImei,detalles)
+                    }
+
+                }
+            } else if (productEntity.stimei2) {
+                if (TextUtils.isEmpty(productEntity.imei2)) {
+                    //request imei2
+                    val dialogView = LayoutInflater.from(this).inflate(R.layout.search_imei_dialog, lltRoot, false)
+                    val mydialog2 = AlertDialog.Builder(this)
+                        .setView(dialogView)
+                        .setCancelable(false)
+                        .setTitle(R.string.propt_imei_title2)
+                        .show()
+
+                    dialogView?.btnScan?.setOnClickListener {
+                        val integrator = IntentIntegrator(this)
+                        integrator.setDesiredBarcodeFormats(IntentIntegrator.ALL_CODE_TYPES)
+                        integrator.setPrompt("Escanear Imei 2")
+                        integrator.setOrientationLocked(false)
+                        integrator.setBeepEnabled(true)
+                        integrator.setBarcodeImageEnabled(true)
+                        integrator.setRequestCode(115)
+                        integrator.initiateScan()
+                    }
+                    dialogView?.tvwAccept?.setOnClickListener {
+                        fltLoading.visibility = View.VISIBLE
+                        if (!dialogView?.edtImei?.text.toString().isEmpty()) {
+                            productEntity.imei2 = dialogView?.edtImei?.text.toString()
+                            mydialog2?.dismiss()
+                        }else {
+                            productEntity.imei2 = view?.edtImei?.text.toString()
+                        }
+                        if (!flag_cotizacion){
+                            checkResult(productEntity)
+                        }else {
+                            checkResult(productEntity,detalles)
+                        }
+
+                    }
+                    dialogView?.tvwCancelar?.setOnClickListener {
+                        showProgress(false)
+                        mydialog2?.dismiss()
+                    }
+                } else {
+                    if (!flag_cotizacion) {
+                        addItem(productEntity)
+                    }else {
+                        addItem(productEntity,detalles)
+                    }
+
+                }
+            } else {
+                // get product from search edittext
+                complementProductTempCode = productEntity.codigo
+
+                if (!flag_cotizacion) {
+                    addItem(productEntity)
+                }else {
+                    addItem(productEntity,detalles)
+                }
+
+            }
+        } else {
+            showProgress(false)
+            val intent = Intent(this, SearchProductActivity::class.java)
+            intent.putExtra("STATUS_COTIZACION",if(chkGenerateCotization.isChecked) 1 else 0)
             startActivityForResult(intent, SEARCH_REQUEST)
         }
 
@@ -372,7 +515,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
                                 if (flag_cotizacion){
                                     findCotizacion(result.contents ?: "")
                                 }else{
-                                    searchViewModel.searchProductDirectly(result.contents ?: "")
+                                    searchViewModel.searchProductDirectly(result.contents ?: "",if(chkGenerateCotization.isChecked) 1 else 0,detalllesCotizacion!!,::checkResult)
                                 }
 
                             }
@@ -393,29 +536,116 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
     }
 
     private fun addItem(productEntity: ProductEntity) {
-        var lastSecuencialOrDefault = 0
-        if (saleViewModel.saleLiveData.value != null) {
-            if (saleViewModel.saleLiveData.value!!.productos.size > 0)
-                lastSecuencialOrDefault = saleViewModel.saleLiveData.value!!.productos[saleViewModel.saleLiveData.value!!.productos.size - 1].secuencial
+       chkGenerateCotization.isEnabled = false
+       chkGenerateCotization.isClickable = false
+        val datos = saleViewModel.saleLiveData.value
+        datos?.statusCotizacion = if (chkGenerateCotization.isChecked) 1 else 0
+        saleViewModel.saleLiveData.postValue(datos)
+        if (!flag_cotizacion) {
+            var lastSecuencialOrDefault = 0
+            if (saleViewModel.saleLiveData.value != null) {
+                if (saleViewModel.saleLiveData.value!!.productos.size > 0)
+                    lastSecuencialOrDefault = saleViewModel.saleLiveData.value!!.productos[saleViewModel.saleLiveData.value!!.productos.size - 1].secuencial
+            }
+
+            val saleSubItem = SaleSubItemEntity().apply {
+                secuencial = lastSecuencialOrDefault + 1
+                codigoventa = productEntity.codigoVenta
+                codigoProducto = productEntity.codigo
+                descripcion = productEntity.descripcion
+                cantidad = 1
+                precio = productEntity.precio
+                imei = productEntity.imei
+                imei2 = productEntity.imei2
+                monedaSimbolo = productEntity.monedaSimbolo
+                complementaryRowColor = productEntity.complementaryRowColor
+                secgaraexte = productEntity.secgaraexte
+                codgaraexte = productEntity.codgaraexte
+            }
+
+            showProgress(true)
+            saleViewModel.saveDetail(saleSubItem)
+        }else {
+            imeiCotizacion = productEntity.imei
+            val saleSubItem = SaleSubItemEntity().apply {
+                secuencial = detalllesCotizacion?.numLin.toString().toInt()
+                codigoventa = detalllesCotizacion?.sku.toString()
+                codigoProducto = detalllesCotizacion?.sku.toString()
+                descripcion = detalllesCotizacion?.descripcion.toString()
+                cantidad = detalllesCotizacion?.unidades.toString().toInt()
+                precio = detalllesCotizacion?.precioIva.toString().toDouble()
+                pcdcto = detalllesCotizacion?.dto.toString().toDouble()
+                ean = detalllesCotizacion?.ean.toString()
+                imei = imeiCotizacion
+                monedaSimbolo = ""
+                complementaryRowColor = ""
+                totaldetalle = detalllesCotizacion?.total.toString().toDouble()
+
+
+            }
+            listSaleSubItem.add(saleSubItem)
+             if (listSaleSubItem.size == listDetalletCotizacion.size){
+                saleViewModel.saveDetail(listSaleSubItem)
+            }
         }
 
-        val saleSubItem = SaleSubItemEntity().apply {
-            secuencial = lastSecuencialOrDefault + 1
-            codigoventa = productEntity.codigoVenta
-            codigoProducto = productEntity.codigo
-            descripcion = productEntity.descripcion
-            cantidad = 1
-            precio = productEntity.precio
-            imei = productEntity.imei
-            imei2 = productEntity.imei2
-            monedaSimbolo = productEntity.monedaSimbolo
-            complementaryRowColor = productEntity.complementaryRowColor
-            secgaraexte = productEntity.secgaraexte
-            codgaraexte = productEntity.codgaraexte
+    }
+    private fun addItem(productEntity: ProductEntity,detallesCotizacion: CotizacionDet) {
+        chkGenerateCotization.isEnabled = false
+        chkGenerateCotization.isClickable = false
+        val datos = saleViewModel.saleLiveData.value
+        datos?.statusCotizacion = if (chkGenerateCotization.isChecked) 1 else 0
+        saleViewModel.saleLiveData.postValue(datos)
+        if (!flag_cotizacion) {
+            var lastSecuencialOrDefault = 0
+            if (saleViewModel.saleLiveData.value != null) {
+                if (saleViewModel.saleLiveData.value!!.productos.size > 0)
+                    lastSecuencialOrDefault = saleViewModel.saleLiveData.value!!.productos[saleViewModel.saleLiveData.value!!.productos.size - 1].secuencial
+            }
+
+            val saleSubItem = SaleSubItemEntity().apply {
+                secuencial = lastSecuencialOrDefault + 1
+                codigoventa = productEntity.codigoVenta
+                codigoProducto = productEntity.codigo
+                descripcion = productEntity.descripcion
+                cantidad = 1
+                precio = productEntity.precio
+                imei = productEntity.imei
+                imei2 = productEntity.imei2
+                monedaSimbolo = productEntity.monedaSimbolo
+                complementaryRowColor = productEntity.complementaryRowColor
+                secgaraexte = productEntity.secgaraexte
+                codgaraexte = productEntity.codgaraexte
+            }
+
+            showProgress(true)
+            saleViewModel.saveDetail(saleSubItem)
+        }else {
+            imeiCotizacion = productEntity.imei
+            val saleSubItem = SaleSubItemEntity().apply {
+                secuencial = detalllesCotizacion?.numLin.toString().toInt()
+                codigoventa = detalllesCotizacion?.sku.toString()
+                codigoProducto = detalllesCotizacion?.sku.toString()
+                descripcion = detalllesCotizacion?.descripcion.toString()
+                cantidad = detalllesCotizacion?.unidades.toString().toInt()
+                precio = detalllesCotizacion?.precioIva.toString().toDouble()
+                pcdcto = detalllesCotizacion?.dto.toString().toDouble()
+                ean = detalllesCotizacion?.ean.toString()
+                imei = imeiCotizacion
+                monedaSimbolo = ""
+                complementaryRowColor = ""
+                totaldetalle = detalllesCotizacion?.total.toString().toDouble()
+
+
+            }
+            listSaleSubItem.add(saleSubItem)
+            println("listSaleSubItem: ${listSaleSubItem.size} - listDetalletCotizacion: ${listDetalletCotizacion.size}")
+
+            if (listSaleSubItem.size == listDetalletCotizacion.size){
+                saleViewModel.saveDetail(listSaleSubItem)
+            }
         }
 
-        showProgress(true)
-        saleViewModel.saveDetail(saleSubItem)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -438,6 +668,14 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
                 //(rvwProducts.adapter as SaleAdapter).items.removeAll { true }
                 (rvwProducts.adapter as SaleAdapter).clearItems()
                 (rvwProducts.adapter as SaleAdapter).addItems(newItem.productos)
+                println("subscribeToModel: ${newItem.productos.size}")
+                if (newItem.productos.size > 0) {
+                    chkGenerateCotization.isEnabled = false
+                    chkGenerateCotization.isClickable = false
+                }else {
+                    chkGenerateCotization.isEnabled = true
+                    chkGenerateCotization.isClickable = true
+                }
                 updateScreen(newItem)
             }
         })
@@ -601,6 +839,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         val androidID: String =
             Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
         //prevent nulls after back pressed
+        //prevent nulls after back pressed
         saleViewModel.saleLiveData.postValue(setSessionInfo(saleViewModel.saleLiveData.value!!))
         val currentSaleEntity : SaleEntity?  = saleViewModel.saleLiveData.value
         if (currentSaleEntity != null) {
@@ -653,17 +892,28 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
     }
 
     private fun productSearchCombined() {
+        flagAddCoti = false
         val productCode = etwAddProduct.text.toString()
         if (!productCode.isNullOrEmpty()) {
             showProgress(true)
 
-            searchViewModel.searchProductDirectly(productCode)
+            searchViewModel.searchProductDirectly(productCode,if(chkGenerateCotization.isChecked) 1 else 0)
+        }
+    }
+    private fun productSearchCombined(datoCodigo: String,detalles: CotizacionDet) {
+        val productCode = datoCodigo
+        flagAddCoti = true
+        if (!productCode.isNullOrEmpty()) {
+            showProgress(true)
+
+            searchViewModel.searchProductDirectly(productCode,if(chkGenerateCotization.isChecked) 1 else 0, detalles,::checkResult)
         }
     }
 
 
     private fun productManualSearch() {
         val intent = Intent(this, SearchProductActivity::class.java)
+        intent.putExtra("STATUS_COTIZACION",if(chkGenerateCotization.isChecked) 1 else 0)
         startActivityForResult(intent, SEARCH_REQUEST)
     }
 
@@ -737,7 +987,12 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
             .setMessage(message)
             .setPositiveButton(R.string.aceptar) { d, _ ->
                 d.dismiss()
-                checkResult(productEntity)
+                if (!flag_cotizacion){
+                    checkResult(productEntity)
+                }else{
+                    checkResult(productEntity,detalllesCotizacion!!)
+                }
+
             }
             .setCancelable(false)
             .create().show()
@@ -959,10 +1214,11 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
 
         when (datos) {
             "search" -> {
-
+                println("closeDialogQuestion-search: ${Gson().toJson(optionData)}")
                 //saleViewModel.saveCotizacion(optionData, ::goToResumenPedido, ::onError)
             }
             "item" -> {
+
                 println("closeDialogQuestion-item: ${Gson().toJson(optionData)}")
                 addCotizacion(optionData!!)
                 println("se cancelo el dialog questions")
@@ -989,6 +1245,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         ), ::dataPresuesto, ::onError)
     }
     fun addCotizacion(cotizacionCab: CotizacionCab) {
+        flag_cotizacion = true
         etwAddProduct.visibility = View.GONE
         imbwAddProductoWithCamera.visibility = View.GONE
         imbwAddProductManualOnly.visibility = View.GONE
@@ -998,11 +1255,22 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         data?.cotizacion = "${cotizacionCab.serie}-${cotizacionCab.numero}"
         tvwCotizacion.text = data?.cotizacion
         saleViewModel.saleLiveData.postValue(data)
-
         cotizacionCab.detalles.forEach {
-            println("detalle: ${Gson().toJson(it)}")
+            if (it.unidades > 0) {
+                listDetalletCotizacion.add(it)
+            }
 
-            val saleSubItem = SaleSubItemEntity().apply {
+        }
+        cotizacionCab.detalles.forEach {
+            if (it.unidades > 0) {
+                println("unidades: ${it.unidades}")
+                detalllesCotizacion = it
+
+                productSearchCombined(it.sku, it)
+                println("detalle: ${Gson().toJson(it)}")
+            }
+
+/*            val saleSubItem = SaleSubItemEntity().apply {
                 secuencial = it.numLin.toInt()
                 codigoventa = it.sku
                 codigoProducto = it.sku
@@ -1011,6 +1279,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
                 precio = it.precioIva
                 pcdcto = it.dto
                 ean = it.ean.toString()
+                imei = imeiCotizacion
                 monedaSimbolo = ""
                 complementaryRowColor = ""
                 totaldetalle = it.total
@@ -1018,12 +1287,14 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
 
             }
             listSaleSubItem.add(saleSubItem)
-
+                */
         }
-        saleViewModel.saveDetail(listSaleSubItem)
+
+       // saleViewModel.saveDetail(listSaleSubItem)
 
 
     }
+
 
     fun dataPresuesto(data: Presupuesto) {
         println("dataPresuesto: ${Gson().toJson(data.presupuestos)}")

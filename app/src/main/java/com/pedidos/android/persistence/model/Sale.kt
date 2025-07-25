@@ -31,4 +31,5 @@ interface Sale : Parcelable {
     var tipodocumentogenera: String
     var cotizacion: String
     var papelSize: String
+    var statusCotizacion : Int
 }

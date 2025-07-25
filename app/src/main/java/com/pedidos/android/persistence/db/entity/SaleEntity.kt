@@ -57,6 +57,9 @@ class SaleEntity() : Sale {
     @Ignore
     var productos: MutableList<SaleSubItem> = mutableListOf()
 
+    @SerializedName("statusCotizacion")
+    override var statusCotizacion: Int = 0
+
     constructor(parcel: Parcel) : this() {
         documento = parcel.readString().toString()
         fecha = parcel.readString().toString()
@@ -90,6 +93,7 @@ class SaleEntity() : Sale {
         tipodocumentogenera = parcel.readString().toString()
         cotizacion = parcel.readString().toString()
         papelSize = parcel.readString().toString()
+        statusCotizacion = parcel.readInt()
     }
 
     constructor(sale: Sale) : this() {
@@ -122,6 +126,7 @@ class SaleEntity() : Sale {
         tipodocumentogenera = sale.tipodocumentogenera
         cotizacion = sale.cotizacion
         papelSize = sale.papelSize
+        statusCotizacion = sale.statusCotizacion
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -154,6 +159,7 @@ class SaleEntity() : Sale {
         parcel.writeString(tipodocumentogenera)
         parcel.writeString(cotizacion)
         parcel.writeString(papelSize)
+        parcel.writeInt(statusCotizacion)
     }
 
     override fun describeContents(): Int {

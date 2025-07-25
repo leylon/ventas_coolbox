@@ -28,10 +28,11 @@ class SaleViewModel(application: Application, private var repository: CoolboxApi
     var saleLiveData = MutableLiveData<SaleEntity>()
     var showProgress = MutableLiveData<Boolean>()
     var message = MutableLiveData<String>()
+    var generaCotizacion  = MutableLiveData<Boolean>()
     var listTipoDocumento = MutableLiveData<ArrayList<SelectedTipoDocumento>>()
 
     init {
-
+        generaCotizacion.postValue(false)
         getTipoDocumentoIdentidad()
     }
     fun saveSale(onSuccess: (entity: SaleEntity) -> Unit, onError: (message: String) -> Unit) {

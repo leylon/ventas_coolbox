@@ -8,6 +8,7 @@ import android.util.Log
 import com.pedidos.android.persistence.api.CoolboxApi
 import com.pedidos.android.persistence.db.entity.ProductEntity
 import com.pedidos.android.persistence.model.CheckImeiResponse
+import com.pedidos.android.persistence.model.cotizacion.CotizacionDet
 import com.pedidos.android.persistence.ui.BasicApp
 import com.pedidos.android.persistence.utils.ApiWrapper
 import retrofit2.Call
@@ -29,13 +30,14 @@ class SearchProductViewModel(private var repository: CoolboxApi) : ViewModel() {
     }
 
     val searchResults = MutableLiveData<ProductEntity>()
+    val searchResultsCotizacion = MutableLiveData<ProductEntity>()
     val searchDescriptionResults = MutableLiveData<List<ProductEntity>>()
     val imeiHelperResults = MutableLiveData<ProductEntity>()
     val errorResults = MutableLiveData<String>()
 
-    fun searchProduct(productID: String) {
+    fun searchProduct(productID: String,statusCotizacion: Int) {
 
-        repository.searchProduct(productID).enqueue(object : Callback<ApiWrapper<ProductEntity>> {
+        repository.searchProduct(productID,statusCotizacion).enqueue(object : Callback<ApiWrapper<ProductEntity>> {
             override fun onFailure(call: Call<ApiWrapper<ProductEntity>>, t: Throwable) {
                 Log.e(TAG, t.message.toString())
                 errorResults.postValue(t.message.toString())
@@ -111,6 +113,36 @@ class SearchProductViewModel(private var repository: CoolboxApi) : ViewModel() {
             }
         })
     }
+    //check whether product requires IMEI2 or not
+    fun checkAutomatically(it: ProductEntity, onError: (message: String, it: ProductEntity) -> Unit,detalleCotiazacion: CotizacionDet) {
+        repository.checkImei(it.codigoVenta, it.imei).enqueue(object : Callback<ApiWrapper<CheckImeiResponse>> {
+            override fun onFailure(call: Call<ApiWrapper<CheckImeiResponse>>, t: Throwable) {
+                // errorResults.postValue(t.message.toString())
+                onError(t.message.toString(), it)
+            }
+
+            override fun onResponse(call: Call<ApiWrapper<CheckImeiResponse>>, response: Response<ApiWrapper<CheckImeiResponse>>) {
+                if (response.isSuccessful) {
+                    if (response.body()?.result == true) {
+                        if (response.body()?.data != null) {
+                            it.stimei = false
+                            searchResultsCotizacion.postValue(it)
+                        } else {
+                            onError(response.body()?.message.toString(),it)
+                        }
+                    }else {
+                        it.stimei = true
+                        it.imei = ""
+                        onError(response.body()!!.message,it)
+                    }
+                    //errorResults.postValue(response.body()?.message)
+                } else{
+                    onError(response.body()!!.message,it)
+                }
+
+            }
+        })
+    }
     fun checkAutomaticallyGuide(it: ProductEntity) {
         repository.checkImei(it.codigoVenta, it.imei).enqueue(object : Callback<ApiWrapper<CheckImeiResponse>> {
             override fun onFailure(call: Call<ApiWrapper<CheckImeiResponse>>, t: Throwable) {
@@ -149,8 +181,8 @@ class SearchProductViewModel(private var repository: CoolboxApi) : ViewModel() {
         })
     }
 
-    fun searchProductDirectly(productID: String) {
-        repository.searchProduct(productID).enqueue(object : Callback<ApiWrapper<ProductEntity>> {
+    fun searchProductDirectly(productID: String, statusCotizacion: Int) {
+        repository.searchProduct(productID,statusCotizacion).enqueue(object : Callback<ApiWrapper<ProductEntity>> {
             override fun onFailure(call: Call<ApiWrapper<ProductEntity>>, t: Throwable) {
                 errorResults.postValue(t.message.toString())
             }
@@ -161,6 +193,27 @@ class SearchProductViewModel(private var repository: CoolboxApi) : ViewModel() {
                         val productoEntity = response.body()?.data
                         productoEntity!!.codigoVenta = productID
                         searchResults.postValue(productoEntity)
+                    } else
+                        errorResults.postValue(response.body()?.message)
+                else
+                    errorResults.postValue(response.body()!!.message)
+            }
+        })
+    }
+    fun searchProductDirectly(productID: String, statusCotizacion: Int,detalleCotiazacion: CotizacionDet,checkResults: (ProductEntity,CotizacionDet) -> Unit) {
+        repository.searchProduct(productID,statusCotizacion).enqueue(object : Callback<ApiWrapper<ProductEntity>> {
+            override fun onFailure(call: Call<ApiWrapper<ProductEntity>>, t: Throwable) {
+                errorResults.postValue(t.message.toString())
+            }
+
+            override fun onResponse(call: Call<ApiWrapper<ProductEntity>>, response: Response<ApiWrapper<ProductEntity>>) {
+                if (response.isSuccessful)
+                    if (response.body()?.result == true && response.body()?.data != null) {
+                        val productoEntity = response.body()?.data
+
+                        productoEntity!!.codigoVenta = productID
+                        checkResults(productoEntity!!,detalleCotiazacion)
+                       // searchResultsCotizacion.postValue(productoEntity)
                     } else
                         errorResults.postValue(response.body()?.message)
                 else

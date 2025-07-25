@@ -80,7 +80,7 @@ class InventaryViewModel(application: Application, private var repository: Coolb
 
 
     fun searchProductDirectly(productID: String, onSuccess: (entity: ProductEntity) -> Unit, onError: (message: String) -> Unit) {
-        repository.searchProduct(productID).enqueue(object : Callback<ApiWrapper<ProductEntity>> {
+        repository.searchProduct(productID,0).enqueue(object : Callback<ApiWrapper<ProductEntity>> {
             override fun onFailure(call: Call<ApiWrapper<ProductEntity>>, t: Throwable) {
                 errorResults.postValue(t.message)
                 Log.e(InventaryViewModel.TAG, "error at ${t.message}")

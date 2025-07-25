@@ -100,6 +100,16 @@
                         android:textStyle="bold"
                         tools:text="40037585 Juan Alavares Perez Torres Flores Ermenegildo" />
 
+                    <CheckBox
+                        android:id="@+id/chkGenerateCotization"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:enabled="true"
+                        android:text="Genera Cotización"
+                        android:visibility="visible"
+                        android:minWidth="48dp"
+                        android:minHeight="48dp"
+                        />
                 </LinearLayout>
 
                 <LinearLayout
@@ -327,6 +337,7 @@
                         android:textStyle="bold" />
 
                 </LinearLayout>
+
             </LinearLayout>
 
             <TextView

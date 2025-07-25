@@ -60,7 +60,16 @@ class EndingActivity : MenuActivity() {
                 onError(it)
             }
         })
+        if (saleEntity?.statusCotizacion == 1) {
+            btnCobrar.visibility = View.GONE
+            btnSaveCotizacion.visibility = View.VISIBLE
+        }else {
+            btnSaveCotizacion.visibility = View.GONE
+            btnCobrar.visibility = View.VISIBLE
+        }
         viewModel.saveCotizacionLiveData.observe(this, Observer { it ->
+            btnSaveCotizacion.isEnabled = true
+            btnSaveCotizacion.isClickable = true
             if (it != null && it.success) {
 
                 Log.d(TAG, "Cotizacion guardada correctamente")
@@ -104,6 +113,8 @@ class EndingActivity : MenuActivity() {
         //viewModel.getSaleReceiptPDF(viewModel.saleLiveData.value!!.documento)
     }
     private fun savePedido() {
+        btnSaveCotizacion.isEnabled = false
+        btnSaveCotizacion.isClickable = false
         viewModel.saveCotizacion(CotizacionPrintRequest(tipo = "PED",
             documento = viewModel.saleLiveData.value!!.documento,"",""))
         //PDF

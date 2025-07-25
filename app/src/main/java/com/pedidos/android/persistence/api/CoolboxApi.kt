@@ -81,7 +81,8 @@ interface CoolboxApi {
     fun tipoDocumentIdentidad(): Call<ApiWrapper<ArrayList<SelectedTipoDocumento>>>
 
     @GET(BasicApp.DEFAULT_API_VENTA_MOVIL+"Product")
-    fun searchProduct(@Query("codigoVenta") codigoProducto: String): Call<ApiWrapper<ProductEntity>>
+    fun searchProduct(@Query("codigoVenta") codigoProducto: String,
+                      @Query("statusCotizacion") statusCotizacion : Int): Call<ApiWrapper<ProductEntity>>
 
     @GET(BasicApp.DEFAULT_API_VENTA_MOVIL+"listaproducto")
     fun searchProductDescription(@Query("codigoVenta") codigoProducto: String): Call<ApiWrapper<List<ProductEntity>>>

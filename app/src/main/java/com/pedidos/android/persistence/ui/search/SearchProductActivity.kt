@@ -19,6 +19,8 @@ import com.pedidos.android.persistence.db.entity.ProductEntity
 import com.pedidos.android.persistence.ui.menu.MenuActivity
 import com.pedidos.android.persistence.viewmodel.SearchProductViewModel
 import com.google.zxing.integration.android.IntentIntegrator
+import com.pedidos.android.persistence.db.entity.SaleEntity
+import com.pedidos.android.persistence.ui.ending.EndingActivity.Companion.EXTRA_ENTITY
 import com.pedidos.android.persistence.utils.hideSoftInput
 import kotlinx.android.synthetic.main.search_activity.*
 import kotlinx.android.synthetic.main.search_imei_dialog.view.*
@@ -28,7 +30,7 @@ class SearchProductActivity : MenuActivity() {
 
     private var dialog: AlertDialog? = null
     private var view: View? = null
-
+    private var statusCotizacion: Int = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithMenu(R.layout.search_activity)
@@ -36,6 +38,12 @@ class SearchProductActivity : MenuActivity() {
 
         rvwSearch.layoutManager = LinearLayoutManager(this)
         rvwSearch.adapter = SearchProductAdapter(mutableListOf()) { insertData(it) }
+        val saleEntity = intent.getIntExtra("STATUS_COTIZACION", 0)
+        if (saleEntity > 0) {
+            statusCotizacion = saleEntity
+        } else {
+            statusCotizacion = 0
+        }
 
         ivbSearch.setOnClickListener {
             this.hideSoftInput()
@@ -148,7 +156,7 @@ class SearchProductActivity : MenuActivity() {
     private fun searchProduct() {
         fltLoading.visibility = View.VISIBLE
         val searchViewModel = ViewModelProviders.of(this)[SearchProductViewModel::class.java]
-        searchViewModel.searchProduct(tvwSearch.text.toString())
+        searchViewModel.searchProduct(tvwSearch.text.toString(),statusCotizacion)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
