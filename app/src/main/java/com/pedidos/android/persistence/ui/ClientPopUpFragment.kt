@@ -7,7 +7,9 @@ import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.v4.app.DialogFragment
 import android.support.v7.app.AlertDialog
+import android.text.Editable
 import android.text.InputType
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -81,6 +83,19 @@ class ClientPopUpFragment : DialogFragment() {
         lp.width = WindowManager.LayoutParams.MATCH_PARENT
 
         dialog.window?.attributes = lp
+        codigo.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {}
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                nombres.setText("") // Limpia el contenido de nombres
+                direccion.setText("") // Limpia el contenido de direccion
+                correo.setText("") // Limpia el contenido de correo
+                phone.setText("") // Limpia el contenido de phone
+
+            }
+        })
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
