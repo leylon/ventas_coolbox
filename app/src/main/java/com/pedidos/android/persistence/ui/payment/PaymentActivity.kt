@@ -345,6 +345,7 @@ class PaymentActivity : MenuActivity() {
     private fun btnOnClickVale() {
         view = LayoutInflater.from(this)
             .inflate(R.layout.search_imei_dialog, lltRoot, false)
+        view?.textTitleDialog?.setText("NUMERO VALE/GIFCARD")
         dialog = AlertDialog.Builder(this)
             .setView(view)
             .setCancelable(false)
@@ -354,7 +355,7 @@ class PaymentActivity : MenuActivity() {
         view?.btnScan?.setOnClickListener {
             val integrator = IntentIntegrator(this)
             integrator.setDesiredBarcodeFormats(IntentIntegrator.ALL_CODE_TYPES)
-            integrator.setPrompt("ESCANEAR IMEI")
+            integrator.setPrompt("NUMERO VALE/GIFCARD")
             integrator.setOrientationLocked(false)
             integrator.setBeepEnabled(true)
             integrator.setBarcodeImageEnabled(true)
