@@ -524,6 +524,7 @@
                             android:ems="10"
                             android:enabled="false"
                             android:focusable="false"
+                            android:clickable="false"
                             android:textColor="@color/visanet_black"
                             android:inputType="numberDecimal"
                             android:textAlignment="textEnd" />
@@ -682,6 +683,56 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:ems="10"
+                        android:inputType="numberDecimal"
+                        android:textAlignment="textEnd"
+                        android:textSize="18sp" />
+                </LinearLayout>
+                <TextView
+                    android:id="@+id/textNCR"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/darkBlue"
+                    android:paddingTop="5dp"
+                    android:paddingBottom="5dp"
+                    android:text="@string/tvw_cobranza_ncr"
+                    android:textAlignment="center"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:visibility="visible"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/linerNCR"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="@dimen/margin_medium"
+                    android:layout_marginEnd="@dimen/margin_medium"
+                    android:orientation="horizontal"
+                    android:visibility="visible"
+                    android:weightSum="2">
+
+                    <ImageButton
+                        android:id="@+id/btnNCR"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:layout_weight="1"
+                        android:src="@drawable/other_service"
+                        android:backgroundTint="@color/white"
+                        android:drawableStart="@drawable/fpay_ic"
+                        android:textAlignment="center"
+                        android:textColor="@android:color/black"
+                        android:textSize="16sp" />
+
+                    <EditText
+                        android:id="@+id/etwNCR"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ems="10"
+                        android:enabled="false"
+                        android:focusable="false"
+                        android:clickable="false"
                         android:inputType="numberDecimal"
                         android:textAlignment="textEnd"
                         android:textSize="18sp" />

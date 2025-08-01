@@ -56,4 +56,8 @@ class PaymentEntity(
     override var pagofalabellaTransaccion : String = ""
     override var pagofalabellaImporte : Double = 0.0
     override var pagofalabellaTicket: String = ""
+    @SerializedName("numncr")
+    override var numncr: String = ""
+    @SerializedName("impncr")
+    override var impncr: Double = 0.0
 }

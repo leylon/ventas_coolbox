@@ -26,4 +26,6 @@ interface Payment {
     var pagofalabellaTransaccion  : String
     var pagofalabellaImporte : Double
     var pagofalabellaTicket: String
+    var numncr: String
+    var impncr: Double
 }

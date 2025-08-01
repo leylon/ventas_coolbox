@@ -20,6 +20,7 @@ import android.app.Application;
 
 import com.pedidos.android.persistence.BuildConfig;
 import com.pedidos.android.persistence.api.ApiCorreo;
+import com.pedidos.android.persistence.api.ApiExternas;
 import com.pedidos.android.persistence.api.CoolboxApi;
 
 /**
@@ -46,7 +47,7 @@ public class BasicApp extends Application {
     public static final String DEFAULT_BASE_URL = "https://wsfacturacion.coolbox.com.pe:9443/SKM/";
 
     private CoolboxApi mrepository;
-
+    private ApiExternas apiExternas;
     private ApiCorreo mrepositoryApiCorreo;
 
     //Serial version
@@ -70,5 +71,12 @@ public class BasicApp extends Application {
         }
 
         return mrepositoryApiCorreo;
+    }
+    public ApiExternas getApiRepositoryExterno(String urlBase) {
+        if (apiExternas == null) {
+            apiExternas = ApiExternas.Companion.create(urlBase);
+        }
+
+        return apiExternas;
     }
 }

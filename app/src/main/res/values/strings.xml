@@ -211,6 +211,7 @@
     <string name="cargar_cotizacion">CARGAR COTIZACION</string>
     <string name="cotizacion_tomar_foto">Tomar foto</string>
     <string name="cotizacion_buscar">Buscar</string>
+    <string name="tvw_cobranza_ncr">Nota de Crédito</string>
     <string-array name="array_modo_transport">
         <item>PUBLICO</item>
         <item>PRIVADO</item>

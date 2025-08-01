@@ -29,6 +29,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import com.google.gson.Gson
 import com.google.zxing.integration.android.IntentIntegrator
 import com.pedidos.android.persistence.R
 import com.pedidos.android.persistence.db.entity.*
@@ -39,6 +40,10 @@ import com.pedidos.android.persistence.model.TipoDocumento
 import com.pedidos.android.persistence.model.pagos.PagoValeDataResponse
 import com.pedidos.android.persistence.model.pagos.PagoValeRequest
 import com.pedidos.android.persistence.model.pagos.PagoValeResponse
+import com.pedidos.android.persistence.model.pagos.PaymentNcrRequest
+import com.pedidos.android.persistence.model.pagos.PaymentNcrResponse
+import com.pedidos.android.persistence.model.pagos.PaymentValeRequest
+import com.pedidos.android.persistence.model.pagos.PaymentValeResponse
 import com.pedidos.android.persistence.ui.BasicApp
 import com.pedidos.android.persistence.ui.ClientPopUpFragment
 import com.pedidos.android.persistence.ui.menu.MenuActivity
@@ -49,7 +54,17 @@ import com.pedidos.android.persistence.utils.Defaults
 import com.pedidos.android.persistence.utils.Formatter
 import com.pedidos.android.persistence.viewmodel.EndingViewModel
 import com.pedidos.android.persistence.viewmodel.PaymentViewModel
+import com.pedidos.android.persistence.viewmodel.TipoPagoViewModel
 import kotlinx.android.synthetic.main.activity_complementary_product.*
+import kotlinx.android.synthetic.main.dialog_ncr.view.buttonAceptar
+import kotlinx.android.synthetic.main.dialog_ncr.view.editTextImporte
+import kotlinx.android.synthetic.main.dialog_ncr.view.editTextNumDoc
+import kotlinx.android.synthetic.main.dialog_ncr.view.editTextTipDoc
+import kotlinx.android.synthetic.main.dialog_ncr.view.imageSearch
+import kotlinx.android.synthetic.main.dialog_ncr.view.textViewBarra
+import kotlinx.android.synthetic.main.dialog_ncr.view.textViewSaldo
+import kotlinx.android.synthetic.main.dialog_ncr.view.textViewVencimiento
+import kotlinx.android.synthetic.main.dialog_pago_vale.view.editTextGiftCard
 import kotlinx.android.synthetic.main.nav_header_menu.view.*
 import kotlinx.android.synthetic.main.payment_activity.*
 import kotlinx.android.synthetic.main.payment_activity.fltLoading
@@ -75,6 +90,7 @@ class PaymentActivity : MenuActivity() {
 
     private lateinit var viewModel: PaymentViewModel
     private lateinit var endingViewModel: EndingViewModel
+    private lateinit var tipoPagoViewModel: TipoPagoViewModel
     private var idOrderPagoLink : String = ""
     private var idOrderFpay : String = ""
     private val codeFpayResult  : Int = 101
@@ -88,7 +104,7 @@ class PaymentActivity : MenuActivity() {
     private var montoReference: String = ""
     private var dialog: AlertDialog? = null
     private var view: View? = null
-    private var numVale: String = ""
+   // private var numVale: String = ""
     private var isSaleSucceses: Boolean = false
     private var refTarje: String = ""
     lateinit var editEfectivo: TextInputEditText
@@ -97,6 +113,9 @@ class PaymentActivity : MenuActivity() {
     lateinit var etwPagoFalabellaTransaccion: TextInputEditText
     lateinit var etwPagoFalabellaTicket  : TextInputEditText
     private var isEnablePagoFalabella: Boolean = false
+    private var numVale: String = ""
+    private var numNcr: String = ""
+    private var importeTotal: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -110,7 +129,7 @@ class PaymentActivity : MenuActivity() {
 
         numeroDocumento = saleEntity.documento
         tvwTotalVenta.text = Formatter.DoubleToString(saleEntity.total, saleEntity.monedaSimbolo)
-
+        importeTotal = saleEntity.total.toString()
         etwMpos.text = Editable.Factory.getInstance().newEditable("")
         editEfectivo = findViewById(R.id.etwEfectivo)
         //etwFpay.text = Editable.Factory.getInstance().newEditable(saleEntity.total.toString())
@@ -151,6 +170,17 @@ class PaymentActivity : MenuActivity() {
 
         val factory = PaymentViewModel.Companion.Factory(application, getSettings().urlbase)
         viewModel = ViewModelProviders.of(this, factory)[PaymentViewModel::class.java]
+        val tipoPagoFactory = TipoPagoViewModel.Companion.Factory(application, getSettings().urlbase)
+        tipoPagoViewModel = ViewModelProviders.of(this, tipoPagoFactory)[TipoPagoViewModel::class.java]
+        tipoPagoViewModel.errorMessages.observe(this) {
+            showLoading(false)
+            onError(it!!)}
+        tipoPagoViewModel.showProgress.observe(this) { showLoading(it!!) }
+        tipoPagoViewModel.valeResult.observe(this, Observer { setValeCard(it!!) })
+        tipoPagoViewModel.ncrResult.observe(this, Observer { setNcrCard(it!!) })
+        swTipoTarjeta.onItemSelectedListener = onSpinerSelectedItem
+        swTipoTarjeta.adapter = arrayAdapter()
+
         viewModel.showLoading.observe(this, Observer { showLoading(it!!) })
         viewModel.resultMessages.observe(this, Observer {
             println("ley: printOnSnackBar => ${it!!}")
@@ -179,7 +209,8 @@ class PaymentActivity : MenuActivity() {
             btnMpos.setOnClickListener { cobrarMPOS() }
             btnFpay.setOnClickListener { btnOnClickFpay() }
             btnPlink.setOnClickListener { btnOnClickPLink() }
-            btnOtherVale.setOnClickListener{ btnOnClickVale()}
+            btnOtherVale.setOnClickListener{ btnOnClickVale(false)}
+            btnNCR.setOnClickListener{ btnOnClickNcr(false)}
             btnMposMasterCard.setOnClickListener {
                 isMposVISA = false
                 printOnSnackBar("En construccion")
@@ -237,6 +268,56 @@ class PaymentActivity : MenuActivity() {
         disableFalabellaPaymentFields()
     }
 
+
+    private fun setNcrCard(it: PaymentNcrResponse) {
+        showLoading(false)
+        btnOnClickNcr(true)
+        //numNcr = it.NU_DOCU
+        //etwNCR.setText(it.IM_DISP.toString())
+
+    }
+    private fun btnOnClickNcr(status: Boolean) {
+        val viewdialog = LayoutInflater.from(this)
+            .inflate(R.layout.dialog_ncr, lltRoot, false)
+        dialog = AlertDialog.Builder(this)
+            .setView(viewdialog)
+            .setCancelable(false)
+            .setTitle("Nota de Crédito")
+            .show()
+
+        viewdialog?.imageSearch?.setOnClickListener {
+            tipoPagoViewModel.getNcrCard(getSession().urlaplncr,
+                PaymentNcrRequest( getSession().usuario,
+                    getSession().tienda,
+                    viewdialog?.editTextTipDoc?.text.toString(),
+                    viewdialog?.editTextNumDoc?.text.toString(),
+                    importeTotal)
+            )
+
+            dialog?.dismiss()
+        }
+        if (status){
+            viewdialog.editTextNumDoc.setText(tipoPagoViewModel?.ncrResult.value?.NU_DOCU.toString())
+            viewdialog.editTextTipDoc.setText(tipoPagoViewModel?.ncrResult.value?.TI_DOCU.toString())
+            viewdialog.textViewSaldo.text = "SALDO: "+ tipoPagoViewModel?.ncrResult.value?.IM_DISP.toString()
+            viewdialog.textViewBarra.text = "CLIENTE: "+tipoPagoViewModel?.ncrResult.value?.NU_RUCS.toString()
+            viewdialog.textViewVencimiento.text = "VENCIMIENTO: "+tipoPagoViewModel?.ncrResult.value?.FE_DOCU.toString()
+            viewdialog.editTextImporte.setText(tipoPagoViewModel?.ncrResult.value?.IM_USAR.toString())
+        }
+        viewdialog?.buttonAceptar?.setOnClickListener {
+            numNcr = viewdialog.editTextNumDoc.text.toString()
+            etwNCR.setText(viewdialog.editTextImporte.text.toString())
+            dialog?.dismiss()
+        }
+
+    }
+
+    private fun setValeCard(paymentValeResponse: PaymentValeResponse){
+
+        showLoading(false)
+        btnOnClickVale(true)
+        println("setValeCard: "+ Gson().toJson(paymentValeResponse))
+    }
     override fun onResume() {
         super.onResume()
         println("onResume")
@@ -333,7 +414,8 @@ class PaymentActivity : MenuActivity() {
         linerOtosPagos.visibility = isVisbleView(userInfo.otroPago)
         linerMpos.visibility = isVisbleView(userInfo.mPos)
         textMpos.visibility = isVisbleView(userInfo.mPos)
-
+        linerNCR.visibility = isVisbleView(userInfo.aplncr)
+        textNCR.visibility = isVisbleView(userInfo.aplncr)
 
     }
 
@@ -342,7 +424,7 @@ class PaymentActivity : MenuActivity() {
         return if(statusView) View.VISIBLE else View.GONE
     }
 
-    private fun btnOnClickVale() {
+    /*private fun btnOnClickVale(status: Boolean){
         view = LayoutInflater.from(this)
             .inflate(R.layout.search_imei_dialog, lltRoot, false)
         view?.textTitleDialog?.setText("NUMERO VALE/GIFCARD")
@@ -371,9 +453,57 @@ class PaymentActivity : MenuActivity() {
             //searchViewModel.checkAutomaticallyGuide(productEntity)
             // addItem(productEntity)
         }
+    }*/
+
+    private fun btnOnClickVale(status: Boolean) {
+        val viewdialog = LayoutInflater.from(this)
+            .inflate(R.layout.dialog_pago_vale, lltRoot, false)
+        dialog = AlertDialog.Builder(this)
+            .setView(viewdialog)
+            .setCancelable(false)
+            .setTitle("VALE/GIFTCARD")
+            .show()
+
+        viewdialog?.imageSearch?.setOnClickListener {
+            tipoPagoViewModel.getValesCard(getSession().urlvale,
+                PaymentValeRequest( getSession().usuario,
+                    getSession().tienda,
+                    viewdialog?.editTextGiftCard?.text.toString(),
+                    importeTotal
+                    )
+            )
+            if (status){
+                viewdialog.editTextGiftCard.setText(tipoPagoViewModel?.valeResult.value?.vale.toString())
+                viewdialog.textViewSaldo.text = "SALDO: "+ tipoPagoViewModel?.valeResult.value?.importe.toString()
+                viewdialog.textViewBarra.text = "BARRA: "+tipoPagoViewModel?.valeResult.value?.barra.toString()
+                viewdialog.textViewVencimiento.text = "VENCIMIENTO: "+tipoPagoViewModel?.valeResult.value?.fechaVencimiento.toString()
+                viewdialog.editTextImporte.setText(tipoPagoViewModel?.valeResult.value?.importeUsar.toString())
+            }
+
+            //viewdialog.textViewSaldo.text = "SALDO:"+ tipoPagoViewModel.valeResult.value?.importe.toString()
+            //viewdialog.textViewBarra.text = "BARRA:"+tipoPagoViewModel.valeResult.value?.barra.toString()
+            //viewdialog.textViewVencimiento.text = "VENCIMIENTO:"+tipoPagoViewModel.valeResult.value?.fechaVencimiento.toString()
+            // checkResult(productEntity)
+            //addItem(productEntity)
+            //validarPagoVale(view?.edtImei?.text.toString())
+            dialog?.dismiss()
+            //searchViewModel.checkAutomaticallyGuide(productEntity)
+            // addItem(productEntity)
+        }
+        if (status){
+            viewdialog.editTextGiftCard.setText(tipoPagoViewModel?.valeResult.value?.vale.toString())
+            viewdialog.textViewSaldo.text = "SALDO: "+ tipoPagoViewModel?.valeResult.value?.importe.toString()
+            viewdialog.textViewBarra.text = "BARRA: "+tipoPagoViewModel?.valeResult.value?.barra.toString()
+            viewdialog.textViewVencimiento.text = "VENCIMIENTO: "+tipoPagoViewModel?.valeResult.value?.fechaVencimiento.toString()
+            viewdialog.editTextImporte.setText(tipoPagoViewModel?.valeResult.value?.importeUsar.toString())
+        }
+        viewdialog?.buttonAceptar?.setOnClickListener {
+            numVale = viewdialog.editTextGiftCard.text.toString()
+            etwOtherVale.setText(viewdialog.editTextImporte.text.toString())
+            dialog?.dismiss()
+        }
+
     }
-
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         println("result_bar: "+data?.dataString)
         println("resultCode: "+resultCode)
@@ -458,6 +588,7 @@ class PaymentActivity : MenuActivity() {
 
     }
 
+
     private fun createPaymentEntity(): PaymentEntity {
         val paymentEntity = PaymentEntity()
         paymentEntity.tipoDocumento = if (rbwBoleta.isChecked) Defaults.BOLETA else Defaults.FACTURA
@@ -493,6 +624,8 @@ class PaymentActivity : MenuActivity() {
         paymentEntity.pagofalabellaCaja = etwPagoFalabellaCaja.text.toString()
         paymentEntity.pagofalabellaTransaccion = etwPagoFalabellaTransaccion.text.toString()
         paymentEntity.pagofalabellaTicket = etwPagoFalabellaTicket.text.toString()
+        paymentEntity.numncr = numNcr
+        paymentEntity.impncr = if (TextUtils.isEmpty(etwNCR.text.toString())) 0.0 else etwNCR.text.toString().toDouble()
         return paymentEntity
     }
 

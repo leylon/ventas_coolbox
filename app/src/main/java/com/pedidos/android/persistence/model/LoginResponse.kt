@@ -37,4 +37,10 @@ class LoginResponse(var cajacodigo: String,
                     var pagoFalabella: Boolean,
                     @SerializedName("version")
                     var version: String,
+                    @SerializedName("AplNCR")
+                    var aplncr: Boolean,
+                    @SerializedName("urlvale")
+                    var urlvale: String,
+                    @SerializedName("urlaplNCR")
+                    var urlaplncr: String,
                     )
