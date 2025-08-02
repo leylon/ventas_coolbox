@@ -235,6 +235,10 @@ open class BaseActivity : AppCompatActivity() {
         try {
             val blueToothWrapper = this.setupPrinter()
             if (blueToothWrapper != null) {
+                val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
+                val setUtf8  = byteArrayOf(0x1C.toByte(), 0x43.toByte(), 0xFF.toByte())
+                blueToothWrapper.outputStream.write(setMulti)
+                blueToothWrapper.outputStream.write(setUtf8)
                 blueToothWrapper.outputStream.write(bytes)
                 blueToothWrapper.outputStream.close()
                 blueToothWrapper.close()
@@ -262,6 +266,10 @@ open class BaseActivity : AppCompatActivity() {
         try {
             val blueToothWrapper = this.setupPrinter()
             if (blueToothWrapper != null) {
+                val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
+                val setUtf8  = byteArrayOf(0x1C.toByte(), 0x43.toByte(), 0xFF.toByte())
+                blueToothWrapper.outputStream.write(setMulti)
+                blueToothWrapper.outputStream.write(setUtf8)
                // blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x00)) // ESC !
                 //blueToothWrapper.outputStream.write(byteArrayOf(0x1D, 0x21, 0x00)) // GS !
                 //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x12))       // Descondensar
@@ -321,7 +329,7 @@ open class BaseActivity : AppCompatActivity() {
                        // return false
                     }
                 }
-                blueToothWrapper.outputStream.write(documentoPrint.toByteArray(Charsets.ISO_8859_1))
+                blueToothWrapper.outputStream.write(documentoPrint.toByteArray(Charsets.UTF_8))
                 Thread.sleep(1500)
                 blueToothWrapper.outputStream.close()
                 blueToothWrapper.inputStream.close()
@@ -615,7 +623,10 @@ open class BaseActivity : AppCompatActivity() {
                         */
                     }
                 }
-
+                val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
+                val setUtf8  = byteArrayOf(0x1C.toByte(), 0x43.toByte(), 0xFF.toByte())
+                blueToothWrapper.outputStream.write(setMulti)
+                blueToothWrapper.outputStream.write(setUtf8)
                 val cotiCabecera = Base64.decode(cotizacionPrint.cotiCabecera,Base64.DEFAULT)
                 blueToothWrapper.outputStream.write(cotiCabecera)
 
