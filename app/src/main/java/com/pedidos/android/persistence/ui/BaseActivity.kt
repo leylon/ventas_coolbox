@@ -236,7 +236,7 @@ open class BaseActivity : AppCompatActivity() {
             val blueToothWrapper = this.setupPrinter()
             if (blueToothWrapper != null) {
                 val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
-                val setUtf8  = byteArrayOf(0x1C.toByte(), 0x43.toByte(), 0xFF.toByte())
+                val setUtf8  = getCodePageCommand(16)
                 blueToothWrapper.outputStream.write(setMulti)
                 blueToothWrapper.outputStream.write(setUtf8)
                 blueToothWrapper.outputStream.write(bytes)
@@ -253,7 +253,12 @@ open class BaseActivity : AppCompatActivity() {
 
         return false
     }
-
+    fun getCodePageCommand(page: Int): ByteArray {
+        return byteArrayOf(0x1B, 0x74, page.toByte()) // ESC t <n>
+    }
+    fun getCodePageCommandSunmi(page: Int): ByteArray {
+        return byteArrayOf(0x1C.toByte(), 0x43.toByte(), 0xFF.toByte()) // ESC t <n>
+    }
     protected fun performPrinting(documentoPrint: String): Boolean {
         val settings = getSettings()
         val width = settings.pageSize
@@ -267,7 +272,7 @@ open class BaseActivity : AppCompatActivity() {
             val blueToothWrapper = this.setupPrinter()
             if (blueToothWrapper != null) {
                 val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
-                val setUtf8  = byteArrayOf(0x1C.toByte(), 0x43.toByte(), 0xFF.toByte())
+                val setUtf8  = getCodePageCommand(16)
                 blueToothWrapper.outputStream.write(setMulti)
                 blueToothWrapper.outputStream.write(setUtf8)
                // blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x00)) // ESC !
@@ -624,7 +629,7 @@ open class BaseActivity : AppCompatActivity() {
                     }
                 }
                 val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
-                val setUtf8  = byteArrayOf(0x1C.toByte(), 0x43.toByte(), 0xFF.toByte())
+                val setUtf8  = getCodePageCommand(16)
                 blueToothWrapper.outputStream.write(setMulti)
                 blueToothWrapper.outputStream.write(setUtf8)
                 val cotiCabecera = Base64.decode(cotizacionPrint.cotiCabecera,Base64.DEFAULT)
