@@ -42,10 +42,14 @@ class TipoPagoViewModel(private val repository: ApiExternas) : ViewModel() {
                 override fun onResponse(
                     call: Call<PaymentValeResponse>, response: Response<PaymentValeResponse>
                 ) {
-                    if (response.isSuccessful && response.body()!!.result) {
-                        valeResult.postValue(response.body())
+                    if (response.isSuccessful ) {
+                        if (response.body() == null || !response.body()!!.result) {
+                            errorMessages.postValue(response.body()?.message ?: "Error desconocido")
+                        } else if (response.body()!!.result) {
+                            valeResult.postValue(response.body())
+                        }
                     } else {
-                        errorMessages.postValue(response.body()!!.message)
+                        errorMessages.postValue(response.message())
                     }
                 }
 
@@ -63,7 +67,12 @@ class TipoPagoViewModel(private val repository: ApiExternas) : ViewModel() {
                     call: Call<PaymentNcrResponse>, response: Response<PaymentNcrResponse>
                 ) {
                     if (response.isSuccessful ) {
-                        ncrResult.postValue(response.body())
+                        if (response.body() == null || !response.body()!!.result) {
+                            errorMessages.postValue(response.body()?.message ?: "Error desconocido")
+                        }else {
+                            ncrResult.postValue(response.body())
+                        }
+
                     } else {
                         errorMessages.postValue(response.message())
                     }

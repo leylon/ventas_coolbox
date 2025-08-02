@@ -19,9 +19,9 @@
 
     <TextView
         android:id="@+id/txtDescriptionCard"
-        android:layout_width="90dp"
+        android:layout_width="80dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4sp"
+        android:layout_marginTop="4dp"
         android:gravity="center_horizontal"
         android:maxLines="1"
         android:text="VISA"
