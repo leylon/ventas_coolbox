@@ -272,7 +272,7 @@ open class BaseActivity : AppCompatActivity() {
             val blueToothWrapper = this.setupPrinter()
             if (blueToothWrapper != null) {
                 val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
-                val setUtf8  = getCodePageCommand(16)
+                val setUtf8  = getCodePageCommandSunmi(16)
                 blueToothWrapper.outputStream.write(setMulti)
                 blueToothWrapper.outputStream.write(setUtf8)
                // blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x00)) // ESC !
@@ -629,7 +629,7 @@ open class BaseActivity : AppCompatActivity() {
                     }
                 }
                 val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
-                val setUtf8  = getCodePageCommand(16)
+                val setUtf8  = getCodePageCommandSunmi(16)
                 blueToothWrapper.outputStream.write(setMulti)
                 blueToothWrapper.outputStream.write(setUtf8)
                 val cotiCabecera = Base64.decode(cotizacionPrint.cotiCabecera,Base64.DEFAULT)
