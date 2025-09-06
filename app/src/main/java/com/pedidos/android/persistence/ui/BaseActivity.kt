@@ -35,6 +35,7 @@ import com.pedidos.android.persistence.utils.Extensions
 import com.pedidos.android.persistence.utils.PaperWidth
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.math.min
 
 
 @SuppressLint("Registered")
@@ -426,12 +427,30 @@ open class BaseActivity : AppCompatActivity() {
                         // return false
                     }
                 }
+
+                var documentPrint : ByteArray? = byteArrayOf()
                 val qrByte = Base64.decode(qrPrint,Base64.DEFAULT)
                 val qrBitmap = BitmapFactory.decodeByteArray(qrByte,0, qrByte.size)
-                val documentPrint = Extensions().decodeBitmap(qrBitmap)
+                documentPrint = Extensions().decodeBitmap(qrBitmap)
 
                 blueToothWrapper.outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
-                blueToothWrapper.outputStream.write(documentPrint)
+
+                val chunkSize = 512 // Tamaño del trozo en bytes. Puedes ajustar este valor.
+                var offset = 0
+                while (offset < documentPrint!!.size) {
+                    val size = min(chunkSize, documentPrint!!.size - offset)
+                    blueToothWrapper.outputStream.write(documentPrint!!, offset, size)
+                    // Pequeña pausa para que la impresora procese el trozo.
+                    Thread.sleep(50)
+                    offset += size
+                }
+
+                // 3. Agregar saltos de línea al final y asegurar que todo se envíe.
+                blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A, 0x0A, 0x0A))
+                //blueToothWrapper.outputStream.write(documentPrint)
+
+                blueToothWrapper.outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
+               // blueToothWrapper.outputStream.write(documentPrint)
                 Thread.sleep(1500)
                 blueToothWrapper.outputStream.close()
                 blueToothWrapper.inputStream.close()

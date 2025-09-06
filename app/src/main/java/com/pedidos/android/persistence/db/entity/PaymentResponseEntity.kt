@@ -34,6 +34,8 @@ class PaymentResponseEntity {
     @SerializedName("voucherprint")
     var voucherMposPrint : String = ""
 
+    @SerializedName("imagenqr2")
+    var qrPrint2 : String = ""
 
     @Ignore()
     var serviceResultMessage : String = ""
