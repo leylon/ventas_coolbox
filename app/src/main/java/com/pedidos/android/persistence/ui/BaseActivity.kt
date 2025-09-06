@@ -372,19 +372,19 @@ open class BaseActivity : AppCompatActivity() {
                 //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x12))       // Descondensar
                 when (width) {
                     PaperWidth.WIDTH_80MM.widthValue -> {
-                        printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
                         println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
                         //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x20)) // Texto grande
                         //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x10)) // Margen izquierdo más amplio
                     }
                     PaperWidth.WIDTH_58MM.widthValue -> {
-                        printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
                         println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
                        // blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x10)) // Texto mediano
                         //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x08)) // Margen izquierdo reducido
                     }
                     PaperWidth.WIDTH_50_8MM.widthValue -> {
-                        printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
                         println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
                         /*
                         blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x08))  // Texto pequeño
@@ -404,7 +404,7 @@ open class BaseActivity : AppCompatActivity() {
                          */
                     }
                     PaperWidth.WIDTH_48MM.widthValue -> {
-                        printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
                         println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
                         // 1. Reset y configuración básica
                         /*blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x40))
@@ -447,11 +447,13 @@ open class BaseActivity : AppCompatActivity() {
 
                 // 3. Agregar saltos de línea al final y asegurar que todo se envíe.
                 blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A, 0x0A, 0x0A))
+                blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A, 0x0A, 0x0A))
                 //blueToothWrapper.outputStream.write(documentPrint)
 
                 blueToothWrapper.outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
+                blueToothWrapper.outputStream.flush()
                // blueToothWrapper.outputStream.write(documentPrint)
-                Thread.sleep(1500)
+                Thread.sleep(2000)
                 blueToothWrapper.outputStream.close()
                 blueToothWrapper.inputStream.close()
                 blueToothWrapper.close()
@@ -491,19 +493,19 @@ open class BaseActivity : AppCompatActivity() {
              when (width) {
 
                  PaperWidth.WIDTH_80MM.widthValue -> {
-                     printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
+                     //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
                      println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
                      //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x20)) // Texto grande
                      //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x10)) // Margen izquierdo más amplio
                  }
                  PaperWidth.WIDTH_58MM.widthValue -> {
-                     printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
+                     //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
                      println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
                      //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x10)) // Texto mediano
                      //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x08)) // Margen izquierdo reducido
                  }
                  PaperWidth.WIDTH_50_8MM.widthValue -> {
-                     printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
+                     //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
                      println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
                      //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x08))  // Texto pequeño
                      //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x04)) // Margen izquierdo mínimo
@@ -520,7 +522,7 @@ open class BaseActivity : AppCompatActivity() {
                      blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x51, 0x00)) // Margen derecho 0
                  }
                  PaperWidth.WIDTH_48MM.widthValue -> {
-                     printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
+                     //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
                      println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
                      /*blueToothWrapper.outputStream.write(byteArrayOf(
                          0x1B, 0x40,       // Reset
@@ -601,19 +603,19 @@ open class BaseActivity : AppCompatActivity() {
                 when (width) {
 
                     PaperWidth.WIDTH_80MM.widthValue -> {
-                        printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
                         println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
                         //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x20)) // Texto grande
                         //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x10)) // Margen izquierdo más amplio
                     }
                     PaperWidth.WIDTH_58MM.widthValue -> {
-                        printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
                         println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
                         //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x10)) // Texto mediano
                         //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x08)) // Margen izquierdo reducido
                     }
                     PaperWidth.WIDTH_50_8MM.widthValue -> {
-                        printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
                         println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
                         //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x08))  // Texto pequeño
                         //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x04)) // Margen izquierdo mínimo
@@ -632,7 +634,7 @@ open class BaseActivity : AppCompatActivity() {
                          */
                     }
                     PaperWidth.WIDTH_48MM.widthValue -> {
-                        printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
                         println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
                        /* blueToothWrapper.outputStream.write(byteArrayOf(
                             0x1B, 0x40,       // Reset

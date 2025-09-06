@@ -71,6 +71,16 @@ class GeneratedDocumentsViewModel(private val repository: CoolboxApi) : ViewMode
                         if (receiptEntity != null) {
                             val data = Base64.decode(receiptEntity.documentoPrint, Base64.DEFAULT)
                             receiptEntity.documentoPrint = String(data)
+                            if (receiptEntity.imagenqr.trim().isNotEmpty()){
+                                val qrReceip = receiptEntity.imagenqr
+                                receiptEntity.imagenqr = qrReceip
+                            }
+                            if (receiptEntity.imagenqr2.trim().isNotEmpty()){
+                                val qrReceip2 = receiptEntity.imagenqr2
+                                receiptEntity.imagenqr2 = qrReceip2
+                            }
+                            val dataPie = Base64.decode(receiptEntity.piedocumentoprint, Base64.DEFAULT)
+                            receiptEntity.piedocumentoprint = String(dataPie)
                             receiptResult.postValue(receiptEntity)
                         } else {
                             errorMessages.postValue(response.body()!!.message)
