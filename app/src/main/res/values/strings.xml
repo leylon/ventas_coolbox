@@ -197,6 +197,7 @@
     <string name="cobranza_otros_pagos">Cobranza Otros Pagos</string>
     <string name="tvw_cobranza_fpay">Cobranza Fpay</string>
     <string name="tvw_cobranza_pLink">Cobranza Pago Link</string>
+    <string name="tvw_type_impresora">Tipo Impresora:</string>
     <string name="yes">Si</string>
     <string name="no">No</string>
     <!-- TODO: Remove or change this placeholder text -->

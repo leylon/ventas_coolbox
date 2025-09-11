@@ -35,6 +35,7 @@ import com.pedidos.android.persistence.utils.Extensions
 import com.pedidos.android.persistence.utils.PaperWidth
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.charset.Charset
 import kotlin.math.min
 
 
@@ -236,8 +237,9 @@ open class BaseActivity : AppCompatActivity() {
         try {
             val blueToothWrapper = this.setupPrinter()
             if (blueToothWrapper != null) {
+                println("Bytes a imprimir: ${bytes.size}")
                 val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
-                val setUtf8  = getCodePageCommand(16)
+                val setUtf8  = getCodePageCommandSunmi(16)
                 blueToothWrapper.outputStream.write(setMulti)
                 blueToothWrapper.outputStream.write(setUtf8)
                 blueToothWrapper.outputStream.write(bytes)
@@ -263,7 +265,9 @@ open class BaseActivity : AppCompatActivity() {
     protected fun performPrinting(documentoPrint: String): Boolean {
         val settings = getSettings()
         val width = settings.pageSize
+        val typePrint = settings.typePrint
         println("Se configuró el Tamaño de Papel: ${width}")
+        println("Se configuró el Tipo de Impresora: ${typePrint}")
         if (documentoPrint == "") {
             Log.i(CancelActivity.TAG, "no existe valor en el documento")
             printOnSnackBar(getString(R.string.payment_no_receipt))
@@ -272,62 +276,85 @@ open class BaseActivity : AppCompatActivity() {
         try {
             val blueToothWrapper = this.setupPrinter()
             if (blueToothWrapper != null) {
-                val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
+                /*val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
                 val setUtf8  = getCodePageCommandSunmi(16)
                 blueToothWrapper.outputStream.write(setMulti)
                 blueToothWrapper.outputStream.write(setUtf8)
+*/
+                when(typePrint) {
+                    "HIOPOS" -> {
+                        //Normal
+                        println("Usando modo GENERIC (Code Page/IBM850)")
+                        // Comandos que funcionaron para la impresora TongLiang
+                        val initPrinter = byteArrayOf(0x1B, 0x40)
+                        val selectCodePage = byteArrayOf(0x1B, 0x74, 0x13) // PC858 (Euro)
+                        // NUEVO: Comando para establecer el interlineado por defecto (ESC 2)
+                        //val setDefaultLineSpacing = byteArrayOf(0x1B, 0x32)
+                        val setCompactLineSpacing = byteArrayOf(0x1B, 0x33, 15)
+                        // Codificar el texto completo una sola vez.
+                        // val textData = textToPrint.toByteArray(Charset.forName("IBM850"))
+                        // 1. Enviar comandos de inicialización y configuración.
+                        blueToothWrapper.outputStream.write(initPrinter)
+                        blueToothWrapper.outputStream.write(selectCodePage)
+                        blueToothWrapper.outputStream.write(setCompactLineSpacing) // Aplicamos el interlineado estándar
+                        blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x00)) // ESC !
+                    }
+                    "SUNMI" -> {
+                        //Doble Alto
+                        val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
+                        val setUtf8  = getCodePageCommandSunmi(16)
+                        blueToothWrapper.outputStream.write(setMulti)
+                        blueToothWrapper.outputStream.write(setUtf8)
+                    }
+                    "GENERIC" -> {
+                        //Doble Ancho
+                        println("Usando modo GENERIC (UTF-8)")
+                        // Para Sunmi, enviamos directamente en UTF-8 sin comandos extraños.
+                        // La impresora Sunmi debería interpretar UTF-8 de forma nativa.
+                        val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
+                        val setUtf8  = getCodePageCommand(16)
+                        blueToothWrapper.outputStream.write(setMulti)
+                        blueToothWrapper.outputStream.write(setUtf8)
+                        //textData = textToPrint.toByteArray(Charsets.UTF_8)
+                    }
+                    "POSD" -> {
+                        //Doble Alto y Ancho
+                        println("Usando modo POSD (Code Page/IBM850)")
+                        // Probamos con la página de códigos PC850 (Multilingual), muy común.
+                        val selectCodePage = byteArrayOf(0x1B, 0x74, 0x02) // PC850
+                        val setCompactLineSpacing = byteArrayOf(0x1B, 0x33, 18)
+                        blueToothWrapper.outputStream.write(selectCodePage)
+                        blueToothWrapper.outputStream.write(setCompactLineSpacing)
+                        //textData = textToPrint.toByteArray(Charset.forName("IBM850"))
+                    }
+
+                }
+
                // blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x00)) // ESC !
                 //blueToothWrapper.outputStream.write(byteArrayOf(0x1D, 0x21, 0x00)) // GS !
                 //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x12))       // Descondensar
                 when (width) {
-                    PaperWidth.WIDTH_80MM.widthValue -> {
-                        printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
+                    "80mm"-> {
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
                         println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
                         //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x20)) // Texto grande
                         //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x10)) // Margen izquierdo más amplio
                     }
-                    PaperWidth.WIDTH_58MM.widthValue -> {
-                        printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
+                    "58mm" -> {
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
                         println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
                         //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x10)) // Texto mediano
                         //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x08)) // Margen izquierdo reducido
                     }
-                    PaperWidth.WIDTH_50_8MM.widthValue -> {
-                        printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
+                    "50mm" -> {
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
                         println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
-                        /*blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x08))  // Texto pequeño
-                        //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x04)) // Margen izquierdo mínimo
-                        // 1. Establecer modo página estrecha
-                        blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x57, 0x00, 0x00, 0x32, 0x00))
 
-                        // 2. Fuente ultra condensada
-                        blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x0F))
-
-                        // 3. Reducción al 60%
-                        blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x58, 0x32, 0x33))
-
-                        // 4. Márgenes mínimos
-                        blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x51, 0x00)) // Margen derecho 0
-
-                        */
                     }
-                    PaperWidth.WIDTH_48MM.widthValue -> {
-                        printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
+                    "48mm" -> {
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
                         println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
-                        // 1. Reset y configuración básica
-                        /*blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x40))
 
-                        // 2. Configuración específica para 48mm
-                        blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x57, 0x00, 0x00, 0x30, 0x00)) // Ancho página 48mm
-                        blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x00)) // Margen izquierdo 0
-                        blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x51, 0x00)) // Margen derecho 0
-
-                        // 3. Fuente condensada + reducción al 85%
-                        blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x0F))       // Fuente condensada ON
-                        blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x58, 0x32, 0x11)) // 87% tamaño
-
-                        // 4. Alta densidad
-                        blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x7B, 0x01))*/
                     }
                     else -> {
                         printOnSnackBar("Tamaño de papel no soportado: $width")
@@ -524,17 +551,6 @@ open class BaseActivity : AppCompatActivity() {
                  PaperWidth.WIDTH_48MM.widthValue -> {
                      //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
                      println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
-                     /*blueToothWrapper.outputStream.write(byteArrayOf(
-                         0x1B, 0x40,       // Reset
-                         0x1B, 0x57, 0x00, 0x00, 0x30, 0x00, // Ancho 48mm
-                         0x1B, 0x4C, 0x00, // Margen izquierdo 0
-                         0x1B, 0x51, 0x00, // Margen derecho 0
-                         0x1D, 0x21, 0x01, // Tamaño pequeño
-                         0x1B, 0x0F,       // Fuente condensada
-                         0x1B, 0x7B, 0x01, // Alta densidad
-                         0x1B, 0x74, 0x10  // Codificación
-                     ))
-                     */
 
                  }
              }
@@ -567,6 +583,7 @@ open class BaseActivity : AppCompatActivity() {
     protected fun performPrintingCotizacionNormal(cotizacionPrint: CotizacionPrint): Boolean {
         val settings = getSettings()
         val width = settings.pageSize
+        val typePrint = settings.typePrint
         println("Tamaño de Papel: $width")
         if (cotizacionPrint.cotiCabecera == "") {
             Log.i(CancelActivity.TAG, "no existe valor en el documento: Cabecera de Cotizacion")
@@ -617,42 +634,64 @@ open class BaseActivity : AppCompatActivity() {
                     PaperWidth.WIDTH_50_8MM.widthValue -> {
                         //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
                         println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
-                        //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x08))  // Texto pequeño
-                        //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x04)) // Margen izquierdo mínimo
-                        // 1. Establecer modo página estrecha
-                        /*blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x57, 0x00, 0x00, 0x32, 0x00))
 
-                        // 2. Fuente ultra condensada
-                        blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x0F))
-
-                        // 3. Reducción al 60%
-                        blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x58, 0x32, 0x33))
-
-                        // 4. Márgenes mínimos
-                        blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x51, 0x00)) // Margen derecho 0
-
-                         */
                     }
                     PaperWidth.WIDTH_48MM.widthValue -> {
                         //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
                         println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
-                       /* blueToothWrapper.outputStream.write(byteArrayOf(
-                            0x1B, 0x40,       // Reset
-                            0x1B, 0x57, 0x00, 0x00, 0x30, 0x00, // Ancho 48mm
-                            0x1B, 0x4C, 0x00, // Margen izquierdo 0
-                            0x1B, 0x51, 0x00, // Margen derecho 0
-                            0x1D, 0x21, 0x01, // Tamaño pequeño
-                            0x1B, 0x0F,       // Fuente condensada
-                            0x1B, 0x7B, 0x01, // Alta densidad
-                            0x1B, 0x74, 0x10  // Codificación
-                        ))
-                        */
+
                     }
                 }
-                val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
-                val setUtf8  = getCodePageCommandSunmi(16)
-                blueToothWrapper.outputStream.write(setMulti)
-                blueToothWrapper.outputStream.write(setUtf8)
+
+                when(typePrint) {
+                    "HIOPOS" -> {
+                        //Normal
+                        println("Usando modo GENERIC (Code Page/IBM850)")
+                        // Comandos que funcionaron para la impresora TongLiang
+                        val initPrinter = byteArrayOf(0x1B, 0x40)
+                        val selectCodePage = byteArrayOf(0x1B, 0x74, 0x13) // PC858 (Euro)
+                        // NUEVO: Comando para establecer el interlineado por defecto (ESC 2)
+                        //val setDefaultLineSpacing = byteArrayOf(0x1B, 0x32)
+                        val setCompactLineSpacing = byteArrayOf(0x1B, 0x33, 15)
+                        // Codificar el texto completo una sola vez.
+                       // val textData = textToPrint.toByteArray(Charset.forName("IBM850"))
+                        // 1. Enviar comandos de inicialización y configuración.
+                        blueToothWrapper.outputStream.write(initPrinter)
+                        blueToothWrapper.outputStream.write(selectCodePage)
+                        blueToothWrapper.outputStream.write(setCompactLineSpacing) // Aplicamos el interlineado estándar
+                        blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x00)) // ESC !
+                    }
+                    "SUNMI" -> {
+                        //Doble Alto
+                        val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
+                        val setUtf8  = getCodePageCommandSunmi(16)
+                        blueToothWrapper.outputStream.write(setMulti)
+                        blueToothWrapper.outputStream.write(setUtf8)
+                    }
+                    "GENERIC" -> {
+                        //Doble Ancho
+                        println("Usando modo GENERIC (UTF-8)")
+                        // Para Sunmi, enviamos directamente en UTF-8 sin comandos extraños.
+                        // La impresora Sunmi debería interpretar UTF-8 de forma nativa.
+                        val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
+                        val setUtf8  = getCodePageCommand(16)
+                        blueToothWrapper.outputStream.write(setMulti)
+                        blueToothWrapper.outputStream.write(setUtf8)
+                        //textData = textToPrint.toByteArray(Charsets.UTF_8)
+                    }
+                    "POSD" -> {
+                        //Doble Alto y Ancho
+                        println("Usando modo POSD (Code Page/IBM850)")
+                        // Probamos con la página de códigos PC850 (Multilingual), muy común.
+                        val selectCodePage = byteArrayOf(0x1B, 0x74, 0x02) // PC850
+                        val setCompactLineSpacing = byteArrayOf(0x1B, 0x33, 18)
+                        blueToothWrapper.outputStream.write(selectCodePage)
+                        blueToothWrapper.outputStream.write(setCompactLineSpacing)
+                        //textData = textToPrint.toByteArray(Charset.forName("IBM850"))
+                    }
+
+                }
+
                 val cotiCabecera = Base64.decode(cotizacionPrint.cotiCabecera,Base64.DEFAULT)
                 blueToothWrapper.outputStream.write(cotiCabecera)
 
