@@ -613,7 +613,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
 
     }
     fun isImeiRepeated(imei: String): Boolean {
-        return listSaleSubItem.any { it.imei == imei }
+        return imei.isNotEmpty() && listSaleSubItem.any { it.imei == imei }
     }
     private fun addItem(productEntity: ProductEntity,detallesCotizacion: CotizacionDet) {
         chkGenerateCotization.isEnabled = false
