@@ -262,7 +262,13 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
                         addItem(productEntity)
 
                     } else {
-                        addItem(productEntity,detalllesCotizacion!!)
+                        if (isImeiRepeated(productEntity.imei)){
+                            onErrorImei("Imei ${productEntity.imei} se encuentra registrado", productEntity)
+                        }else {
+                            addItem(productEntity,detalllesCotizacion!!)
+                        }
+
+
                     }
 
                 }
@@ -286,6 +292,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
 
     }
     private fun checkResult(productEntity: ProductEntity?,detalles: CotizacionDet) {
+        detalllesCotizacion = detalles
         if (productEntity != null) {
             if (productEntity.stimei) {
                 //request IMEI
@@ -330,12 +337,17 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
                     dialogView?.tvwCancelar?.setOnClickListener {
                         showProgress(false)
                         mydialog?.dismiss()
+                        if (flag_cotizacion) {
+                            finish()
+                            startActivity(Intent(this, SaleActivity::class.java))
+                        }
                     }
                 } else {
                     if (!flag_cotizacion) {
                         searchViewModel.checkAutomatically(productEntity,::onErrorImei)
                     } else {
-                        searchViewModel.checkAutomatically(productEntity,::onErrorImei,detalles)
+                            searchViewModel.checkAutomatically(productEntity,::onErrorImei,detalles)
+                //        searchViewModel.checkAutomatically(productEntity,::onErrorImei,detalles)
                     }
 
                 }
@@ -382,7 +394,12 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
                     if (!flag_cotizacion) {
                         addItem(productEntity)
                     }else {
-                        addItem(productEntity,detalles)
+                        if (isImeiRepeated(productEntity.imei)){
+                            onErrorImei("Imei ${productEntity.imei} se encuentra registrado", productEntity)
+                        }else {
+                            addItem(productEntity,detalles)
+                        }
+
                     }
 
                 }
@@ -393,7 +410,12 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
                 if (!flag_cotizacion) {
                     addItem(productEntity)
                 }else {
-                    addItem(productEntity,detalles)
+                    if (isImeiRepeated(productEntity.imei)){
+                        onErrorImei("Imei ${productEntity.imei} se encuentra registrado", productEntity)
+                    }else {
+                        addItem(productEntity,detalles)
+                    }
+
                 }
 
             }
@@ -589,6 +611,9 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
             }
         }
 
+    }
+    fun isImeiRepeated(imei: String): Boolean {
+        return listSaleSubItem.any { it.imei == imei }
     }
     private fun addItem(productEntity: ProductEntity,detallesCotizacion: CotizacionDet) {
         chkGenerateCotization.isEnabled = false
@@ -987,9 +1012,12 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
             .setMessage(message)
             .setPositiveButton(R.string.aceptar) { d, _ ->
                 d.dismiss()
+
                 if (!flag_cotizacion){
                     checkResult(productEntity)
                 }else{
+                    productEntity.stimei = true
+                    productEntity.imei = ""
                     checkResult(productEntity,detalllesCotizacion!!)
                 }
 
