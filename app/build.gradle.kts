@@ -126,6 +126,7 @@ dependencies {
     // Architecture components
     implementation(libs.runtime)
     implementation(libs.lifecycle.extensions)
+    //implementation(libs.lifecycle.runtime)
     kapt(libs.compiler)
 
     implementation(libs.constraint.layout)
@@ -133,7 +134,7 @@ dependencies {
     implementation(libs.room.runtime)
     kapt(libs.room.compiler)
 
-    implementation(libs.retrofit)
+    implementation(libs.lifecycle.extensions )
     implementation(libs.converter.gson)
     implementation(libs.logging.interceptor)
 
@@ -175,6 +176,7 @@ dependencies {
 
     //todo: organize
     implementation(libs.rxbinding)
+
 
 }
 repositories {
