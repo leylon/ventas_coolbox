@@ -334,7 +334,7 @@ class GuideActivity : MenuActivity() {
                                     .create().show()
                         } else {
                             showProgress(true)
-                            searchViewModel.searchProductDirectly(result.contents ?: "",0)
+                            searchViewModel.searchProductDirectly(result.contents ?: "","",0)
                         }
                     } else {
                         showProgress(false)
@@ -520,7 +520,7 @@ class GuideActivity : MenuActivity() {
         if (!productCode.isNullOrEmpty()) {
             showProgress(true)
 
-            searchViewModel.searchProductDirectly(productCode,0)
+            searchViewModel.searchProductDirectly(productCode,"",0)
         }
     }
 

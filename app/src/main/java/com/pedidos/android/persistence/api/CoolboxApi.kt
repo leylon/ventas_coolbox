@@ -82,7 +82,8 @@ interface CoolboxApi {
 
     @GET(BasicApp.DEFAULT_API_VENTA_MOVIL+"Product")
     fun searchProduct(@Query("codigoVenta") codigoProducto: String,
-                      @Query("statusCotizacion") statusCotizacion : Int): Call<ApiWrapper<ProductEntity>>
+                      @Query("cotizacion") cotizacion: String,
+                      @Query("statusCotizacion") statusCotizacion : Int ): Call<ApiWrapper<ProductEntity>>
 
     @GET(BasicApp.DEFAULT_API_VENTA_MOVIL+"listaproducto")
     fun searchProductDescription(@Query("codigoVenta") codigoProducto: String): Call<ApiWrapper<List<ProductEntity>>>

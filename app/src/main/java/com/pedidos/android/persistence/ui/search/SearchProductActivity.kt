@@ -31,6 +31,7 @@ class SearchProductActivity : MenuActivity() {
     private var dialog: AlertDialog? = null
     private var view: View? = null
     private var statusCotizacion: Int = 0
+    private var cotizacion: String = ""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithMenu(R.layout.search_activity)
@@ -39,6 +40,7 @@ class SearchProductActivity : MenuActivity() {
         rvwSearch.layoutManager = LinearLayoutManager(this)
         rvwSearch.adapter = SearchProductAdapter(mutableListOf()) { insertData(it) }
         val saleEntity = intent.getIntExtra("STATUS_COTIZACION", 0)
+        cotizacion = intent.getStringExtra("COTIZACION").toString()
         if (saleEntity > 0) {
             statusCotizacion = saleEntity
         } else {
@@ -156,7 +158,7 @@ class SearchProductActivity : MenuActivity() {
     private fun searchProduct() {
         fltLoading.visibility = View.VISIBLE
         val searchViewModel = ViewModelProviders.of(this)[SearchProductViewModel::class.java]
-        searchViewModel.searchProduct(tvwSearch.text.toString(),statusCotizacion)
+        searchViewModel.searchProduct(tvwSearch.text.toString(),cotizacion ,statusCotizacion)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

@@ -35,9 +35,9 @@ class SearchProductViewModel(private var repository: CoolboxApi) : ViewModel() {
     val imeiHelperResults = MutableLiveData<ProductEntity>()
     val errorResults = MutableLiveData<String>()
 
-    fun searchProduct(productID: String,statusCotizacion: Int) {
+    fun searchProduct(productID: String,cotizacion: String,statusCotizacion: Int) {
 
-        repository.searchProduct(productID,statusCotizacion).enqueue(object : Callback<ApiWrapper<ProductEntity>> {
+        repository.searchProduct(productID,cotizacion,statusCotizacion).enqueue(object : Callback<ApiWrapper<ProductEntity>> {
             override fun onFailure(call: Call<ApiWrapper<ProductEntity>>, t: Throwable) {
                 Log.e(TAG, t.message.toString())
                 errorResults.postValue(t.message.toString())
@@ -181,8 +181,8 @@ class SearchProductViewModel(private var repository: CoolboxApi) : ViewModel() {
         })
     }
 
-    fun searchProductDirectly(productID: String, statusCotizacion: Int) {
-        repository.searchProduct(productID,statusCotizacion).enqueue(object : Callback<ApiWrapper<ProductEntity>> {
+    fun searchProductDirectly(productID: String,cotizacion: String, statusCotizacion: Int) {
+        repository.searchProduct(productID,cotizacion,statusCotizacion).enqueue(object : Callback<ApiWrapper<ProductEntity>> {
             override fun onFailure(call: Call<ApiWrapper<ProductEntity>>, t: Throwable) {
                 errorResults.postValue(t.message.toString())
             }
@@ -200,8 +200,8 @@ class SearchProductViewModel(private var repository: CoolboxApi) : ViewModel() {
             }
         })
     }
-    fun searchProductDirectly(productID: String, statusCotizacion: Int,detalleCotiazacion: CotizacionDet,checkResults: (ProductEntity,CotizacionDet) -> Unit) {
-        repository.searchProduct(productID,statusCotizacion).enqueue(object : Callback<ApiWrapper<ProductEntity>> {
+    fun searchProductDirectly(productID: String,cotizacion: String, statusCotizacion:Int,detalleCotiazacion: CotizacionDet,checkResults: (ProductEntity,CotizacionDet) -> Unit) {
+        repository.searchProduct(productID,cotizacion,statusCotizacion).enqueue(object : Callback<ApiWrapper<ProductEntity>> {
             override fun onFailure(call: Call<ApiWrapper<ProductEntity>>, t: Throwable) {
                 errorResults.postValue(t.message.toString())
             }

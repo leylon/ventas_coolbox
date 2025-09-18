@@ -83,6 +83,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
     var imeiCotizacion = ""
     var detalllesCotizacion: CotizacionDet? = null
     var listDetalletCotizacion: MutableList<CotizacionDet> = mutableListOf()
+    var nroCotizacion: String = ""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithMenu(R.layout.sales_activity)
@@ -107,14 +108,15 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
             flag_pop = false
             flag_cotizacion = false
             tvwCotizacion.text = ""
+
             productSearch() }
         imbwAddProductManualOnly.setOnClickListener { productManualSearch() }
         btnSelectClient.setOnClickListener { showClientPopUp() }
         if (getSession().pagoFalabella){
-            chkGenerateCotization.visibility = View.VISIBLE
+            //chkGenerateCotization.visibility = View.VISIBLE
             btnSelectCotization.visibility = View.VISIBLE
         }else {
-            chkGenerateCotization.visibility = View.GONE
+            //chkGenerateCotization.visibility = View.GONE
             btnSelectCotization.visibility = View.GONE
         }
         btnSelectCotization.setOnClickListener {
@@ -287,6 +289,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
             showProgress(false)
             val intent = Intent(this, SearchProductActivity::class.java)
             intent.putExtra("STATUS_COTIZACION",if(chkGenerateCotization.isChecked) 1 else 0)
+            intent.putExtra("COTIZACION",tvwCotizacion.text.toString())
             startActivityForResult(intent, SEARCH_REQUEST)
         }
 
@@ -423,6 +426,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
             showProgress(false)
             val intent = Intent(this, SearchProductActivity::class.java)
             intent.putExtra("STATUS_COTIZACION",if(chkGenerateCotization.isChecked) 1 else 0)
+            intent.putExtra("COTIZACION",tvwCotizacion.text.toString())
             startActivityForResult(intent, SEARCH_REQUEST)
         }
 
@@ -537,7 +541,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
                                 if (flag_cotizacion){
                                     findCotizacion(result.contents ?: "")
                                 }else{
-                                    searchViewModel.searchProductDirectly(result.contents ?: "",if(chkGenerateCotization.isChecked) 1 else 0,detalllesCotizacion!!,::checkResult)
+                                    searchViewModel.searchProductDirectly(result.contents ?: "",tvwCotizacion.text.toString(),if(chkGenerateCotization.isChecked) 1 else 0,detalllesCotizacion!!,::checkResult)
                                 }
 
                             }
@@ -922,7 +926,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         if (!productCode.isNullOrEmpty()) {
             showProgress(true)
 
-            searchViewModel.searchProductDirectly(productCode,if(chkGenerateCotization.isChecked) 1 else 0)
+            searchViewModel.searchProductDirectly(productCode,tvwCotizacion.text.toString(),if(chkGenerateCotization.isChecked) 1 else 0)
         }
     }
     private fun productSearchCombined(datoCodigo: String,detalles: CotizacionDet) {
@@ -931,7 +935,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         if (!productCode.isNullOrEmpty()) {
             showProgress(true)
 
-            searchViewModel.searchProductDirectly(productCode,if(chkGenerateCotization.isChecked) 1 else 0, detalles,::checkResult)
+            searchViewModel.searchProductDirectly(productCode,tvwCotizacion.text.toString(),if(chkGenerateCotization.isChecked) 1 else 0, detalles,::checkResult)
         }
     }
 
@@ -939,6 +943,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
     private fun productManualSearch() {
         val intent = Intent(this, SearchProductActivity::class.java)
         intent.putExtra("STATUS_COTIZACION",if(chkGenerateCotization.isChecked) 1 else 0)
+        intent.putExtra("COTIZACION", tvwCotizacion.text.toString())
         startActivityForResult(intent, SEARCH_REQUEST)
     }
 
@@ -992,9 +997,17 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
 
     private fun onError(message: String) {
         btnProcess.isEnabled =true
-        etwAddProduct.visibility = View.GONE
-        imbwAddProductoWithCamera.visibility = View.GONE
-        imbwAddProductManualOnly.visibility = View.GONE
+
+        if (tvwCotizacion.text.toString().isNullOrEmpty()){
+            etwAddProduct.visibility = View.VISIBLE
+            imbwAddProductoWithCamera.visibility = View.VISIBLE
+            imbwAddProductManualOnly.visibility = View.VISIBLE
+        }else {
+            etwAddProduct.visibility = View.GONE
+            imbwAddProductoWithCamera.visibility = View.GONE
+            imbwAddProductManualOnly.visibility = View.GONE
+        }
+
         Log.e(TAG, message)
 
         AlertDialog.Builder(this, R.style.AppTheme_DIALOG)
@@ -1281,6 +1294,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         println("addCotizacion: ${Gson().toJson(cotizacionCab)}")
         val data = saleViewModel.saleLiveData.value
         data?.cotizacion = "${cotizacionCab.serie}-${cotizacionCab.numero}"
+        nroCotizacion = "${cotizacionCab.serie}-${cotizacionCab.numero}"
         tvwCotizacion.text = data?.cotizacion
         saleViewModel.saleLiveData.postValue(data)
         cotizacionCab.detalles.forEach {

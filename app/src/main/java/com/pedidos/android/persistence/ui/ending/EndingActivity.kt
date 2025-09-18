@@ -43,7 +43,7 @@ class EndingActivity : MenuActivity() {
         setContentViewWithMenu(R.layout.ending_activity)
         setSupportActionBarMenu(toolbar)
         checkSession()
-
+        val user = getSession()
         val saleEntity = intent.getParcelableExtra(EXTRA_ENTITY) as SaleEntity?
         lateinit var factory : EndingViewModel.Companion.Factory
         try {
@@ -60,10 +60,12 @@ class EndingActivity : MenuActivity() {
                 onError(it)
             }
         })
-        if (saleEntity?.statusCotizacion == 1) {
+        if (user.pagoFalabella && saleEntity?.cotizacion.isNullOrEmpty() ) {
+            saleEntity?.statusCotizacion = 1
             btnCobrar.visibility = View.GONE
             btnSaveCotizacion.visibility = View.VISIBLE
         }else {
+            saleEntity?.statusCotizacion = 0
             btnSaveCotizacion.visibility = View.GONE
             btnCobrar.visibility = View.VISIBLE
         }

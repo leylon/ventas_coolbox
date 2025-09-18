@@ -106,7 +106,7 @@
                         android:layout_height="wrap_content"
                         android:enabled="true"
                         android:text="Genera Cotización"
-                        android:visibility="visible"
+                        android:visibility="gone"
                         android:minWidth="48dp"
                         android:minHeight="48dp"
                         />
