@@ -452,7 +452,7 @@ open class BaseActivity : AppCompatActivity() {
                     }
 
                     // 3. Agregar saltos de línea al final y asegurar que todo se envíe.
-                    blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A, 0x0A, 0x0A))
+                    blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A))
                     //blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A, 0x0A, 0x0A))
                     //blueToothWrapper.outputStream.write(documentPrint)
 
@@ -696,7 +696,7 @@ open class BaseActivity : AppCompatActivity() {
                 val cotiPie =Base64.decode(cotizacionPrint.cotiPie,Base64.DEFAULT)
 
                 blueToothWrapper.outputStream.write(cotiPie)
-                Thread.sleep(2000)
+                Thread.sleep(1500)
                 blueToothWrapper.outputStream.close()
                 blueToothWrapper.inputStream.close()
                 blueToothWrapper.close()
