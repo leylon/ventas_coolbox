@@ -33,6 +33,7 @@ import com.pedidos.android.persistence.ui.menu.MenuActivity
 import com.pedidos.android.persistence.utils.BluetoothConnector
 import com.pedidos.android.persistence.utils.Extensions
 import com.pedidos.android.persistence.utils.PaperWidth
+import com.pedidos.android.persistence.utils.PrintingCallback
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.charset.Charset
@@ -275,6 +276,7 @@ open class BaseActivity : AppCompatActivity() {
             printOnSnackBar(getString(R.string.payment_no_receipt))
             return false
         }
+        var textData: ByteArray = byteArrayOf() // Inicialización vacía
         val blueToothWrapper = this.setupPrinter()
         println("Datos: ${documentoPrint}")
         try {
@@ -296,12 +298,13 @@ open class BaseActivity : AppCompatActivity() {
                         //val setDefaultLineSpacing = byteArrayOf(0x1B, 0x32)
                         val setCompactLineSpacing = byteArrayOf(0x1B, 0x33, 15)
                         // Codificar el texto completo una sola vez.
-                        // val textData = textToPrint.toByteArray(Charset.forName("IBM850"))
+
                         // 1. Enviar comandos de inicialización y configuración.
                         blueToothWrapper.outputStream.write(initPrinter)
                         blueToothWrapper.outputStream.write(selectCodePage)
                         blueToothWrapper.outputStream.write(setCompactLineSpacing) // Aplicamos el interlineado estándar
                         blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x00)) // ESC !
+                        textData = documentoPrint.toByteArray(Charset.forName("IBM850"))
                     }
                     "SUNMI" -> {
                         //Doble Alto
@@ -311,6 +314,7 @@ open class BaseActivity : AppCompatActivity() {
                         val setUtf8  = getCodePageCommandSunmi(16)
                         blueToothWrapper.outputStream.write(setMulti)
                         blueToothWrapper.outputStream.write(setUtf8)
+                        textData = documentoPrint.toByteArray(Charsets.UTF_8)
                     }
                     "GENERIC" -> {
                         //Doble Ancho
@@ -321,7 +325,7 @@ open class BaseActivity : AppCompatActivity() {
                         val setUtf8  = getCodePageCommand(16)
                         blueToothWrapper.outputStream.write(setMulti)
                         blueToothWrapper.outputStream.write(setUtf8)
-                        //textData = textToPrint.toByteArray(Charsets.UTF_8)
+                        textData = documentoPrint.toByteArray(Charsets.UTF_8)
                     }
                     "POSD" -> {
                         //Doble Alto y Ancho
@@ -331,7 +335,7 @@ open class BaseActivity : AppCompatActivity() {
                         val setCompactLineSpacing = byteArrayOf(0x1B, 0x33, 18)
                         blueToothWrapper.outputStream.write(selectCodePage)
                         blueToothWrapper.outputStream.write(setCompactLineSpacing)
-                        //textData = textToPrint.toByteArray(Charset.forName("IBM850"))
+                        textData = documentoPrint.toByteArray(Charset.forName("IBM850"))
                     }
                 }
                 when (width) {
@@ -361,7 +365,20 @@ open class BaseActivity : AppCompatActivity() {
                        // return false
                     }
                 }
-                blueToothWrapper.outputStream.write(documentoPrint.toByteArray(Charsets.UTF_8))
+                // 2. Enviar el texto en trozos (chunks) para evitar desbordamiento del búfer.
+
+                val chunkSize = 512 // Tamaño del trozo en bytes. Puedes ajustar este valor.
+                var offset = 0
+                while (offset < textData.size) {
+                    val size = min(chunkSize, textData.size - offset)
+                    blueToothWrapper.outputStream.write(textData, offset, size)
+                    // Pequeña pausa para que la impresora procese el trozo.
+                    Thread.sleep(50)
+                    offset += size
+                }
+               // blueToothWrapper.outputStream.write(documentoPrint.toByteArray(Charsets.UTF_8))
+                blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A))
+                blueToothWrapper.outputStream.flush()
                 Thread.sleep(1500)
 
                 return true
@@ -373,15 +390,129 @@ open class BaseActivity : AppCompatActivity() {
             printOnSnackBar(getString(R.string.printer_error) + ": " + ex.message)
             return false
         } finally {
-
-            if (blueToothWrapper != null) {
-                blueToothWrapper.outputStream.close()
-                blueToothWrapper.close()
-                println("Socket de impresora cerrado.")
-            }
-            //blueToothWrapper.inputStream.close()
+                Thread.sleep(100)
+                blueToothWrapper?.outputStream?.close()
+                Thread.sleep(100)
+                blueToothWrapper?.inputStream?.close()
+                blueToothWrapper?.close()
+            println("Socket de impresora cerrado.")
         }
         return false
+    }
+    protected fun performPrinting(documentoPrint: String, callback: PrintingCallback) {
+        // 1. Inicia un nuevo hilo para hacer todo el trabajo en segundo plano.
+        Thread {
+            var blueToothWrapper:  BluetoothConnector.BluetoothSocketWrapper? = null // Usa tu clase BlueToothWrapper
+            try {
+                val settings = getSettings()
+                val width = settings.pageSize
+                val typePrint = settings.typePrint
+
+                if (documentoPrint.isEmpty()) {
+                    runOnUiThread { callback.onPrintingError("El documento está vacío.") }
+                    return@Thread
+                }
+
+                 blueToothWrapper = this.setupPrinter()
+
+                if (blueToothWrapper != null) {
+                    val outputStream = blueToothWrapper.outputStream
+                    var textData: ByteArray
+
+                    // Lógica de configuración de la impresora
+                    when(typePrint) {
+                        "HIOPOS" -> {
+                            //Normal
+                            println("Usando modo GENERIC (Code Page/IBM850)")
+                            // Comandos que funcionaron para la impresora TongLiang
+                            val initPrinter = byteArrayOf(0x1B, 0x40)
+                            val selectCodePage = byteArrayOf(0x1B, 0x74, 0x13) // PC858 (Euro)
+                            // NUEVO: Comando para establecer el interlineado por defecto (ESC 2)
+                            //val setDefaultLineSpacing = byteArrayOf(0x1B, 0x32)
+                            val setCompactLineSpacing = byteArrayOf(0x1B, 0x33, 15)
+                            // Codificar el texto completo una sola vez.
+
+                            // 1. Enviar comandos de inicialización y configuración.
+                            blueToothWrapper.outputStream.write(initPrinter)
+                            blueToothWrapper.outputStream.write(selectCodePage)
+                            blueToothWrapper.outputStream.write(setCompactLineSpacing) // Aplicamos el interlineado estándar
+                            blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x00)) // ESC !
+                            textData = documentoPrint.toByteArray(Charset.forName("IBM850"))
+                        }
+                        "SUNMI" -> {
+                            //Doble Alto
+                            val resetFontMode = byteArrayOf(0x1B, 0x21, 0x00)
+                            blueToothWrapper.outputStream.write(resetFontMode)
+                            val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
+                            val setUtf8  = getCodePageCommandSunmi(16)
+                            blueToothWrapper.outputStream.write(setMulti)
+                            blueToothWrapper.outputStream.write(setUtf8)
+                            textData = documentoPrint.toByteArray(Charsets.UTF_8)
+                        }
+                        "GENERIC" -> {
+                            //Doble Ancho
+                            println("Usando modo GENERIC (UTF-8)")
+                            // Para Sunmi, enviamos directamente en UTF-8 sin comandos extraños.
+                            // La impresora Sunmi debería interpretar UTF-8 de forma nativa.
+                            val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
+                            val setUtf8  = getCodePageCommand(16)
+                            blueToothWrapper.outputStream.write(setMulti)
+                            blueToothWrapper.outputStream.write(setUtf8)
+                            textData = documentoPrint.toByteArray(Charsets.UTF_8)
+                        }
+                        "POSD" -> {
+                            //Doble Alto y Ancho
+                            println("Usando modo POSD (Code Page/IBM850)")
+                            // Probamos con la página de códigos PC850 (Multilingual), muy común.
+                            val selectCodePage = byteArrayOf(0x1B, 0x74, 0x02) // PC850
+                            val setCompactLineSpacing = byteArrayOf(0x1B, 0x33, 18)
+                            blueToothWrapper.outputStream.write(selectCodePage)
+                            blueToothWrapper.outputStream.write(setCompactLineSpacing)
+                            textData = documentoPrint.toByteArray(Charset.forName("IBM850"))
+                        } else -> { // GENERIC y otros casos
+                            val initPrinter = byteArrayOf(0x1B, 0x40)
+                            outputStream.write(initPrinter)
+                            textData = documentoPrint.toByteArray(Charset.forName("IBM850"))
+                        }
+                    }
+
+                    // Lógica de envío de datos (chunks)
+                    val chunkSize = 512
+                    var offset = 0
+                    while (offset < textData.size) {
+                        val size = min(chunkSize, textData.size - offset)
+                        outputStream.write(textData, offset, size)
+                        Thread.sleep(50)
+                        offset += size
+                    }
+
+                    outputStream.write(byteArrayOf(0x0A, 0x0A, 0x0A,))
+                    outputStream.flush()
+                    Thread.sleep(1500)
+
+                    // 2. Si todo sale bien, notifica el éxito.
+                    runOnUiThread { callback.onPrintingSuccess() }
+
+                } else {
+                    runOnUiThread { callback.onPrintingError(getString(R.string.printer_error)) }
+                }
+            } catch (ex: Exception) {
+                Log.e(CancelActivity.TAG, "Error en hilo de impresión: " + ex.message)
+                // 3. Si hay un error, notifica el fallo.
+                runOnUiThread { callback.onPrintingError(ex.message) }
+            } finally {
+                // 4. Cierra la conexión de forma segura en el hilo de fondo.
+                try {
+                    Thread.sleep(100)
+                    blueToothWrapper?.outputStream?.close()
+                    Thread.sleep(100)
+                    blueToothWrapper?.close()
+                    println("Socket de impresora cerrado.")
+                } catch (e: Exception) {
+                    Log.e(CancelActivity.TAG, "Error al cerrar socket: " + e.message)
+                }
+            }
+        }.start() // No olvides .start() para que el hilo comience.
     }
 
         protected fun performPrintingQr(qrPrint: String): Boolean {
@@ -452,14 +583,14 @@ open class BaseActivity : AppCompatActivity() {
                     }
 
                     // 3. Agregar saltos de línea al final y asegurar que todo se envíe.
-                    blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A))
-                    //blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A, 0x0A, 0x0A))
+                    //blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A,0x0A))
+                    blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A, 0x0A, 0x0A))
                     //blueToothWrapper.outputStream.write(documentPrint)
 
                     blueToothWrapper.outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
                     //blueToothWrapper.outputStream.flush()
                     // blueToothWrapper.outputStream.write(documentPrint)
-                    Thread.sleep(1500)
+                    Thread.sleep(1800)
                     blueToothWrapper.outputStream.close()
                     blueToothWrapper.inputStream.close()
                     blueToothWrapper.close()
@@ -475,6 +606,78 @@ open class BaseActivity : AppCompatActivity() {
 
             return false
            //saveAndShareFile(Base64.decode(documentoPrint, Base64.DEFAULT), numeroDocumento)
+    }
+    // Asumo que la interfaz PrintingCallback ya está definida en tu archivo.
+
+    protected fun performPrintingQr(qrPrint: String, callback: PrintingCallback) {
+        // 1. Inicia un hilo en segundo plano para no bloquear la app.
+        Thread {
+            var blueToothWrapper: BluetoothConnector.BluetoothSocketWrapper? = null
+            try {
+                if (qrPrint.isEmpty()) {
+                    runOnUiThread { callback.onPrintingError("La cadena del QR está vacía.") }
+                    return@Thread
+                }
+
+                blueToothWrapper = this.setupPrinter()
+
+                if (blueToothWrapper != null) {
+                    val outputStream = blueToothWrapper.outputStream
+
+                    // --- INICIO DE TU LÓGICA DE QR ---
+                    // Decodificar la cadena Base64 a un array de bytes
+                    val qrByte = Base64.decode(qrPrint, Base64.DEFAULT)
+                    // Convertir el array de bytes a un Bitmap de Android
+                    val qrBitmap = BitmapFactory.decodeByteArray(qrByte, 0, qrByte.size)
+                    // Usar tu función de ayuda para convertir el Bitmap al formato de bytes de la impresora
+                    val documentPrint = Extensions().decodeBitmap(qrBitmap)
+                    // --- FIN DE TU LÓGICA DE QR ---
+
+                    // Comando para centrar el contenido (muy importante para un QR)
+                    outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
+
+                    // Enviar la imagen en trozos para no saturar el buffer
+                    val chunkSize = 512
+                    var offset = 0
+                    if (documentPrint != null) {
+                        while (offset < documentPrint.size) {
+                            val size = min(chunkSize, documentPrint.size - offset)
+                            outputStream.write(documentPrint, offset, size)
+                            Thread.sleep(50) // Pausa para que la impresora procese
+                            offset += size
+                        }
+                    }
+
+                    // Añadir espacio al final y resetear la alineación a la izquierda
+                    outputStream.write(byteArrayOf(0x0A, 0x0A, 0x0A, 0x0A))
+                    outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x00)) // Alineación a la izquierda
+
+                    outputStream.flush()
+                    Thread.sleep(1800) // Pausa final para asegurar la impresión completa de la imagen
+
+                    // 2. Notificar que la impresión fue exitosa.
+                    runOnUiThread { callback.onPrintingSuccess() }
+
+                } else {
+                    runOnUiThread { callback.onPrintingError(getString(R.string.printer_error)) }
+                }
+            } catch (ex: Exception) {
+                Log.e(CancelActivity.TAG, "Error en hilo de impresión QR: " + ex.message)
+                // 3. Notificar si hubo un error.
+                runOnUiThread { callback.onPrintingError(ex.message) }
+            } finally {
+                // 4. Cerrar la conexión de forma segura, pase lo que pase.
+                try {
+                    Thread.sleep(100)
+                    blueToothWrapper?.outputStream?.close()
+                    Thread.sleep(100)
+                    blueToothWrapper?.close()
+                    println("Socket de impresora QR cerrado.")
+                } catch (e: Exception) {
+                    Log.e(CancelActivity.TAG, "Error al cerrar socket de QR: " + e.message)
+                }
+            }
+        }.start()
     }
 
 
@@ -696,7 +899,7 @@ open class BaseActivity : AppCompatActivity() {
                 val cotiPie =Base64.decode(cotizacionPrint.cotiPie,Base64.DEFAULT)
 
                 blueToothWrapper.outputStream.write(cotiPie)
-                Thread.sleep(1500)
+                Thread.sleep(2000)
                 blueToothWrapper.outputStream.close()
                 blueToothWrapper.inputStream.close()
                 blueToothWrapper.close()

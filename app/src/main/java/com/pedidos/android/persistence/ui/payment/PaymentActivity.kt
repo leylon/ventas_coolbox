@@ -52,6 +52,7 @@ import com.pedidos.android.persistence.ui.sale.SaleActivity.Companion
 import com.pedidos.android.persistence.ui.search.SearchProductActivity
 import com.pedidos.android.persistence.utils.Defaults
 import com.pedidos.android.persistence.utils.Formatter
+import com.pedidos.android.persistence.utils.PrintingCallback
 import com.pedidos.android.persistence.viewmodel.EndingViewModel
 import com.pedidos.android.persistence.viewmodel.PaymentViewModel
 import com.pedidos.android.persistence.viewmodel.TipoPagoViewModel
@@ -186,7 +187,11 @@ class PaymentActivity : MenuActivity() {
             println("ley: printOnSnackBar => ${it!!}")
             printOnSnackBar(it!!)
         })
-        viewModel.liveData.observe(this, Observer { performAfterOperations(it) })
+        viewModel.liveData.observe(this, Observer {
+            //performAfterOperationsQueue(it)
+            performAfterOperationsQueueQR(it)
+            //performAfterOperations(it)
+        })
 
         val endingFactory = EndingViewModel.Companion.Factory(application, getSettings().urlbase)
         endingViewModel = ViewModelProviders.of(this, endingFactory)[EndingViewModel::class.java]
@@ -761,6 +766,205 @@ class PaymentActivity : MenuActivity() {
                     .setCancelable(false)
                     .create().show()
         }
+    }
+    private fun performAfterOperationsQueue(entity: PaymentResponseEntity?) {
+        if (entity == null) {
+            onError("Error al obtener el recibo.")
+            Log.e(TAG, "La entidad de respuesta de pago es nula.")
+            return
+        }
+
+        // Paso 1: Limpiamos la información de pago.
+        savePagoIdFpay("")
+        savePagoIdPLink("")
+
+        // Paso 2: Creamos una "cola" con todos los documentos que necesitamos imprimir en orden.
+        // Usamos un par (Pair) para guardar el texto a imprimir y un nombre para los errores.
+        val printQueue = mutableListOf<Pair<String, String>>()
+        printQueue.add(Pair(entity.documentoPrint, "cuerpo del recibo"))
+        printQueue.add(Pair(entity.qrPrint, "código QR")) // Asumo que tienes una función para imprimir QR
+        printQueue.add(Pair(entity.piedocumentoPrint, "pie del recibo"))
+
+        if (entity.qrPrint2.trim().isNotEmpty()) {
+            printQueue.add(Pair(entity.qrPrint2, "segundo código QR"))
+        }
+
+        // Paso 3: Creamos una función que procesa la cola, un elemento a la vez.
+        fun processPrintQueue(index: Int) {
+            // Si ya hemos procesado todos los elementos de la cola, mostramos el mensaje final.
+            if (index >= printQueue.size) {
+                // Todos los documentos principales se imprimieron con éxito.
+                confirmResultMessage(entity.serviceResultMessage, onOk = { dialog ->
+                    // Verificamos si hay un voucher final para imprimir.
+                    if (entity.voucherMposPrint.trim().isNotEmpty()) {
+                        // Lo imprimimos de forma asíncrona.
+                        performPrinting(entity.voucherMposPrint, object : PrintingCallback {
+                            override fun onPrintingSuccess() {
+                                // Solo después de que el voucher se imprima, cerramos todo.
+                                dialog.dismiss()
+                                startNewSale()
+                            }
+                            override fun onPrintingError(errorMessage: String?) {
+                                onError("Error al imprimir el voucher final: $errorMessage")
+                                dialog.dismiss()
+                                startNewSale() // Decidimos si empezar una nueva venta incluso con error.
+                            }
+                        })
+                    } else {
+                        // No hay voucher, simplemente cerramos y empezamos de nuevo.
+                        dialog.dismiss()
+                        startNewSale()
+                    }
+                })
+                return
+            }
+
+            // Tomamos el documento actual de la cola.
+            val currentDocument = printQueue[index]
+            val textToPrint = currentDocument.first
+            val documentName = currentDocument.second
+
+            // Lo mandamos a imprimir con nuestro sistema de callbacks.
+            // NOTA: Aquí asumo que tienes una función similar para QR llamada performPrintingQR
+            // Si no, tendrás que adaptarlo. Por ahora uso la misma para el ejemplo.
+            performPrintingQr(textToPrint, object : PrintingCallback {
+                override fun onPrintingSuccess() {
+                    // Si la impresión fue exitosa, procesamos el SIGUIENTE elemento de la cola.
+                    println("Éxito al imprimir: $documentName")
+                    processPrintQueue(index + 1)
+                }
+
+                override fun onPrintingError(errorMessage: String?) {
+                    // Si algo falla, mostramos un error y detenemos la secuencia.
+                    Log.e(TAG, "Error al imprimir $documentName: $errorMessage")
+                    onError("Error al imprimir el $documentName.")
+                }
+            })
+        }
+
+        // Paso 4: Iniciamos el proceso de impresión con el primer elemento de la cola (índice 0).
+        processPrintQueue(0)
+    }
+
+
+    // 2. El helper para mostrar diálogos de error de forma limpia.
+    private fun showPrintingErrorDialog(message: String) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.app_name)
+            .setMessage(message)
+            .setPositiveButton(R.string.aceptar) { d, _ -> d.dismiss() }
+            .setCancelable(false)
+            .create().show()
+    }
+
+
+    // 3. LA FUNCIÓN PRINCIPAL OPTIMIZADA
+    private fun performAfterOperationsQueueQR(entity: PaymentResponseEntity?) {
+        if (entity == null) {
+            showPrintingErrorDialog("Error al obtener el recibo.")
+            Log.e(TAG, "La entidad de respuesta de pago es nula.")
+            return
+        }
+
+        // Limpiamos la información de pago.
+        savePagoIdFpay("")
+        savePagoIdPLink("")
+
+        // Creamos una "cola" con todos los documentos que necesitamos imprimir en orden.
+        // Usamos un par (Pair) para guardar el texto a imprimir y un nombre para identificarlo.
+        val printQueue = mutableListOf<Pair<String, String>>()
+
+        // Añadimos los documentos a la cola en el orden correcto.
+        if (entity.documentoPrint.trim().isNotEmpty()) {
+            printQueue.add(Pair(entity.documentoPrint, "cuerpo del recibo"))
+        }
+        if (entity.qrPrint.trim().isNotEmpty()) {
+            printQueue.add(Pair(entity.qrPrint, "código QR"))
+        }
+        if (entity.piedocumentoPrint.trim().isNotEmpty()) {
+            printQueue.add(Pair(entity.piedocumentoPrint, "pie del recibo"))
+        }
+        if (entity.qrPrint2.trim().isNotEmpty()) {
+            printQueue.add(Pair(entity.qrPrint2, "segundo código QR"))
+        }
+
+        // Creamos una función interna que procesará la cola, un elemento a la vez.
+        fun processPrintQueue(index: Int) {
+            // CASO BASE: Si ya procesamos todos los elementos, hemos terminado con la impresión principal.
+            if (index >= printQueue.size) {
+                // Todos los documentos principales se imprimieron con éxito.
+                confirmResultMessage(entity.serviceResultMessage, onOk = { dialog ->
+                    // Verificamos si hay un voucher final para imprimir.
+                    if (entity.voucherMposPrint.trim().isNotEmpty()) {
+                        performPrinting(entity.voucherMposPrint, object : PrintingCallback {
+                            override fun onPrintingSuccess() {
+                                dialog.dismiss()
+                                startNewSale()
+                            }
+                            override fun onPrintingError(errorMessage: String?) {
+                                showPrintingErrorDialog("Error al imprimir el voucher final: $errorMessage")
+                                dialog.dismiss()
+                                startNewSale()
+                            }
+                        })
+                    } else {
+                        dialog.dismiss()
+                        startNewSale()
+                    }
+                })
+                return
+            }
+
+            // Tomamos el documento actual de la cola.
+            val currentDocument = printQueue[index]
+            val dataToPrint = currentDocument.first
+            val documentName = currentDocument.second
+
+            // Creamos un callback genérico para manejar el resultado de la impresión.
+            val printingCallback = object : PrintingCallback {
+                override fun onPrintingSuccess() {
+                    println("Éxito al imprimir: $documentName")
+                    // Si la impresión fue exitosa, procesamos el SIGUIENTE elemento de la cola.
+                    processPrintQueue(index + 1)
+                }
+
+                override fun onPrintingError(errorMessage: String?) {
+                    Log.e(TAG, "Error al imprimir $documentName: $errorMessage")
+                    // Si algo falla, mostramos un error y detenemos la secuencia.
+                    showPrintingErrorDialog("Error al imprimir el $documentName.")
+                }
+            }
+
+            // Decidimos qué función de impresión usar basándonos en el nombre del documento.
+            if (documentName.contains("QR", ignoreCase = true)) {
+                performPrintingQr(dataToPrint, printingCallback)
+            } else {
+                performPrinting(dataToPrint, printingCallback)
+            }
+        }
+
+        // Iniciamos el proceso de impresión con el primer elemento de la cola (índice 0).
+        processPrintQueue(0)
+    }
+    private fun performAfterOperationsPrint(entity: PaymentResponseEntity?){
+        if (entity != null) {
+            //Get PDF
+            //endingViewModel.getSaleReceiptPDF(numeroDocumento)
+            savePagoIdFpay("")
+            savePagoIdPLink("")
+            performPrinting(entity.documentoPrint, object : PrintingCallback {
+                override fun onPrintingSuccess() {
+
+                }
+
+                override fun onPrintingError(errorMessage: String?) {
+
+                }
+            })
+        } else {
+
+        }
+
     }
 
     private fun performViewOperations(receipt: ReceiptEntity?) {

@@ -109,7 +109,8 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
             flag_cotizacion = false
             tvwCotizacion.text = ""
 
-            productSearch() }
+            productSearch()
+        }
         imbwAddProductManualOnly.setOnClickListener { productManualSearch() }
         btnSelectClient.setOnClickListener { showClientPopUp() }
         if (getSession().pagoFalabella){
