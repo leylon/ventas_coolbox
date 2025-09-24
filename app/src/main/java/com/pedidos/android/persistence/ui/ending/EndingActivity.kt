@@ -95,8 +95,8 @@ class EndingActivity : MenuActivity() {
         btnImprimir.setOnClickListener { obtenerPedido() }
         btnCotizacion.setOnClickListener { obtenerCotizacion("1") }
         btnSaveCotizacion.setOnClickListener { savePedido() }
-        btnRegresar.setOnClickListener {   cobrarPedido()
-            //onBackPressed()
+        btnRegresar.setOnClickListener { //cobrarPedido()
+            onBackPressed()
         }
         btnVisa.setOnClickListener { cobrarPedido() }
     }

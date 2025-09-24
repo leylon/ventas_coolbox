@@ -65,7 +65,7 @@ android {
         create("root") {
             dimension = "version"
             applicationIdSuffix = ".root"
-            versionCode = 35
+            versionCode = 38
             versionName = "2.0.20"
             buildConfigField(
                 "String",

@@ -122,6 +122,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         }
         btnSelectCotization.setOnClickListener {
             listSaleSubItem = mutableListOf()
+            listDetalletCotizacion = mutableListOf()
             initSale()
             showCotizacionConfirm("show",null)
         }

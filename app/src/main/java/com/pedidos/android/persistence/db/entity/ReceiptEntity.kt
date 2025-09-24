@@ -1,5 +1,6 @@
 package com.pedidos.android.persistence.db.entity
 
+import android.arch.persistence.room.Ignore
 import com.pedidos.android.persistence.model.Receipt
 import com.google.gson.annotations.SerializedName
 
@@ -11,4 +12,6 @@ class ReceiptEntity : Receipt {
     override var imagenqr2: String = ""
     override var piedocumentoprint: String = ""
     var pdfBytes: ByteArray = byteArrayOf()
+    @Ignore()
+    override var serviceResultMessage : String = ""
 }

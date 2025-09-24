@@ -486,7 +486,7 @@ open class BaseActivity : AppCompatActivity() {
                         offset += size
                     }
 
-                    outputStream.write(byteArrayOf(0x0A, 0x0A, 0x0A,))
+                    outputStream.write(byteArrayOf(0x0A, 0x0A))
                     outputStream.flush()
                     Thread.sleep(1500)
 
@@ -584,7 +584,7 @@ open class BaseActivity : AppCompatActivity() {
 
                     // 3. Agregar saltos de línea al final y asegurar que todo se envíe.
                     //blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A,0x0A))
-                    blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A, 0x0A, 0x0A))
+                    blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A))
                     //blueToothWrapper.outputStream.write(documentPrint)
 
                     blueToothWrapper.outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
