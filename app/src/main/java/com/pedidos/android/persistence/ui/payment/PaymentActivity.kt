@@ -229,6 +229,8 @@ class PaymentActivity : MenuActivity() {
         btnRegresar.setOnClickListener { onBackPressed() }
 
         btnFinalizar.setOnClickListener {
+            btnFinalizar.isClickable = false
+            btnRegresar.isClickable = false
             btnFinalizar.isEnabled = false
             btnRegresar.isEnabled = false
             if (isValidFlight()) {
@@ -565,6 +567,7 @@ class PaymentActivity : MenuActivity() {
     private fun onError(message: String) {
         Log.e(SaleActivity.TAG, message)
         btnFinalizar.isEnabled = true
+        btnFinalizar.isClickable = true
         AlertDialog.Builder(this, R.style.AppTheme_DIALOG)
                 .setTitle(R.string.app_name)
                 .setMessage(message)

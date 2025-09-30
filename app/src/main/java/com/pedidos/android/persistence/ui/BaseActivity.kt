@@ -649,8 +649,8 @@ open class BaseActivity : AppCompatActivity() {
                     }
 
                     // Añadir espacio al final y resetear la alineación a la izquierda
-                    outputStream.write(byteArrayOf(0x0A, 0x0A, 0x0A, 0x0A))
-                    outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x00)) // Alineación a la izquierda
+                    outputStream.write(byteArrayOf(0x0A, 0x0A))
+                    outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01)) // Alineación a la izquierda
 
                     outputStream.flush()
                     Thread.sleep(1800) // Pausa final para asegurar la impresión completa de la imagen

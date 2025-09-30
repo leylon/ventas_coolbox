@@ -54,6 +54,7 @@ import com.pedidos.android.persistence.utils.Formatter
 import com.pedidos.android.persistence.utils.complementProductTempCode
 import com.pedidos.android.persistence.viewmodel.SaleViewModel
 import com.pedidos.android.persistence.viewmodel.SearchProductViewModel
+import kotlinx.android.synthetic.main.generated_documents_activity.fltLoading
 import kotlinx.android.synthetic.main.sales_activity.*
 import kotlinx.android.synthetic.main.search_imei_dialog.view.*
 import rx.android.schedulers.AndroidSchedulers
@@ -1261,10 +1262,14 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
                 //saleViewModel.saveCotizacion(optionData, ::goToResumenPedido, ::onError)
             }
             "item" -> {
+                if (optionData?.estado == "APLICADA") {
+                    showErrorValid("COTIZACION APLICADA")
+                }else {
+                    println("closeDialogQuestion-item: ${Gson().toJson(optionData)}")
+                    addCotizacion(optionData!!)
+                    println("se cancelo el dialog questions")
+                }
 
-                println("closeDialogQuestion-item: ${Gson().toJson(optionData)}")
-                addCotizacion(optionData!!)
-                println("se cancelo el dialog questions")
             }
             "scanner" -> {
                 flag_cotizacion = true
@@ -1348,6 +1353,14 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         showCotizacionConfirm("search", data.presupuestos)
     }
 
+    private fun showErrorValid(error: String?) {
+        fltLoading.visibility = View.GONE
+        AlertDialog.Builder(this)
+            .setTitle(R.string.app_name)
+            .setMessage(error)
+            .setPositiveButton(R.string.ok) { dialog, _ -> dialog.dismiss() }
+            .show()
+    }
 }
 
 
