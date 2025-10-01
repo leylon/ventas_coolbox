@@ -6,7 +6,9 @@ import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.os.Build
 import android.support.design.widget.Snackbar
 import android.support.v4.app.ActivityCompat
@@ -36,6 +38,7 @@ import com.pedidos.android.persistence.utils.PaperWidth
 import com.pedidos.android.persistence.utils.PrintingCallback
 import java.io.File
 import java.io.FileOutputStream
+import java.io.OutputStream
 import java.nio.charset.Charset
 import kotlin.math.min
 
@@ -460,6 +463,17 @@ open class BaseActivity : AppCompatActivity() {
                             blueToothWrapper.outputStream.write(setUtf8)
                             textData = documentoPrint.toByteArray(Charsets.UTF_8)
                         }
+                        "BIXOLON" -> {
+                            //Doble Ancho
+                            println("Usando modo BIXOLON (UTF-8)")
+                            // Para Sunmi, enviamos directamente en UTF-8 sin comandos extraños.
+                            // La impresora Sunmi debería interpretar UTF-8 de forma nativa.
+                            val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
+                            val setUtf8  = getCodePageCommand(16)
+                            blueToothWrapper.outputStream.write(setMulti)
+                            blueToothWrapper.outputStream.write(setUtf8)
+                            textData = documentoPrint.toByteArray(Charsets.UTF_8)
+                        }
                         "POSD" -> {
                             //Doble Alto y Ancho
                             println("Usando modo POSD (Code Page/IBM850)")
@@ -518,6 +532,7 @@ open class BaseActivity : AppCompatActivity() {
         protected fun performPrintingQr(qrPrint: String): Boolean {
             val settings = getSettings()
             val width = settings.pageSize
+            val typePrint = settings.typePrint
             if (qrPrint == "") {
                 Log.i(CancelActivity.TAG, "no existe valor en el documento")
                 printOnSnackBar(getString(R.string.payment_no_receipt))
@@ -564,6 +579,7 @@ open class BaseActivity : AppCompatActivity() {
                             // return false
                         }
                     }
+
 
                     var documentPrint: ByteArray? = byteArrayOf()
                     val qrByte = Base64.decode(qrPrint, Base64.DEFAULT)
@@ -613,6 +629,7 @@ open class BaseActivity : AppCompatActivity() {
         // 1. Inicia un hilo en segundo plano para no bloquear la app.
         Thread {
             var blueToothWrapper: BluetoothConnector.BluetoothSocketWrapper? = null
+
             try {
                 if (qrPrint.isEmpty()) {
                     runOnUiThread { callback.onPrintingError("La cadena del QR está vacía.") }
@@ -622,6 +639,8 @@ open class BaseActivity : AppCompatActivity() {
                 blueToothWrapper = this.setupPrinter()
 
                 if (blueToothWrapper != null) {
+                    val settings = getSettings()
+                    val typePrint = settings.typePrint
                     val outputStream = blueToothWrapper.outputStream
 
                     // --- INICIO DE TU LÓGICA DE QR ---
@@ -630,33 +649,44 @@ open class BaseActivity : AppCompatActivity() {
                     // Convertir el array de bytes a un Bitmap de Android
                     val qrBitmap = BitmapFactory.decodeByteArray(qrByte, 0, qrByte.size)
                     // Usar tu función de ayuda para convertir el Bitmap al formato de bytes de la impresora
-                    val documentPrint = Extensions().decodeBitmap(qrBitmap)
+                    //val documentPrint = Extensions().decodeBitmap(qrBitmap)
                     // --- FIN DE TU LÓGICA DE QR ---
 
-                    // Comando para centrar el contenido (muy importante para un QR)
-                    outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
+                    when(typePrint) {
+                        "BIXOLON" -> {
+                            printBitmapBixolon(outputStream,qrBitmap)
 
-                    // Enviar la imagen en trozos para no saturar el buffer
-                    val chunkSize = 512
-                    var offset = 0
-                    if (documentPrint != null) {
-                        while (offset < documentPrint.size) {
-                            val size = min(chunkSize, documentPrint.size - offset)
-                            outputStream.write(documentPrint, offset, size)
-                            Thread.sleep(50) // Pausa para que la impresora procese
-                            offset += size
+                        } else -> {
+                        val documentPrint = Extensions().decodeBitmap(qrBitmap)
+
+                        // Comando para centrar el contenido (muy importante para un QR)
+                        outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
+
+                        // Enviar la imagen en trozos para no saturar el buffer
+                        val chunkSize = 512
+                        var offset = 0
+                        if (documentPrint != null) {
+                            while (offset < documentPrint.size) {
+                                val size = min(chunkSize, documentPrint.size - offset)
+                                outputStream.write(documentPrint, offset, size)
+                                Thread.sleep(50) // Pausa para que la impresora procese
+                                offset += size
+                            }
                         }
+
+                        // Añadir espacio al final y resetear la alineación a la izquierda
+                        outputStream.write(byteArrayOf(0x0A, 0x0A))
+                        outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01)) // Alineación a la izquierda
+
+                        outputStream.flush()
+                        Thread.sleep(2000) // Pausa final para asegurar la impresión completa de la imagen
+
+                        // 2. Notificar que la impresión fue exitosa.
+                        runOnUiThread { callback.onPrintingSuccess() }
+                        }
+
                     }
 
-                    // Añadir espacio al final y resetear la alineación a la izquierda
-                    outputStream.write(byteArrayOf(0x0A, 0x0A))
-                    outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01)) // Alineación a la izquierda
-
-                    outputStream.flush()
-                    Thread.sleep(1800) // Pausa final para asegurar la impresión completa de la imagen
-
-                    // 2. Notificar que la impresión fue exitosa.
-                    runOnUiThread { callback.onPrintingSuccess() }
 
                 } else {
                     runOnUiThread { callback.onPrintingError(getString(R.string.printer_error)) }
@@ -679,7 +709,48 @@ open class BaseActivity : AppCompatActivity() {
             }
         }.start()
     }
+    private fun printBitmapBixolon(outputStream: OutputStream, bitmap: Bitmap) {
+        // Implementación del comando GS v 0 para Bixolon
+        val printerData = bitmapToEscPos(bitmap)
+        val widthBytes = (bitmap.width + 7) / 8
+        val widthL = widthBytes % 256
+        val widthH = widthBytes / 256
+        val heightL = bitmap.height % 256
+        val heightH = bitmap.height / 256
 
+        // Comando GS v 0 para imprimir imagen rasterizada
+        val command = byteArrayOf(0x1D, 0x76, 0x30, 0x00, widthL.toByte(), widthH.toByte(), heightL.toByte(), heightH.toByte())
+        outputStream.write(command)
+        outputStream.write(printerData)
+    }
+
+    private fun bitmapToEscPos(bitmap: Bitmap): ByteArray {
+        val width = bitmap.width
+        val height = bitmap.height
+        val result = mutableListOf<Byte>()
+        val widthBytes = (width + 7) / 8
+
+        for (y in 0 until height) {
+            for (xBlock in 0 until widthBytes) {
+                var slice: Byte = 0
+                for (xBit in 0..7) {
+                    val x = xBlock * 8 + xBit
+                    if (x < width) {
+                        val pixel = bitmap.getPixel(x, y)
+                        val r = Color.red(pixel)
+                        val g = Color.green(pixel)
+                        val b = Color.blue(pixel)
+                        // Considera un pixel como "negro" si su luminancia es menor a 128
+                        if (r * 0.3 + g * 0.59 + b * 0.11 < 128) {
+                            slice = (slice.toInt() or (1 shl (7 - xBit))).toByte()
+                        }
+                    }
+                }
+                result.add(slice)
+            }
+        }
+        return result.toByteArray()
+    }
 
     protected fun performPrintingCotizacion(documentoPrint: String,tipo: Int): Boolean {
         val settings = getSettings()

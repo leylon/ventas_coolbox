@@ -47,6 +47,7 @@ import com.pedidos.android.persistence.model.pagos.PaymentValeResponse
 import com.pedidos.android.persistence.ui.BasicApp
 import com.pedidos.android.persistence.ui.ClientPopUpFragment
 import com.pedidos.android.persistence.ui.menu.MenuActivity
+import com.pedidos.android.persistence.ui.payment.fragment.PaymentBottomSheetFragment
 import com.pedidos.android.persistence.ui.sale.SaleActivity
 import com.pedidos.android.persistence.ui.sale.SaleActivity.Companion
 import com.pedidos.android.persistence.ui.search.SearchProductActivity
@@ -83,7 +84,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 
-class PaymentActivity : MenuActivity() {
+class PaymentActivity : MenuActivity(), PaymentBottomSheetFragment.PaymentListener {
     companion object {
         val TAG = PaymentEntity::class.java.simpleName!!
         const val ENTITY_EXTRA = "com.example.android.persistence.ui.payment.entity"
@@ -117,7 +118,7 @@ class PaymentActivity : MenuActivity() {
     private var numVale: String = ""
     private var numNcr: String = ""
     private var importeTotal: String = ""
-
+    private var refTarjeta: String = ""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithMenu(R.layout.payment_activity)
@@ -208,7 +209,10 @@ class PaymentActivity : MenuActivity() {
             Log.d("VISANET-APP", ex.message, ex)
         }
         if (saleEntity.cotizacion.isEmpty()){
-            btnTarjeta.setOnClickListener { btnOnClickCreditCard(endingViewModel.cardsAccepted.value ?: arrayListOf()) }
+            btnTarjeta.setOnClickListener {
+                //btnOnClickCreditCard(endingViewModel.cardsAccepted.value ?: arrayListOf())
+                btnOnClickCreditCardNew(endingViewModel.cardsAccepted.value ?: arrayListOf())
+            }
             btnOther.setOnClickListener { btnOnClickOthers(endingViewModel.otherPayments.value ?: arrayListOf()) }
             btnMakeAndWish.setOnClickListener { onClickMakeAndWish() }
             btnMpos.setOnClickListener { cobrarMPOS() }
@@ -770,6 +774,7 @@ class PaymentActivity : MenuActivity() {
                     .create().show()
         }
     }
+    /*
     private fun performAfterOperationsQueue(entity: PaymentResponseEntity?) {
         if (entity == null) {
             onError("Error al obtener el recibo.")
@@ -847,7 +852,7 @@ class PaymentActivity : MenuActivity() {
 
         // Paso 4: Iniciamos el proceso de impresión con el primer elemento de la cola (índice 0).
         processPrintQueue(0)
-    }
+    }*/
 
 
     // 2. El helper para mostrar diálogos de error de forma limpia.
@@ -868,6 +873,18 @@ class PaymentActivity : MenuActivity() {
             Log.e(TAG, "La entidad de respuesta de pago es nula.")
             return
         }
+
+        if (entity.documentoPrint.isEmpty()) {
+            showPrintingErrorDialog("La cabecera del documento es vacio.")
+            Log.e(TAG, "Error la cabecera del documento es vacio")
+            return
+        }
+        if (entity.qrPrint.isEmpty()) {
+            showPrintingErrorDialog("El QR del documento esta vacio.")
+            Log.e(TAG, "Error la cabecera del documento es vacio")
+            return
+        }
+
 
         // Limpiamos la información de pago.
         savePagoIdFpay("")
@@ -949,26 +966,7 @@ class PaymentActivity : MenuActivity() {
         // Iniciamos el proceso de impresión con el primer elemento de la cola (índice 0).
         processPrintQueue(0)
     }
-    private fun performAfterOperationsPrint(entity: PaymentResponseEntity?){
-        if (entity != null) {
-            //Get PDF
-            //endingViewModel.getSaleReceiptPDF(numeroDocumento)
-            savePagoIdFpay("")
-            savePagoIdPLink("")
-            performPrinting(entity.documentoPrint, object : PrintingCallback {
-                override fun onPrintingSuccess() {
 
-                }
-
-                override fun onPrintingError(errorMessage: String?) {
-
-                }
-            })
-        } else {
-
-        }
-
-    }
 
     private fun performViewOperations(receipt: ReceiptEntity?) {
         if (receipt != null) {
@@ -1124,6 +1122,16 @@ class PaymentActivity : MenuActivity() {
                 dialog.dismiss()
             }
         }
+    }
+    private fun btnOnClickCreditCardNew(list : ArrayList<SelectedCreditCard>) {
+
+
+        // 2. Llama al método newInstance para crear el fragmento con los datos
+        val paymentSheet = PaymentBottomSheetFragment.newInstance(list)
+
+        // 3. Muestra el BottomSheet
+        paymentSheet.show(supportFragmentManager, PaymentBottomSheetFragment.TAG)
+
     }
 
     // for other payments
@@ -1378,6 +1386,36 @@ class PaymentActivity : MenuActivity() {
                 if (!messageType)
                     ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), SearchProductActivity.CAMERA_REQUEST_ID)
             }.show()
+    }
+
+    override fun onPaymentAccepted(
+        amount: String,
+        reference: String,
+        selectedCardCode: SelectedCreditCard,
+        list: ArrayList<SelectedCreditCard>
+    ) {
+        Log.d("PaymentResult", "Monto: $amount, Ref: $reference, Tarjeta: $selectedCardCode")
+
+        // Ahora puedes usar estos datos para actualizar tu UI o procesar el pago
+        //Toast.makeText(this, "Pago aceptado por $amount", Toast.LENGTH_SHORT).show()
+        //etwTarjeta.setText(amount)
+
+        refTarje = reference
+        if(amount.isNullOrEmpty() || amount == "0"  || amount == "0.0" ) {
+            etwTarjeta.setText("")
+
+            creditCardSelected = list[0].codeCard.toString()
+
+            btnTarjeta.text = list[0].description
+            btnTarjeta.setCompoundDrawablesWithIntrinsicBounds(getDrawable(list[0].getImageResource(list[0].icon)),null,null,null)
+
+        } else {
+            etwTarjeta.setText(amount)
+            creditCardSelected = selectedCardCode.codeCard.toString()
+            btnTarjeta.text = selectedCardCode.description
+            btnTarjeta.setCompoundDrawablesWithIntrinsicBounds(getDrawable(selectedCardCode.getImageResource(selectedCardCode.icon)),null,null,null)
+
+        }
     }
 
 
