@@ -237,6 +237,10 @@ class PaymentActivity : MenuActivity(), PaymentBottomSheetFragment.PaymentListen
             btnRegresar.isClickable = false
             btnFinalizar.isEnabled = false
             btnRegresar.isEnabled = false
+            btnNCR.isEnabled = false
+            btnOtherVale.isEnabled = false
+            btnNCR.isClickable = false
+            btnOtherVale.isClickable = false
             if (isValidFlight()) {
                 finalizarPedido(createPaymentEntity())
             }
@@ -563,6 +567,7 @@ class PaymentActivity : MenuActivity(), PaymentBottomSheetFragment.PaymentListen
     }
 
     private fun finalizarPedido(paymentEntity: PaymentEntity) {
+        viewModel.showLoading.postValue(true)
         println("finalizarPedido: "+ Gson().toJson(paymentEntity))
         viewModel.savePayment(paymentEntity, ::onError)
     }
@@ -572,6 +577,10 @@ class PaymentActivity : MenuActivity(), PaymentBottomSheetFragment.PaymentListen
         Log.e(SaleActivity.TAG, message)
         btnFinalizar.isEnabled = true
         btnFinalizar.isClickable = true
+        btnNCR.isEnabled = true
+        btnOtherVale.isEnabled = true
+        btnNCR.isClickable = true
+        btnOtherVale.isClickable = true
         AlertDialog.Builder(this, R.style.AppTheme_DIALOG)
                 .setTitle(R.string.app_name)
                 .setMessage(message)
@@ -899,7 +908,7 @@ class PaymentActivity : MenuActivity(), PaymentBottomSheetFragment.PaymentListen
             printQueue.add(Pair(entity.documentoPrint, "cuerpo del recibo"))
         }
         if (entity.qrPrint.trim().isNotEmpty()) {
-            printQueue.add(Pair(entity.qrPrint, "código QR"))
+            printQueue.add(Pair(entity.qrPrint, "codigo QR"))
         }
         if (entity.piedocumentoPrint.trim().isNotEmpty()) {
             printQueue.add(Pair(entity.piedocumentoPrint, "pie del recibo"))

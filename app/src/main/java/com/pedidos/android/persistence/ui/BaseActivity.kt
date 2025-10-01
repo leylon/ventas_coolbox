@@ -11,7 +11,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Build
 import android.support.design.widget.Snackbar
-import android.support.v4.app.ActivityCompat
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
@@ -35,9 +34,11 @@ import com.pedidos.android.persistence.ui.menu.MenuActivity
 import com.pedidos.android.persistence.utils.BluetoothConnector
 import com.pedidos.android.persistence.utils.Extensions
 import com.pedidos.android.persistence.utils.PaperWidth
+import com.pedidos.android.persistence.utils.PrintError
 import com.pedidos.android.persistence.utils.PrintingCallback
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.io.OutputStream
 import java.nio.charset.Charset
 import kotlin.math.min
@@ -63,15 +64,15 @@ open class BaseActivity : AppCompatActivity() {
     fun cleanSession() {
         val preferences = getSharedPreferences(LoginActivity.NAMESPACE, Context.MODE_PRIVATE)
         preferences.edit().putString(
-                LoginActivity.SESSION_USER_NAME, "{}").apply()
+            LoginActivity.SESSION_USER_NAME, "{}").apply()
     }
 
     fun saveSetting(settings: Settings) {
         val preferences = getSharedPreferences(MenuActivity.NAMESPACE, Context.MODE_PRIVATE)
 
         preferences.edit().putString(
-                MenuActivity.SETTINGS,
-                Gson().toJson(settings)
+            MenuActivity.SETTINGS,
+            Gson().toJson(settings)
         ).apply()
     }
 
@@ -93,8 +94,8 @@ open class BaseActivity : AppCompatActivity() {
     fun printOnSnackBar(content: String) {
         val view = (findViewById<View>(android.R.id.content) as ViewGroup).getChildAt(0) as ViewGroup
         Snackbar.make(view, content, Snackbar.LENGTH_INDEFINITE)
-                .setDuration(2000)
-                .setAction("Action", null).show()
+            .setDuration(2000)
+            .setAction("Action", null).show()
     }
     fun printOnDialogMessaging(content: String) {
         /*val view = (findViewById<View>(android.R.id.content) as ViewGroup).getChildAt(0) as ViewGroup
@@ -122,11 +123,11 @@ open class BaseActivity : AppCompatActivity() {
     //todo: add optional lambda, replace uses
     fun confirmMessage(content: String) {
         AlertDialog.Builder(this)
-                .setTitle(R.string.app_name)
-                .setMessage(content)
-                .setPositiveButton(R.string.aceptar) { d, _ -> d.dismiss() }
-                .setCancelable(false)
-                .create().show()
+            .setTitle(R.string.app_name)
+            .setMessage(content)
+            .setPositiveButton(R.string.aceptar) { d, _ -> d.dismiss() }
+            .setCancelable(false)
+            .create().show()
 
     }
 
@@ -255,7 +256,7 @@ open class BaseActivity : AppCompatActivity() {
             }
         } catch (ex: Exception) {
             Log.e(CancelActivity.TAG, ex.message.toString())
-          //  printOnSnackBar("Error seleccionando la impresora: " + ex.message)
+            //  printOnSnackBar("Error seleccionando la impresora: " + ex.message)
         }
 
         return false
@@ -330,6 +331,17 @@ open class BaseActivity : AppCompatActivity() {
                         blueToothWrapper.outputStream.write(setUtf8)
                         textData = documentoPrint.toByteArray(Charsets.UTF_8)
                     }
+                    "BIXOLON" -> {
+                        //Doble Ancho
+                        println("Usando modo BIXOLON (UTF-8)")
+                        // Para Sunmi, enviamos directamente en UTF-8 sin comandos extraños.
+                        // La impresora Sunmi debería interpretar UTF-8 de forma nativa.
+                        val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
+                        val setUtf8  = getCodePageCommand(16)
+                        blueToothWrapper.outputStream.write(setMulti)
+                        blueToothWrapper.outputStream.write(setUtf8)
+                        textData = documentoPrint.toByteArray(Charsets.UTF_8)
+                    }
                     "POSD" -> {
                         //Doble Alto y Ancho
                         println("Usando modo POSD (Code Page/IBM850)")
@@ -365,7 +377,7 @@ open class BaseActivity : AppCompatActivity() {
                     else -> {
                         printOnSnackBar("Tamaño de papel no soportado: $width")
                         Log.e(CancelActivity.TAG, "Tamaño de papel no soportado: $width")
-                       // return false
+                        // return false
                     }
                 }
                 // 2. Enviar el texto en trozos (chunks) para evitar desbordamiento del búfer.
@@ -379,7 +391,7 @@ open class BaseActivity : AppCompatActivity() {
                     Thread.sleep(50)
                     offset += size
                 }
-               // blueToothWrapper.outputStream.write(documentoPrint.toByteArray(Charsets.UTF_8))
+                // blueToothWrapper.outputStream.write(documentoPrint.toByteArray(Charsets.UTF_8))
                 blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A))
                 blueToothWrapper.outputStream.flush()
                 Thread.sleep(1500)
@@ -393,11 +405,11 @@ open class BaseActivity : AppCompatActivity() {
             printOnSnackBar(getString(R.string.printer_error) + ": " + ex.message)
             return false
         } finally {
-                Thread.sleep(100)
-                blueToothWrapper?.outputStream?.close()
-                Thread.sleep(100)
-                blueToothWrapper?.inputStream?.close()
-                blueToothWrapper?.close()
+            Thread.sleep(100)
+            blueToothWrapper?.outputStream?.close()
+            Thread.sleep(100)
+            blueToothWrapper?.inputStream?.close()
+            blueToothWrapper?.close()
             println("Socket de impresora cerrado.")
         }
         return false
@@ -408,7 +420,7 @@ open class BaseActivity : AppCompatActivity() {
             var blueToothWrapper:  BluetoothConnector.BluetoothSocketWrapper? = null // Usa tu clase BlueToothWrapper
             try {
                 val settings = getSettings()
-                val width = settings.pageSize
+                //val width = settings.pageSize
                 val typePrint = settings.typePrint
 
                 if (documentoPrint.isEmpty()) {
@@ -416,14 +428,14 @@ open class BaseActivity : AppCompatActivity() {
                     return@Thread
                 }
 
-                 blueToothWrapper = this.setupPrinter()
+                blueToothWrapper = this.setupPrinter()
 
                 if (blueToothWrapper != null) {
                     val outputStream = blueToothWrapper.outputStream
                     var textData: ByteArray
 
                     // Lógica de configuración de la impresora
-                    when(typePrint) {
+                    when (typePrint) {
                         "HIOPOS" -> {
                             //Normal
                             println("Usando modo GENERIC (Code Page/IBM850)")
@@ -439,41 +451,51 @@ open class BaseActivity : AppCompatActivity() {
                             blueToothWrapper.outputStream.write(initPrinter)
                             blueToothWrapper.outputStream.write(selectCodePage)
                             blueToothWrapper.outputStream.write(setCompactLineSpacing) // Aplicamos el interlineado estándar
-                            blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x00)) // ESC !
+                            blueToothWrapper.outputStream.write(
+                                byteArrayOf(
+                                    0x1B,
+                                    0x21,
+                                    0x00
+                                )
+                            ) // ESC !
                             textData = documentoPrint.toByteArray(Charset.forName("IBM850"))
                         }
+
                         "SUNMI" -> {
                             //Doble Alto
                             val resetFontMode = byteArrayOf(0x1B, 0x21, 0x00)
                             blueToothWrapper.outputStream.write(resetFontMode)
                             val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
-                            val setUtf8  = getCodePageCommandSunmi(16)
+                            val setUtf8 = getCodePageCommandSunmi(16)
                             blueToothWrapper.outputStream.write(setMulti)
                             blueToothWrapper.outputStream.write(setUtf8)
                             textData = documentoPrint.toByteArray(Charsets.UTF_8)
                         }
+
                         "GENERIC" -> {
                             //Doble Ancho
                             println("Usando modo GENERIC (UTF-8)")
                             // Para Sunmi, enviamos directamente en UTF-8 sin comandos extraños.
                             // La impresora Sunmi debería interpretar UTF-8 de forma nativa.
                             val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
-                            val setUtf8  = getCodePageCommand(16)
+                            val setUtf8 = getCodePageCommand(16)
                             blueToothWrapper.outputStream.write(setMulti)
                             blueToothWrapper.outputStream.write(setUtf8)
                             textData = documentoPrint.toByteArray(Charsets.UTF_8)
                         }
+
                         "BIXOLON" -> {
                             //Doble Ancho
                             println("Usando modo BIXOLON (UTF-8)")
                             // Para Sunmi, enviamos directamente en UTF-8 sin comandos extraños.
                             // La impresora Sunmi debería interpretar UTF-8 de forma nativa.
                             val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
-                            val setUtf8  = getCodePageCommand(16)
+                            val setUtf8 = getCodePageCommand(16)
                             blueToothWrapper.outputStream.write(setMulti)
                             blueToothWrapper.outputStream.write(setUtf8)
                             textData = documentoPrint.toByteArray(Charsets.UTF_8)
                         }
+
                         "POSD" -> {
                             //Doble Alto y Ancho
                             println("Usando modo POSD (Code Page/IBM850)")
@@ -483,7 +505,9 @@ open class BaseActivity : AppCompatActivity() {
                             blueToothWrapper.outputStream.write(selectCodePage)
                             blueToothWrapper.outputStream.write(setCompactLineSpacing)
                             textData = documentoPrint.toByteArray(Charset.forName("IBM850"))
-                        } else -> { // GENERIC y otros casos
+                        }
+
+                        else -> { // GENERIC y otros casos
                             val initPrinter = byteArrayOf(0x1B, 0x40)
                             outputStream.write(initPrinter)
                             textData = documentoPrint.toByteArray(Charset.forName("IBM850"))
@@ -502,7 +526,7 @@ open class BaseActivity : AppCompatActivity() {
 
                     outputStream.write(byteArrayOf(0x0A, 0x0A))
                     outputStream.flush()
-                    Thread.sleep(1500)
+                    Thread.sleep(2000)
 
                     // 2. Si todo sale bien, notifica el éxito.
                     runOnUiThread { callback.onPrintingSuccess() }
@@ -511,9 +535,15 @@ open class BaseActivity : AppCompatActivity() {
                     runOnUiThread { callback.onPrintingError(getString(R.string.printer_error)) }
                 }
             } catch (ex: Exception) {
-                Log.e(CancelActivity.TAG, "Error en hilo de impresión: " + ex.message)
-                // 3. Si hay un error, notifica el fallo.
+                Log.e(CancelActivity.TAG, "Error en hilo de impresión QR: " + ex.message)
+                // 3. Notificar si hubo un error.
                 runOnUiThread { callback.onPrintingError(ex.message) }
+            }catch (e: IOException) {
+                Log.e("PrintImage", "Error de IO (Conexión): ${e.message}")
+                runOnUiThread { callback.onPrintingError("${PrintError.CONNECTION_FAILED}") }
+            } catch (e: IllegalArgumentException) {
+                Log.e("PrintImage", "Error en datos (Base64): ${e.message}")
+                runOnUiThread { callback.onPrintingError("${PrintError.CONNECTION_FAILED}") }
             } finally {
                 // 4. Cierra la conexión de forma segura en el hilo de fondo.
                 try {
@@ -524,104 +554,105 @@ open class BaseActivity : AppCompatActivity() {
                     println("Socket de impresora cerrado.")
                 } catch (e: Exception) {
                     Log.e(CancelActivity.TAG, "Error al cerrar socket: " + e.message)
+                    runOnUiThread { callback.onPrintingError("Error en hilo de impresión: " + e.message) }
                 }
             }
         }.start() // No olvides .start() para que el hilo comience.
     }
 
-        protected fun performPrintingQr(qrPrint: String): Boolean {
-            val settings = getSettings()
-            val width = settings.pageSize
-            val typePrint = settings.typePrint
-            if (qrPrint == "") {
-                Log.i(CancelActivity.TAG, "no existe valor en el documento")
-                printOnSnackBar(getString(R.string.payment_no_receipt))
-                return false
-            }
-            try {
-
-                val blueToothWrapper = this.setupPrinter()
-
-                if (blueToothWrapper != null) {
-                    //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x00)) // ESC !
-                    //blueToothWrapper.outputStream.write(byteArrayOf(0x1D, 0x21, 0x00)) // GS !
-                    //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x12))       // Descondensar
-                    when (width) {
-                        PaperWidth.WIDTH_80MM.widthValue -> {
-                            //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
-                            println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
-                            //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x20)) // Texto grande
-                            //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x10)) // Margen izquierdo más amplio
-                        }
-
-                        PaperWidth.WIDTH_58MM.widthValue -> {
-                            //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
-                            println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
-                            // blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x10)) // Texto mediano
-                            //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x08)) // Margen izquierdo reducido
-                        }
-
-                        PaperWidth.WIDTH_50_8MM.widthValue -> {
-                            //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
-                            println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
-
-                        }
-
-                        PaperWidth.WIDTH_48MM.widthValue -> {
-                            //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
-                            println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
-
-                        }
-
-                        else -> {
-                            printOnSnackBar("Tamaño de papel no soportado: $width")
-                            Log.e(CancelActivity.TAG, "Tamaño de papel no soportado: $width")
-                            // return false
-                        }
-                    }
-
-
-                    var documentPrint: ByteArray? = byteArrayOf()
-                    val qrByte = Base64.decode(qrPrint, Base64.DEFAULT)
-                    val qrBitmap = BitmapFactory.decodeByteArray(qrByte, 0, qrByte.size)
-                    documentPrint = Extensions().decodeBitmap(qrBitmap)
-
-                    blueToothWrapper.outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
-
-                    val chunkSize = 512 // Tamaño del trozo en bytes. Puedes ajustar este valor.
-                    var offset = 0
-                    while (offset < documentPrint!!.size) {
-                        val size = min(chunkSize, documentPrint!!.size - offset)
-                        blueToothWrapper.outputStream.write(documentPrint!!, offset, size)
-                        // Pequeña pausa para que la impresora procese el trozo.
-                        Thread.sleep(50)
-                        offset += size
-                    }
-
-                    // 3. Agregar saltos de línea al final y asegurar que todo se envíe.
-                    //blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A,0x0A))
-                    blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A))
-                    //blueToothWrapper.outputStream.write(documentPrint)
-
-                    blueToothWrapper.outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
-                    //blueToothWrapper.outputStream.flush()
-                    // blueToothWrapper.outputStream.write(documentPrint)
-                    Thread.sleep(1800)
-                    blueToothWrapper.outputStream.close()
-                    blueToothWrapper.inputStream.close()
-                    blueToothWrapper.close()
-                    return true
-                } else {
-                    printOnSnackBar(getString(R.string.printer_error))
-                }
-            } catch (ex: Exception) {
-                Log.e(CancelActivity.TAG, "ley : " + ex.message)
-
-                //printOnSnackBar(getString(R.string.printer_error) + ": " + ex.message)
-            }
-
+    protected fun performPrintingQr(qrPrint: String): Boolean {
+        val settings = getSettings()
+        val width = settings.pageSize
+        val typePrint = settings.typePrint
+        if (qrPrint == "") {
+            Log.i(CancelActivity.TAG, "no existe valor en el documento")
+            printOnSnackBar(getString(R.string.payment_no_receipt))
             return false
-           //saveAndShareFile(Base64.decode(documentoPrint, Base64.DEFAULT), numeroDocumento)
+        }
+        try {
+
+            val blueToothWrapper = this.setupPrinter()
+
+            if (blueToothWrapper != null) {
+                //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x00)) // ESC !
+                //blueToothWrapper.outputStream.write(byteArrayOf(0x1D, 0x21, 0x00)) // GS !
+                //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x12))       // Descondensar
+                when (width) {
+                    PaperWidth.WIDTH_80MM.widthValue -> {
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
+                        println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
+                        //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x20)) // Texto grande
+                        //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x10)) // Margen izquierdo más amplio
+                    }
+
+                    PaperWidth.WIDTH_58MM.widthValue -> {
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
+                        println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
+                        // blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x10)) // Texto mediano
+                        //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x08)) // Margen izquierdo reducido
+                    }
+
+                    PaperWidth.WIDTH_50_8MM.widthValue -> {
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
+                        println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
+
+                    }
+
+                    PaperWidth.WIDTH_48MM.widthValue -> {
+                        //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
+                        println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
+
+                    }
+
+                    else -> {
+                        printOnSnackBar("Tamaño de papel no soportado: $width")
+                        Log.e(CancelActivity.TAG, "Tamaño de papel no soportado: $width")
+                        // return false
+                    }
+                }
+
+
+                var documentPrint: ByteArray? = byteArrayOf()
+                val qrByte = Base64.decode(qrPrint, Base64.DEFAULT)
+                val qrBitmap = BitmapFactory.decodeByteArray(qrByte, 0, qrByte.size)
+                documentPrint = Extensions().decodeBitmap(qrBitmap)
+
+                blueToothWrapper.outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
+
+                val chunkSize = 512 // Tamaño del trozo en bytes. Puedes ajustar este valor.
+                var offset = 0
+                while (offset < documentPrint!!.size) {
+                    val size = min(chunkSize, documentPrint!!.size - offset)
+                    blueToothWrapper.outputStream.write(documentPrint!!, offset, size)
+                    // Pequeña pausa para que la impresora procese el trozo.
+                    Thread.sleep(50)
+                    offset += size
+                }
+
+                // 3. Agregar saltos de línea al final y asegurar que todo se envíe.
+                //blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A,0x0A))
+                blueToothWrapper.outputStream.write(byteArrayOf(0x0A, 0x0A))
+                //blueToothWrapper.outputStream.write(documentPrint)
+
+                blueToothWrapper.outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
+                //blueToothWrapper.outputStream.flush()
+                // blueToothWrapper.outputStream.write(documentPrint)
+                Thread.sleep(1800)
+                blueToothWrapper.outputStream.close()
+                blueToothWrapper.inputStream.close()
+                blueToothWrapper.close()
+                return true
+            } else {
+                printOnSnackBar(getString(R.string.printer_error))
+            }
+        } catch (ex: Exception) {
+            Log.e(CancelActivity.TAG, "ley : " + ex.message)
+
+            //printOnSnackBar(getString(R.string.printer_error) + ": " + ex.message)
+        }
+
+        return false
+        //saveAndShareFile(Base64.decode(documentoPrint, Base64.DEFAULT), numeroDocumento)
     }
     // Asumo que la interfaz PrintingCallback ya está definida en tu archivo.
 
@@ -653,7 +684,7 @@ open class BaseActivity : AppCompatActivity() {
                     // --- FIN DE TU LÓGICA DE QR ---
 
                     when(typePrint) {
-                        "BIXOLON" -> {
+                        "GENERIC" -> {
                             printBitmapBixolon(outputStream,qrBitmap)
 
                         } else -> {
@@ -683,7 +714,7 @@ open class BaseActivity : AppCompatActivity() {
 
                         // 2. Notificar que la impresión fue exitosa.
                         runOnUiThread { callback.onPrintingSuccess() }
-                        }
+                    }
 
                     }
 
@@ -695,7 +726,14 @@ open class BaseActivity : AppCompatActivity() {
                 Log.e(CancelActivity.TAG, "Error en hilo de impresión QR: " + ex.message)
                 // 3. Notificar si hubo un error.
                 runOnUiThread { callback.onPrintingError(ex.message) }
-            } finally {
+            }catch (e: IOException) {
+                Log.e("PrintImage", "Error de IO (Conexión): ${e.message}")
+                runOnUiThread { callback.onPrintingError("${PrintError.CONNECTION_FAILED}") }
+            } catch (e: IllegalArgumentException) {
+                Log.e("PrintImage", "Error en datos (Base64): ${e.message}")
+                runOnUiThread { callback.onPrintingError("${PrintError.CONNECTION_FAILED}") }
+            }
+            finally {
                 // 4. Cerrar la conexión de forma segura, pase lo que pase.
                 try {
                     Thread.sleep(100)
@@ -721,7 +759,22 @@ open class BaseActivity : AppCompatActivity() {
         // Comando GS v 0 para imprimir imagen rasterizada
         val command = byteArrayOf(0x1D, 0x76, 0x30, 0x00, widthL.toByte(), widthH.toByte(), heightL.toByte(), heightH.toByte())
         outputStream.write(command)
-        outputStream.write(printerData)
+        outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
+        //outputStream.write(printerData)
+        // *** MEJORA: Enviar los datos de la imagen en trozos para evitar saturar el buffer ***
+        val chunkSize = 1024 // Un chunk más grande para imágenes suele ser eficiente
+        var offset = 0
+        while (offset < printerData.size) {
+            val size = min(chunkSize, printerData.size - offset)
+            outputStream.write(printerData, offset, size)
+            Thread.sleep(50) // Pausa corta para que la impresora procese el trozo
+            offset += size
+        }
+
+        outputStream.write(byteArrayOf(0x0A, 0x0A))
+        outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
+        outputStream.flush()
+        Thread.sleep(2000)
     }
 
     private fun bitmapToEscPos(bitmap: Bitmap): ByteArray {
@@ -757,80 +810,80 @@ open class BaseActivity : AppCompatActivity() {
         val width = settings.pageSize
         println("Tamaño de Papel: $width")
         if (documentoPrint == "") {
-             Log.i(CancelActivity.TAG, "no existe valor en el documento")
-             printOnSnackBar(getString(R.string.payment_no_receipt))
-             return false
-         }
-         try {
-             val blueToothWrapper = this.setupPrinter()
-             if (blueToothWrapper == null) {
-                 printOnSnackBar(getString(R.string.printer_error))
-                 return false
-             }
-             //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x00)) // ESC !
-             //blueToothWrapper.outputStream.write(byteArrayOf(0x1D, 0x21, 0x00)) // GS !
-             //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x12))       // Descondensar
-             when (width) {
+            Log.i(CancelActivity.TAG, "no existe valor en el documento")
+            printOnSnackBar(getString(R.string.payment_no_receipt))
+            return false
+        }
+        try {
+            val blueToothWrapper = this.setupPrinter()
+            if (blueToothWrapper == null) {
+                printOnSnackBar(getString(R.string.printer_error))
+                return false
+            }
+            //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x00)) // ESC !
+            //blueToothWrapper.outputStream.write(byteArrayOf(0x1D, 0x21, 0x00)) // GS !
+            //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x12))       // Descondensar
+            when (width) {
 
-                 PaperWidth.WIDTH_80MM.widthValue -> {
-                     //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
-                     println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
-                     //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x20)) // Texto grande
-                     //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x10)) // Margen izquierdo más amplio
-                 }
-                 PaperWidth.WIDTH_58MM.widthValue -> {
-                     //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
-                     println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
-                     //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x10)) // Texto mediano
-                     //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x08)) // Margen izquierdo reducido
-                 }
-                 PaperWidth.WIDTH_50_8MM.widthValue -> {
-                     //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
-                     println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
-                     //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x08))  // Texto pequeño
-                     //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x04)) // Margen izquierdo mínimo
-                     // 1. Establecer modo página estrecha
-                     blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x57, 0x00, 0x00, 0x32, 0x00))
+                PaperWidth.WIDTH_80MM.widthValue -> {
+                    //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
+                    println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_80MM}")
+                    //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x20)) // Texto grande
+                    //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x10)) // Margen izquierdo más amplio
+                }
+                PaperWidth.WIDTH_58MM.widthValue -> {
+                    //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
+                    println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_58MM}")
+                    //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x10)) // Texto mediano
+                    //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x08)) // Margen izquierdo reducido
+                }
+                PaperWidth.WIDTH_50_8MM.widthValue -> {
+                    //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
+                    println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_50_8MM}")
+                    //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x21, 0x08))  // Texto pequeño
+                    //blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x4C, 0x04)) // Margen izquierdo mínimo
+                    // 1. Establecer modo página estrecha
+                    blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x57, 0x00, 0x00, 0x32, 0x00))
 
-                     // 2. Fuente ultra condensada
-                     blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x0F))
+                    // 2. Fuente ultra condensada
+                    blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x0F))
 
-                     // 3. Reducción al 60%
-                     blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x58, 0x32, 0x33))
+                    // 3. Reducción al 60%
+                    blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x58, 0x32, 0x33))
 
-                     // 4. Márgenes mínimos
-                     blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x51, 0x00)) // Margen derecho 0
-                 }
-                 PaperWidth.WIDTH_48MM.widthValue -> {
-                     //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
-                     println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
+                    // 4. Márgenes mínimos
+                    blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x51, 0x00)) // Margen derecho 0
+                }
+                PaperWidth.WIDTH_48MM.widthValue -> {
+                    //printOnSnackBar("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
+                    println("Se eligió el Tamaño de Papel: ${PaperWidth.WIDTH_48MM}")
 
-                 }
-             }
+                }
+            }
 
-             if (blueToothWrapper != null) {
-                 val documentoPrintByte = Base64.decode(documentoPrint,Base64.DEFAULT)
-                 blueToothWrapper.outputStream.write(documentoPrintByte)
-                 Thread.sleep(2000)
-                 blueToothWrapper.outputStream.close()
-                 blueToothWrapper.inputStream.close()
-                 blueToothWrapper.close()
-                 return true
-             } else {
-                 printOnSnackBar(getString(R.string.printer_error))
-             }
-         } catch (ex: Exception) {
-             Log.e(CancelActivity.TAG,"ley: "+ ex.message)
-             printOnSnackBar(getString(R.string.printer_error) + ": " + ex.message)
-         }
+            if (blueToothWrapper != null) {
+                val documentoPrintByte = Base64.decode(documentoPrint,Base64.DEFAULT)
+                blueToothWrapper.outputStream.write(documentoPrintByte)
+                Thread.sleep(2000)
+                blueToothWrapper.outputStream.close()
+                blueToothWrapper.inputStream.close()
+                blueToothWrapper.close()
+                return true
+            } else {
+                printOnSnackBar(getString(R.string.printer_error))
+            }
+        } catch (ex: Exception) {
+            Log.e(CancelActivity.TAG,"ley: "+ ex.message)
+            printOnSnackBar(getString(R.string.printer_error) + ": " + ex.message)
+        }
 
-         return false
+        return false
 
-            //printOnSnackBar(getString(R.string.printer_error) + ": " + ex.message)
-     }
+        //printOnSnackBar(getString(R.string.printer_error) + ": " + ex.message)
+    }
 
 
-        //saveAndShareFile(Base64.decode(documentoPrint, Base64.DEFAULT), numeroDocumento)
+    //saveAndShareFile(Base64.decode(documentoPrint, Base64.DEFAULT), numeroDocumento)
 // Función auxiliar para configuración de 48mm
 
     protected fun performPrintingCotizacionNormal(cotizacionPrint: CotizacionPrint): Boolean {
@@ -907,7 +960,7 @@ open class BaseActivity : AppCompatActivity() {
                         //val setDefaultLineSpacing = byteArrayOf(0x1B, 0x32)
                         val setCompactLineSpacing = byteArrayOf(0x1B, 0x33, 15)
                         // Codificar el texto completo una sola vez.
-                       // val textData = textToPrint.toByteArray(Charset.forName("IBM850"))
+                        // val textData = textToPrint.toByteArray(Charset.forName("IBM850"))
                         // 1. Enviar comandos de inicialización y configuración.
                         blueToothWrapper.outputStream.write(initPrinter)
                         blueToothWrapper.outputStream.write(selectCodePage)
