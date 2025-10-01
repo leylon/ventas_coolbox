@@ -471,7 +471,7 @@ open class BaseActivity : AppCompatActivity() {
                             blueToothWrapper.outputStream.write(setUtf8)
                             textData = documentoPrint.toByteArray(Charsets.UTF_8)
                         }
-
+                        /*
                         "GENERIC" -> {
                             //Doble Ancho
                             println("Usando modo GENERIC (UTF-8)")
@@ -482,7 +482,7 @@ open class BaseActivity : AppCompatActivity() {
                             blueToothWrapper.outputStream.write(setMulti)
                             blueToothWrapper.outputStream.write(setUtf8)
                             textData = documentoPrint.toByteArray(Charsets.UTF_8)
-                        }
+                        }*/
 
                         "BIXOLON" -> {
                             //Doble Ancho
@@ -496,7 +496,7 @@ open class BaseActivity : AppCompatActivity() {
                             textData = documentoPrint.toByteArray(Charsets.UTF_8)
                         }
 
-                        "POSD" -> {
+                        "GENERIC" -> {
                             //Doble Alto y Ancho
                             println("Usando modo POSD (Code Page/IBM850)")
                             // Probamos con la página de códigos PC850 (Multilingual), muy común.
@@ -532,18 +532,30 @@ open class BaseActivity : AppCompatActivity() {
                     runOnUiThread { callback.onPrintingSuccess() }
 
                 } else {
-                    runOnUiThread { callback.onPrintingError(getString(R.string.printer_error)) }
+                    runOnUiThread {
+                        printOnSnackBar(getString(R.string.printer_error))
+                        callback.onPrintingError(getString(R.string.printer_error)) }
                 }
             } catch (ex: Exception) {
                 Log.e(CancelActivity.TAG, "Error en hilo de impresión QR: " + ex.message)
+
                 // 3. Notificar si hubo un error.
-                runOnUiThread { callback.onPrintingError(ex.message) }
+                runOnUiThread {
+                    printOnSnackBar("Error en hilo de impresión QR: " + ex.message)
+                    callback.onPrintingError(ex.message)
+                }
             }catch (e: IOException) {
                 Log.e("PrintImage", "Error de IO (Conexión): ${e.message}")
-                runOnUiThread { callback.onPrintingError("${PrintError.CONNECTION_FAILED}") }
+                runOnUiThread {
+                    printOnSnackBar("Error de IO (Conexión): ${e.message}")
+                    callback.onPrintingError("${PrintError.CONNECTION_FAILED}")
+                }
             } catch (e: IllegalArgumentException) {
                 Log.e("PrintImage", "Error en datos (Base64): ${e.message}")
-                runOnUiThread { callback.onPrintingError("${PrintError.CONNECTION_FAILED}") }
+                runOnUiThread {
+                    printOnSnackBar("Error en datos (Base64): ${e.message}")
+                    callback.onPrintingError("${PrintError.CONNECTION_FAILED}")
+                }
             } finally {
                 // 4. Cierra la conexión de forma segura en el hilo de fondo.
                 try {
@@ -554,7 +566,10 @@ open class BaseActivity : AppCompatActivity() {
                     println("Socket de impresora cerrado.")
                 } catch (e: Exception) {
                     Log.e(CancelActivity.TAG, "Error al cerrar socket: " + e.message)
-                    runOnUiThread { callback.onPrintingError("Error en hilo de impresión: " + e.message) }
+                    runOnUiThread {
+                        printOnSnackBar("Error al cerrar socket: " + e.message)
+                        callback.onPrintingError("Error en hilo de impresión: " + e.message)
+                    }
                 }
             }
         }.start() // No olvides .start() para que el hilo comience.
@@ -683,55 +698,68 @@ open class BaseActivity : AppCompatActivity() {
                     //val documentPrint = Extensions().decodeBitmap(qrBitmap)
                     // --- FIN DE TU LÓGICA DE QR ---
 
-                    when(typePrint) {
+                    /*when(typePrint) {
                         "GENERIC" -> {
                             printBitmapBixolon(outputStream,qrBitmap)
 
                         } else -> {
-                        val documentPrint = Extensions().decodeBitmap(qrBitmap)
 
-                        // Comando para centrar el contenido (muy importante para un QR)
-                        outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
+                    }
 
-                        // Enviar la imagen en trozos para no saturar el buffer
-                        val chunkSize = 512
-                        var offset = 0
-                        if (documentPrint != null) {
-                            while (offset < documentPrint.size) {
-                                val size = min(chunkSize, documentPrint.size - offset)
-                                outputStream.write(documentPrint, offset, size)
-                                Thread.sleep(50) // Pausa para que la impresora procese
-                                offset += size
-                            }
+                    }*/
+                    val documentPrint = Extensions().decodeBitmap(qrBitmap)
+
+                    // Comando para centrar el contenido (muy importante para un QR)
+                    outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
+
+                    // Enviar la imagen en trozos para no saturar el buffer
+                    val chunkSize = 512
+                    var offset = 0
+                    if (documentPrint != null) {
+                        while (offset < documentPrint.size) {
+                            val size = min(chunkSize, documentPrint.size - offset)
+                            outputStream.write(documentPrint, offset, size)
+                            Thread.sleep(50) // Pausa para que la impresora procese
+                            offset += size
                         }
-
-                        // Añadir espacio al final y resetear la alineación a la izquierda
-                        outputStream.write(byteArrayOf(0x0A, 0x0A))
-                        outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01)) // Alineación a la izquierda
-
-                        outputStream.flush()
-                        Thread.sleep(2000) // Pausa final para asegurar la impresión completa de la imagen
-
-                        // 2. Notificar que la impresión fue exitosa.
-                        runOnUiThread { callback.onPrintingSuccess() }
                     }
 
-                    }
+                    // Añadir espacio al final y resetear la alineación a la izquierda
+                    outputStream.write(byteArrayOf(0x0A, 0x0A))
+                    outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01)) // Alineación a la izquierda
+
+                    outputStream.flush()
+                    Thread.sleep(2000) // Pausa final para asegurar la impresión completa de la imagen
+
+                    // 2. Notificar que la impresión fue exitosa.
+                    runOnUiThread { callback.onPrintingSuccess() }
 
 
                 } else {
-                    runOnUiThread { callback.onPrintingError(getString(R.string.printer_error)) }
+                    runOnUiThread {
+                        printOnSnackBar(getString(R.string.printer_error))
+                        callback.onPrintingError(getString(R.string.printer_error))
+                    }
                 }
             } catch (ex: Exception) {
                 Log.e(CancelActivity.TAG, "Error en hilo de impresión QR: " + ex.message)
                 // 3. Notificar si hubo un error.
-                runOnUiThread { callback.onPrintingError(ex.message) }
+                runOnUiThread {
+                    printOnSnackBar("Error en hilo de impresión QR: " + ex.message)
+                    callback.onPrintingError(ex.message)
+                }
             }catch (e: IOException) {
                 Log.e("PrintImage", "Error de IO (Conexión): ${e.message}")
-                runOnUiThread { callback.onPrintingError("${PrintError.CONNECTION_FAILED}") }
+                runOnUiThread {
+                    printOnSnackBar("Error de IO (Conexión): ${e.message}")
+                    callback.onPrintingError("${PrintError.CONNECTION_FAILED}")
+                }
             } catch (e: IllegalArgumentException) {
                 Log.e("PrintImage", "Error en datos (Base64): ${e.message}")
-                runOnUiThread { callback.onPrintingError("${PrintError.CONNECTION_FAILED}") }
+                runOnUiThread {
+                    printOnSnackBar("Error en datos (Base64): ${e.message}")
+                    callback.onPrintingError("${PrintError.CONNECTION_FAILED}")
+                }
             }
             finally {
                 // 4. Cerrar la conexión de forma segura, pase lo que pase.

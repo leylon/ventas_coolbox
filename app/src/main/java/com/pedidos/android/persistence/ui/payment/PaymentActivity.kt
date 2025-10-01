@@ -191,6 +191,7 @@ class PaymentActivity : MenuActivity(), PaymentBottomSheetFragment.PaymentListen
         viewModel.liveData.observe(this, Observer {
             //performAfterOperationsQueue(it)
             performAfterOperationsQueueQR(it)
+            //performAfterOperationsQueueQR2(it)
             //performAfterOperations(it)
         })
 
@@ -916,13 +917,14 @@ class PaymentActivity : MenuActivity(), PaymentBottomSheetFragment.PaymentListen
         if (entity.qrPrint2.trim().isNotEmpty()) {
             printQueue.add(Pair(entity.qrPrint2, "segundo código QR"))
         }
+        val mensajeboleta = entity.serviceResultMessage.toString()
 
         // Creamos una función interna que procesará la cola, un elemento a la vez.
         fun processPrintQueue(index: Int) {
             // CASO BASE: Si ya procesamos todos los elementos, hemos terminado con la impresión principal.
             if (index >= printQueue.size) {
                 // Todos los documentos principales se imprimieron con éxito.
-                confirmResultMessage(entity.serviceResultMessage, onOk = { dialog ->
+                confirmResultMessage(mensajeboleta, onOk = { dialog ->
                     // Verificamos si hay un voucher final para imprimir.
                     if (entity.voucherMposPrint.trim().isNotEmpty()) {
                         performPrinting(entity.voucherMposPrint, object : PrintingCallback {
@@ -931,9 +933,14 @@ class PaymentActivity : MenuActivity(), PaymentBottomSheetFragment.PaymentListen
                                 startNewSale()
                             }
                             override fun onPrintingError(errorMessage: String?) {
-                                showPrintingErrorDialog("Error al imprimir el voucher final: $errorMessage")
-                                dialog.dismiss()
-                                startNewSale()
+                               // showPrintingErrorDialog("Error al imprimir el voucher final: $errorMessage")
+                                confirmResultMessage(mensajeboleta, onOk = {
+                                    //try to print, if its not stop process
+                                    it.dismiss()
+                                    startNewSale()
+                                })
+                                //dialog.dismiss()
+                                //startNewSale()
                             }
                         })
                     } else {
@@ -960,7 +967,12 @@ class PaymentActivity : MenuActivity(), PaymentBottomSheetFragment.PaymentListen
                 override fun onPrintingError(errorMessage: String?) {
                     Log.e(TAG, "Error al imprimir $documentName: $errorMessage")
                     // Si algo falla, mostramos un error y detenemos la secuencia.
-                    showPrintingErrorDialog("Error al imprimir el $documentName.")
+                    //showPrintingErrorDialog("Error al imprimir el $documentName.")
+                    confirmResultMessage(mensajeboleta, onOk = {
+                        //try to print, if its not stop process
+                        it.dismiss()
+                        startNewSale()
+                    })
                 }
             }
 
@@ -973,6 +985,124 @@ class PaymentActivity : MenuActivity(), PaymentBottomSheetFragment.PaymentListen
         }
 
         // Iniciamos el proceso de impresión con el primer elemento de la cola (índice 0).
+        processPrintQueue(0)
+    }
+
+    private fun performAfterOperationsQueueQR2(entity: PaymentResponseEntity?) {
+        // --- PASO 1: VALIDACIONES INICIALES (sin cambios) ---
+        if (entity == null) {
+            showPrintingErrorDialog("Error al obtener el recibo.")
+            Log.e(TAG, "La entidad de respuesta de pago es nula.")
+            return
+        }
+
+        if (entity.documentoPrint.isEmpty()) {
+            showPrintingErrorDialog("La cabecera del documento es vacio.")
+            Log.e(TAG, "Error la cabecera del documento es vacio")
+            return
+        }
+        if (entity.qrPrint.isEmpty()) {
+            showPrintingErrorDialog("El QR del documento esta vacio.")
+            Log.e(TAG, "Error la cabecera del documento es vacio")
+            return
+        }
+
+        // Limpiamos la información de pago.
+        savePagoIdFpay("")
+        savePagoIdPLink("")
+
+        // --- PASO 2: MOSTRAR EL MENSAJE Y DISPARAR LA IMPRESIÓN SIMULTÁNEAMENTE (CAMBIO CLAVE) ---
+
+        // Mostramos el mensaje de resultado de la transacción.
+        // El callback `onOk` ahora solo se encarga de iniciar una nueva venta.
+        confirmResultMessage(entity.serviceResultMessage, onOk = { dialog ->
+            dialog.dismiss()
+            // No llamamos a startNewSale() aquí para dar tiempo a que la impresión finalice o falle.
+            // La llamada a startNewSale() se moverá al final de la cola de impresión.
+        })
+
+        // INMEDIATAMENTE DESPUÉS de mostrar el diálogo, comenzamos a construir y procesar la cola de impresión.
+        // Esto hace que la impresión ocurra "en paralelo" a la visualización del mensaje.
+
+        val printQueue = mutableListOf<Pair<String, String>>()
+        if (entity.documentoPrint.trim().isNotEmpty()) {
+            printQueue.add(Pair(entity.documentoPrint, "cuerpo del recibo"))
+        }
+        if (entity.qrPrint.trim().isNotEmpty()) {
+            printQueue.add(Pair(entity.qrPrint, "codigo QR"))
+        }
+        if (entity.piedocumentoPrint.trim().isNotEmpty()) {
+            printQueue.add(Pair(entity.piedocumentoPrint, "pie del recibo"))
+        }
+        if (entity.qrPrint2.trim().isNotEmpty()) {
+            printQueue.add(Pair(entity.qrPrint2, "segundo código QR"))
+        }
+
+        // Creamos la función interna para procesar la cola recursivamente.
+        fun processPrintQueue(index: Int) {
+            // CASO BASE: Si ya procesamos todos los elementos, la impresión principal ha terminado.
+            if (index >= printQueue.size) {
+                // Ahora, verificamos si hay un voucher final para imprimir.
+                if (entity.voucherMposPrint.trim().isNotEmpty()) {
+                    performPrinting(entity.voucherMposPrint, object : PrintingCallback {
+                        override fun onPrintingSuccess() {
+                            // Todo terminó, iniciamos nueva venta.
+                            startNewSale()
+                        }
+
+                        override fun onPrintingError(errorMessage: String?) {
+                            showPrintingErrorDialog("Error al imprimir el voucher final: $errorMessage")
+                            // A pesar del error, permitimos continuar a la siguiente venta.
+                            //startNewSale()v
+                            confirmResultMessage("Error al imprimir el voucher final: $errorMessage", onOk = {
+                                //try to print, if its not stop process
+                                it.dismiss()
+                                startNewSale()
+                            })
+                        }
+                    })
+                } else {
+                    // No hay voucher final, la secuencia de impresión ha terminado.
+                    startNewSale()
+                }
+                return
+            }
+
+            // Tomamos el documento actual de la cola.
+            val currentDocument = printQueue[index]
+            val dataToPrint = currentDocument.first
+            val documentName = currentDocument.second
+
+            val printingCallback = object : PrintingCallback {
+                override fun onPrintingSuccess() {
+                    println("Éxito al imprimir: $documentName")
+                    // Si la impresión fue exitosa, procesamos el SIGUIENTE elemento.
+                    processPrintQueue(index + 1)
+                }
+
+                override fun onPrintingError(errorMessage: String?) {
+                    Log.e(TAG, "Error al imprimir $documentName: $errorMessage")
+                    showPrintingErrorDialog("Error al imprimir el $documentName.")
+                    // IMPORTANTE: Si un elemento de la cola falla, detenemos la impresión y vamos a la siguiente venta.
+                    // Esto evita que el usuario se quede bloqueado.
+                    //startNewSale()
+                    confirmResultMessage("Error al imprimir $documentName: $errorMessage", onOk = {
+                        //try to print, if its not stop process
+                        it.dismiss()
+                        startNewSale()
+                    })
+                }
+            }
+
+            // Decidimos qué función de impresión usar.
+            if (documentName.contains("QR", ignoreCase = true)) {
+                performPrintingQr(dataToPrint, printingCallback)
+            } else {
+                performPrinting(dataToPrint, printingCallback)
+            }
+        }
+
+        // Iniciamos el proceso de impresión con el primer elemento (índice 0).
         processPrintQueue(0)
     }
 
