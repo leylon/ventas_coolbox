@@ -87,9 +87,21 @@ class GeneratedDocumentsActivity : MenuActivity() {
             Log.e(PaymentActivity.TAG, "La entidad de respuesta de pago es nula.")
             return
         }
-
+        val settings = getSettings()
+        val printerName = settings.impresora
         // Creamos una "cola" con todos los documentos que necesitamos imprimir en orden.
         // Usamos un par (Pair) para guardar el texto a imprimir y un nombre para identificarlo.
+        Thread {
+            val socket = setupPrinterConnection(this, printerName)
+
+            if (socket == null) {
+                // Si la conexión falla, lo notificamos al usuario en el hilo principal.
+                runOnUiThread {
+                    showPrintingErrorDialog("Fallo de conexión. Revise que la impresora esté vinculada y encendida.")
+                }
+                return@Thread
+            }
+
         val printQueue = mutableListOf<Pair<String, String>>()
 
         // Añadimos los documentos a la cola en el orden correcto.
@@ -111,7 +123,7 @@ class GeneratedDocumentsActivity : MenuActivity() {
             // CASO BASE: Si ya procesamos todos los elementos, hemos terminado con la impresión principal.
             if (index >= printQueue.size) {
                 // Todos los documentos principales se imprimieron con éxito.
-
+                socket.close() // Cerramos si no hay voucher
                 confirmResultMessage(messagePrinted, onOk = { dialog ->
                         dialog.dismiss()
                 })
@@ -123,32 +135,41 @@ class GeneratedDocumentsActivity : MenuActivity() {
             val dataToPrint = currentDocument.first
             val documentName = currentDocument.second
 
-            // Creamos un callback genérico para manejar el resultado de la impresión.
-            val printingCallback = object : PrintingCallback {
+            val callback = object : PrintingCallback {
                 override fun onPrintingSuccess() {
-                    println("Éxito al imprimir: $documentName")
-                    // Si la impresión fue exitosa, procesamos el SIGUIENTE elemento de la cola.
-                    processPrintQueue(index + 1)
+                    processPrintQueue(index + 1) // Éxito -> vamos al siguiente
                 }
-
                 override fun onPrintingError(errorMessage: String?) {
-                    Log.e(PaymentActivity.TAG, "Error al imprimir $documentName: $errorMessage")
-                    // Si algo falla, mostramos un error y detenemos la secuencia.
-                    showPrintingErrorDialog("Error al imprimir el $documentName.")
+                    socket.close() // Error -> detenemos todo y cerramos conexión
+                    runOnUiThread {
+                        confirmResultMessage(messagePrinted, onOk = {
+                            it.dismiss();
+                            //startNewSale()
+                        })
+                        // showPrintingErrorDialog("Error al imprimir el $documentName.")
+                    }
                 }
             }
 
-            // Decidimos qué función de impresión usar basándonos en el nombre del documento.
+            // 3. REUTILIZAMOS EL MISMO SOCKET PARA CADA TRABAJO
             if (documentName.contains("QR", ignoreCase = true)) {
-                performPrintingQr(dataToPrint, printingCallback)
+                performPrintingQr(socket, dataToPrint, callback)
             } else {
-                performPrinting(dataToPrint, printingCallback)
+                performPrinting(socket, dataToPrint,  callback)
             }
         }
 
         // Iniciamos el proceso de impresión con el primer elemento de la cola (índice 0).
         processPrintQueue(0)
-    }
+
+    }.start()
+}
+
+    /**
+     * Función principal y optimizada para gestionar toda la secuencia de impresión.
+     * Se conecta una vez, imprime todo y se desconecta al final.
+     */
+
     private fun confirmResultMessage(message: String, onOk: (alert: DialogInterface) -> Unit) {
         AlertDialog.Builder(this)
             .setTitle(R.string.app_name)

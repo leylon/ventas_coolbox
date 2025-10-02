@@ -3,6 +3,7 @@ package com.pedidos.android.persistence.ui
 import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -11,6 +12,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Build
 import android.support.design.widget.Snackbar
+import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
@@ -41,6 +43,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.nio.charset.Charset
+import java.util.UUID
 import kotlin.math.min
 
 
@@ -237,6 +240,92 @@ open class BaseActivity : AppCompatActivity() {
     }*/
 
 
+    /**
+     * Busca y se conecta a una impresora Bluetooth por su nombre de forma segura.
+     *
+     * @param printerName El nombre de la impresora a buscar en los dispositivos vinculados.
+     * @return Un BluetoothSocket conectado si tiene éxito, o null si falla.
+     */
+    fun setupPrinterConnection(context: Context, printerName: String): BluetoothSocket? {
+        // 1. VERIFICACIÓN DE PERMISOS PARA ANDROID 12 (API 31) Y SUPERIORES
+        // La solicitud de permisos debe hacerse en la Activity, aquí solo verificamos si ya fueron otorgados.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Permisos para Android 12 (API 31) y superiores
+            val permissions = arrayOf(
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN
+            )
+
+            requestPermissions( permissions, 1)
+        } else {
+            // Permisos para versiones anteriores
+            val permissions = arrayOf(
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN
+            )
+            requestPermissions( permissions, 1)
+        }
+        // Verificar si la versión de Android es 12 o superior
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            requestPermissions(arrayOf(
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN
+            ), 1)
+            Log.i(CancelActivity.TAG, "Solicitando permisos de Bluetooth")
+            // Verificar si el permiso BLUETOOTH_CONNECT está otorgado
+            if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED  ||
+                checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf( Manifest.permission.BLUETOOTH_CONNECT,
+                    Manifest.permission.BLUETOOTH_SCAN), 1)
+                Log.e(CancelActivity.TAG, "Error checkSelfPermission: ${getString(R.string.bluetooth_permission_required)}")
+                //printOnSnackBar("SetupPrinter: Permiso BLUETOOTH_CONNECT no otorgado. La conexión no puede continuar.")
+                printOnSnackBar(getString(R.string.bluetooth_permission_required))
+                return null
+            }
+        }
+       /* if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                printOnSnackBar("SetupPrinter: Permiso BLUETOOTH_CONNECT no otorgado. La conexión no puede continuar.")
+                Log.e("SetupPrinter", "Permiso BLUETOOTH_CONNECT no otorgado. La conexión no puede continuar.")
+                // Es crucial que la Activity haya solicitado este permiso antes de llamar a esta función.
+                return null
+            }
+        }
+*/
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
+            printOnSnackBar("SetupPrinter: El Bluetooth no está disponible o no está activado.")
+            Log.e("SetupPrinter", "El Bluetooth no está disponible o no está activado.")
+            return null
+        }
+
+        // Usamos .find() que devuelve null si no encuentra nada, en lugar de .first() que causa un crash.
+        val printerDevice = bluetoothAdapter.bondedDevices.find { it.name.equals(printerName, ignoreCase = true) }
+
+        if (printerDevice == null) {
+            // Si no se encontró la impresora, lo registramos y devolvemos null de forma segura.
+            printOnSnackBar("SetupPrinter: No se encontró la impresora '$printerName' en los dispositivos vinculados.")
+            Log.e("SetupPrinter", "No se encontró la impresora '$printerName' en los dispositivos vinculados.")
+            return null
+        }
+
+        try {
+            // UUID estándar para impresoras Serial Port Profile (SPP)
+            val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+            val socket = printerDevice.createRfcommSocketToServiceRecord(uuid)
+            socket.connect() // Esta operación puede tardar y debe estar en un hilo de fondo.
+            return socket
+        } catch (e: IOException) {
+            printOnSnackBar("SetupPrinter: Error al conectar con la impresora: ${e.message}")
+            Log.e("SetupPrinter", "Error al conectar con la impresora: ${e.message}")
+            return null
+        } catch (e: SecurityException) {
+            // Este catch es por si acaso, aunque la verificación de arriba debería prevenirlo.
+            printOnSnackBar("SetupPrinter: Error de seguridad. Revisa los permisos de BLUETOOTH_CONNECT en el Manifest y en tiempo de ejecución.")
+            Log.e("SetupPrinter", "Error de seguridad. Revisa los permisos de BLUETOOTH_CONNECT en el Manifest y en tiempo de ejecución.")
+            return null
+        }
+    }
 
     protected fun performPrinting(bytes: ByteArray): Boolean {
         try {
@@ -428,7 +517,7 @@ open class BaseActivity : AppCompatActivity() {
                     return@Thread
                 }
 
-                blueToothWrapper = this.setupPrinter()
+                val blueToothWrapper = setupPrinterConnection(this,settings.impresora) // Usamos la nueva función segura
 
                 if (blueToothWrapper != null) {
                     val outputStream = blueToothWrapper.outputStream
@@ -499,6 +588,7 @@ open class BaseActivity : AppCompatActivity() {
                         "GENERIC" -> {
                             //Doble Alto y Ancho
                             println("Usando modo POSD (Code Page/IBM850)")
+                            blueToothWrapper.outputStream.write(byteArrayOf(0x1B, 0x40)) // ESC @
                             // Probamos con la página de códigos PC850 (Multilingual), muy común.
                             val selectCodePage = byteArrayOf(0x1B, 0x74, 0x02) // PC850
                             val setCompactLineSpacing = byteArrayOf(0x1B, 0x33, 18)
@@ -556,7 +646,7 @@ open class BaseActivity : AppCompatActivity() {
                     printOnSnackBar("Error en datos (Base64): ${e.message}")
                     callback.onPrintingError("${PrintError.CONNECTION_FAILED}")
                 }
-            } finally {
+            } /*finally {
                 // 4. Cierra la conexión de forma segura en el hilo de fondo.
                 try {
                     Thread.sleep(100)
@@ -571,9 +661,136 @@ open class BaseActivity : AppCompatActivity() {
                         callback.onPrintingError("Error en hilo de impresión: " + e.message)
                     }
                 }
+            }*/
+        }.start() // No olvides .start() para que el hilo comience.
+    }
+    protected fun performPrinting(socket: BluetoothSocket,documentoPrint: String, callback: PrintingCallback) {
+        // 1. Inicia un nuevo hilo para hacer todo el trabajo en segundo plano.
+        Thread {
+            var blueToothWrapper:  BluetoothConnector.BluetoothSocketWrapper? = null // Usa tu clase BlueToothWrapper
+            try {
+                val settings = getSettings()
+                //val width = settings.pageSize
+                val typePrint = settings.typePrint
+
+                if (documentoPrint.isEmpty()) {
+                    runOnUiThread { callback.onPrintingError("El documento está vacío.") }
+                    return@Thread
+                }
+
+                val outputStream = socket.outputStream
+                var textData: ByteArray
+
+                // Lógica de configuración de la impresora
+                when (typePrint) {
+                    "HIOPOS" -> {
+                        //Normal
+                        println("Usando modo GENERIC (Code Page/IBM850)")
+                        // Comandos que funcionaron para la impresora TongLiang
+                        val initPrinter = byteArrayOf(0x1B, 0x40)
+                        val selectCodePage = byteArrayOf(0x1B, 0x74, 0x13) // PC858 (Euro)
+                        // NUEVO: Comando para establecer el interlineado por defecto (ESC 2)
+                        //val setDefaultLineSpacing = byteArrayOf(0x1B, 0x32)
+                        val setCompactLineSpacing = byteArrayOf(0x1B, 0x33, 15)
+                        // Codificar el texto completo una sola vez.
+
+                        // 1. Enviar comandos de inicialización y configuración.
+                        outputStream.write(initPrinter)
+                        outputStream.write(selectCodePage)
+                        outputStream.write(setCompactLineSpacing) // Aplicamos el interlineado estándar
+                        outputStream.write(
+                            byteArrayOf(
+                                0x1B,
+                                0x21,
+                                0x00
+                            )
+                        ) // ESC !
+                        textData = documentoPrint.toByteArray(Charset.forName("IBM850"))
+                    }
+
+                    "SUNMI" -> {
+                        //Doble Alto
+                        val resetFontMode = byteArrayOf(0x1B, 0x21, 0x00)
+                        outputStream.write(resetFontMode)
+                        val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
+                        val setUtf8 = getCodePageCommandSunmi(16)
+                        outputStream.write(setMulti)
+                        outputStream.write(setUtf8)
+                        textData = documentoPrint.toByteArray(Charsets.UTF_8)
+                    }
+
+                    "BIXOLON" -> {
+                        //Doble Ancho
+                        println("Usando modo BIXOLON (UTF-8)")
+                        // Para Sunmi, enviamos directamente en UTF-8 sin comandos extraños.
+                        // La impresora Sunmi debería interpretar UTF-8 de forma nativa.
+                        val setMulti = byteArrayOf(0x1C.toByte(), 0x26.toByte())
+                        val setUtf8 = getCodePageCommand(16)
+                        outputStream.write(setMulti)
+                        outputStream.write(setUtf8)
+                        textData = documentoPrint.toByteArray(Charsets.UTF_8)
+                    }
+
+                    "GENERIC" -> {
+                        //Doble Alto y Ancho
+                        println("Usando modo POSD (Code Page/IBM850)")
+                        outputStream.write(byteArrayOf(0x1B, 0x40)) // ESC @
+                        // Probamos con la página de códigos PC850 (Multilingual), muy común.
+                        val selectCodePage = byteArrayOf(0x1B, 0x74, 0x02) // PC850
+                        val setCompactLineSpacing = byteArrayOf(0x1B, 0x33, 18)
+                        outputStream.write(selectCodePage)
+                        outputStream.write(setCompactLineSpacing)
+                        textData = documentoPrint.toByteArray(Charset.forName("IBM850"))
+                    }
+
+                    else -> { // GENERIC y otros casos
+                        val initPrinter = byteArrayOf(0x1B, 0x40)
+                        outputStream.write(initPrinter)
+                        textData = documentoPrint.toByteArray(Charset.forName("IBM850"))
+                    }
+                }
+
+                // Lógica de envío de datos (chunks)
+                val chunkSize = 512
+                var offset = 0
+                while (offset < textData.size) {
+                    val size = min(chunkSize, textData.size - offset)
+                    outputStream.write(textData, offset, size)
+                    Thread.sleep(50)
+                    offset += size
+                }
+
+                outputStream.write(byteArrayOf(0x0A, 0x0A))
+                outputStream.flush()
+                Thread.sleep(2000)
+
+                // 2. Si todo sale bien, notifica el éxito.
+                runOnUiThread { callback.onPrintingSuccess() }
+
+            } catch (ex: Exception) {
+                Log.e(CancelActivity.TAG, "Error en hilo de impresión QR: " + ex.message)
+
+                // 3. Notificar si hubo un error.
+                runOnUiThread {
+                    printOnSnackBar("Error en hilo de impresión QR: " + ex.message)
+                    callback.onPrintingError(ex.message)
+                }
+            }catch (e: IOException) {
+                Log.e("PrintImage", "Error de IO (Conexión): ${e.message}")
+                runOnUiThread {
+                    printOnSnackBar("Error de IO (Conexión): ${e.message}")
+                    callback.onPrintingError("${PrintError.CONNECTION_FAILED}")
+                }
+            } catch (e: IllegalArgumentException) {
+                Log.e("PrintImage", "Error en datos (Base64): ${e.message}")
+                runOnUiThread {
+                    printOnSnackBar("Error en datos (Base64): ${e.message}")
+                    callback.onPrintingError("${PrintError.CONNECTION_FAILED}")
+                }
             }
         }.start() // No olvides .start() para que el hilo comience.
     }
+
 
     protected fun performPrintingQr(qrPrint: String): Boolean {
         val settings = getSettings()
@@ -761,7 +978,7 @@ open class BaseActivity : AppCompatActivity() {
                     callback.onPrintingError("${PrintError.CONNECTION_FAILED}")
                 }
             }
-            finally {
+            /*finally {
                 // 4. Cerrar la conexión de forma segura, pase lo que pase.
                 try {
                     Thread.sleep(100)
@@ -771,6 +988,77 @@ open class BaseActivity : AppCompatActivity() {
                     println("Socket de impresora QR cerrado.")
                 } catch (e: Exception) {
                     Log.e(CancelActivity.TAG, "Error al cerrar socket de QR: " + e.message)
+                }
+            }*/
+        }.start()
+    }
+    protected fun performPrintingQr(socket: BluetoothSocket,qrPrint: String, callback: PrintingCallback) {
+        // 1. Inicia un hilo en segundo plano para no bloquear la app.
+        Thread {
+            var blueToothWrapper: BluetoothConnector.BluetoothSocketWrapper? = null
+
+            try {
+                if (qrPrint.isEmpty()) {
+                    runOnUiThread { callback.onPrintingError("La cadena del QR está vacía.") }
+                    return@Thread
+                }
+
+
+                val outputStream = socket.outputStream
+
+                // --- INICIO DE TU LÓGICA DE QR ---
+                // Decodificar la cadena Base64 a un array de bytes
+                val qrByte = Base64.decode(qrPrint, Base64.DEFAULT)
+                // Convertir el array de bytes a un Bitmap de Android
+                val qrBitmap = BitmapFactory.decodeByteArray(qrByte, 0, qrByte.size)
+
+
+                val documentPrint = Extensions().decodeBitmap(qrBitmap)
+
+                // Comando para centrar el contenido (muy importante para un QR)
+                outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01))
+
+                // Enviar la imagen en trozos para no saturar el buffer
+                val chunkSize = 512
+                var offset = 0
+                if (documentPrint != null) {
+                    while (offset < documentPrint.size) {
+                        val size = min(chunkSize, documentPrint.size - offset)
+                        outputStream.write(documentPrint, offset, size)
+                        Thread.sleep(50) // Pausa para que la impresora procese
+                        offset += size
+                    }
+                }
+
+                // Añadir espacio al final y resetear la alineación a la izquierda
+                outputStream.write(byteArrayOf(0x0A, 0x0A))
+                outputStream.write(byteArrayOf(0x1b, 'a'.toByte(), 0x01)) // Alineación a la izquierda
+
+                outputStream.flush()
+                Thread.sleep(2000) // Pausa final para asegurar la impresión completa de la imagen
+
+                // 2. Notificar que la impresión fue exitosa.
+                runOnUiThread { callback.onPrintingSuccess() }
+
+
+            } catch (ex: Exception) {
+                Log.e(CancelActivity.TAG, "Error en hilo de impresión QR: " + ex.message)
+                // 3. Notificar si hubo un error.
+                runOnUiThread {
+                    printOnSnackBar("Error en hilo de impresión QR: " + ex.message)
+                    callback.onPrintingError(ex.message)
+                }
+            }catch (e: IOException) {
+                Log.e("PrintImage", "Error de IO (Conexión): ${e.message}")
+                runOnUiThread {
+                    printOnSnackBar("Error de IO (Conexión): ${e.message}")
+                    callback.onPrintingError("${PrintError.CONNECTION_FAILED}")
+                }
+            } catch (e: IllegalArgumentException) {
+                Log.e("PrintImage", "Error en datos (Base64): ${e.message}")
+                runOnUiThread {
+                    printOnSnackBar("Error en datos (Base64): ${e.message}")
+                    callback.onPrintingError("${PrintError.CONNECTION_FAILED}")
                 }
             }
         }.start()

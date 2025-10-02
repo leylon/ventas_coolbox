@@ -53,6 +53,7 @@ import com.pedidos.android.persistence.ui.sale.SaleActivity.Companion
 import com.pedidos.android.persistence.ui.search.SearchProductActivity
 import com.pedidos.android.persistence.utils.Defaults
 import com.pedidos.android.persistence.utils.Formatter
+import com.pedidos.android.persistence.utils.PrintError
 import com.pedidos.android.persistence.utils.PrintingCallback
 import com.pedidos.android.persistence.viewmodel.EndingViewModel
 import com.pedidos.android.persistence.viewmodel.PaymentViewModel
@@ -190,7 +191,8 @@ class PaymentActivity : MenuActivity(), PaymentBottomSheetFragment.PaymentListen
         })
         viewModel.liveData.observe(this, Observer {
             //performAfterOperationsQueue(it)
-            performAfterOperationsQueueQR(it)
+           // performAfterOperationsQueueQR(it)
+            performAfterOperationsAll(it)
             //performAfterOperationsQueueQR2(it)
             //performAfterOperations(it)
         })
@@ -1106,6 +1108,122 @@ class PaymentActivity : MenuActivity(), PaymentBottomSheetFragment.PaymentListen
         processPrintQueue(0)
     }
 
+    /**
+     * Función principal y optimizada para gestionar toda la secuencia de impresión.
+     * Se conecta una vez, imprime todo y se desconecta al final.
+     */
+    private fun performAfterOperationsAll(entity: PaymentResponseEntity?) {
+        viewModel.showLoading.postValue(true)
+        if (entity == null) {
+            showPrintingErrorDialog("Error al obtener el recibo.")
+            return
+        }
+
+        // Obtenemos los ajustes de la impresora aquí, una sola vez.
+        val settings = getSettings()
+        val printerName = settings.impresora
+
+
+        // 1. INICIAMOS TODO EN UN HILO DE FONDO PARA NO CAUSAR ANR
+        Thread {
+            // 2. NOS CONECTAMOS UNA SOLA VEZ AL PRINCIPIO
+            // Pasamos 'this' como contexto para la validación de permisos.
+            val socket = setupPrinterConnection(this, printerName)
+            val mensajeboleta = entity.serviceResultMessage.toString()
+
+            if (socket == null) {
+                // Si la conexión falla, lo notificamos al usuario en el hilo principal.
+                runOnUiThread {
+                    viewModel.showLoading.postValue(false)
+                    confirmResultMessage(mensajeboleta, onOk = {
+                        it.dismiss();
+                        startNewSale()
+                    })
+                   // showPrintingErrorDialog("Fallo de conexión. Revise que la impresora esté vinculada y encendida.")
+                }
+                return@Thread
+            }
+
+            // Si la conexión fue exitosa, procedemos a imprimir.
+            // Creamos la cola de impresión.
+            val printQueue = mutableListOf<Pair<String, String>>()
+            if (entity.documentoPrint.trim().isNotEmpty()) printQueue.add(Pair(entity.documentoPrint, "cuerpo del recibo"))
+            if (entity.qrPrint.trim().isNotEmpty()) printQueue.add(Pair(entity.qrPrint, "código QR"))
+            if (entity.piedocumentoPrint.trim().isNotEmpty()) printQueue.add(Pair(entity.piedocumentoPrint, "pie del recibo"))
+            if (entity.qrPrint2.trim().isNotEmpty()) printQueue.add(Pair(entity.qrPrint2, "segundo código QR"))
+            // Función interna para procesar la cola
+            fun processPrintQueue(index: Int) {
+                // Si ya imprimimos todo, pasamos al voucher final.
+                if (index >= printQueue.size) {
+                    if (entity.voucherMposPrint.trim().isNotEmpty()) {
+                        performPrinting(socket, entity.voucherMposPrint,  object : PrintingCallback {
+                            override fun onPrintingSuccess() {
+                                // 4. CERRAMOS LA CONEXIÓN AL FINAL DE TODO
+                                viewModel.showLoading.postValue(false)
+                                socket.close()
+                                runOnUiThread {
+                                    confirmResultMessage(entity.serviceResultMessage, onOk = {
+                                        it.dismiss();
+                                        startNewSale()
+                                    })
+                                }
+                            }
+                            override fun onPrintingError(errorMessage: String?) {
+                                viewModel.showLoading.postValue(false)
+                                socket.close() // También cerramos si hay error
+                                runOnUiThread {
+                                    confirmResultMessage(mensajeboleta, onOk = {
+                                        it.dismiss();
+                                        startNewSale()
+                                    })
+                                   // showPrintingErrorDialog("Error al imprimir el voucher final.")
+                                }
+                            }
+                        })
+                    } else {
+                        viewModel.showLoading.postValue(false)
+                        socket.close() // Cerramos si no hay voucher
+                        runOnUiThread {
+                            confirmResultMessage(entity.serviceResultMessage, onOk = { it.dismiss(); startNewSale() })
+                        }
+                    }
+                    return
+                }
+
+                val currentDocument = printQueue[index]
+                val dataToPrint = currentDocument.first
+                val documentName = currentDocument.second
+
+                val callback = object : PrintingCallback {
+                    override fun onPrintingSuccess() {
+                        processPrintQueue(index + 1) // Éxito -> vamos al siguiente
+                    }
+                    override fun onPrintingError(errorMessage: String?) {
+                        viewModel.showLoading.postValue(false)
+                        socket.close() // Error -> detenemos todo y cerramos conexión
+                        runOnUiThread {
+                            confirmResultMessage(mensajeboleta, onOk = {
+                                it.dismiss();
+                                startNewSale()
+                            })
+                           // showPrintingErrorDialog("Error al imprimir el $documentName.")
+                        }
+                    }
+                }
+
+                // 3. REUTILIZAMOS EL MISMO SOCKET PARA CADA TRABAJO
+                if (documentName.contains("QR", ignoreCase = true)) {
+                    performPrintingQr(socket, dataToPrint, callback)
+                } else {
+                    performPrinting(socket, dataToPrint,  callback)
+                }
+            }
+
+            // Iniciamos la secuencia con el primer elemento.
+            processPrintQueue(0)
+
+        }.start() // No olvides iniciar el hilo.
+    }
 
     private fun performViewOperations(receipt: ReceiptEntity?) {
         if (receipt != null) {
