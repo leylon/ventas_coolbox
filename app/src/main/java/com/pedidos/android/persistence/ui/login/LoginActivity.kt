@@ -32,6 +32,7 @@ import com.pedidos.android.persistence.R
 import com.pedidos.android.persistence.api.LoginApiTask
 import com.pedidos.android.persistence.model.LoginResponse
 import com.pedidos.android.persistence.ui.BasicApp
+import com.pedidos.android.persistence.ui.cancel.CancelActivity
 import com.pedidos.android.persistence.ui.menu.MenuActivity
 import com.pedidos.android.persistence.ui.sale.SaleActivity
 import com.pedidos.android.persistence.utils.hideSoftInput
@@ -57,6 +58,7 @@ class LoginActivity : MenuActivity(), LoaderCallbacks<Cursor> {
         textVersion.visibility = View.GONE
         textVersion.text = """Version : ${BasicApp.APP_VERSION}"""
         supportActionBar!!.setDisplayShowTitleEnabled(false)
+        permisosBluetooth()
        // IMEI()
         //permissionPhone()
         password.setOnEditorActionListener(TextView.OnEditorActionListener { _, id, _ ->
@@ -95,6 +97,42 @@ class LoginActivity : MenuActivity(), LoaderCallbacks<Cursor> {
             ).show()
         }
 
+    }
+    fun permisosBluetooth(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Permisos para Android 12 (API 31) y superiores
+            val permissions = arrayOf(
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN
+            )
+
+            requestPermissions( permissions, 1)
+        } else {
+            // Permisos para versiones anteriores
+            val permissions = arrayOf(
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN
+            )
+            requestPermissions( permissions, 1)
+        }
+        // Verificar si la versión de Android es 12 o superior
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            requestPermissions(arrayOf(
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN
+            ), 1)
+            Log.i(CancelActivity.TAG, "Solicitando permisos de Bluetooth")
+            // Verificar si el permiso BLUETOOTH_CONNECT está otorgado
+            if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED  ||
+                checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf( Manifest.permission.BLUETOOTH_CONNECT,
+                    Manifest.permission.BLUETOOTH_SCAN), 1)
+                Log.e(CancelActivity.TAG, "Error checkSelfPermission: ${getString(R.string.bluetooth_permission_required)}")
+                //printOnSnackBar("SetupPrinter: Permiso BLUETOOTH_CONNECT no otorgado. La conexión no puede continuar.")
+                printOnSnackBar(getString(R.string.bluetooth_permission_required))
+                return
+            }
+        }
     }
 
     /**

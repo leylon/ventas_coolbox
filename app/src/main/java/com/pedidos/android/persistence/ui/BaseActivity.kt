@@ -616,7 +616,7 @@ open class BaseActivity : AppCompatActivity() {
 
                     outputStream.write(byteArrayOf(0x0A, 0x0A))
                     outputStream.flush()
-                    Thread.sleep(2000)
+                    Thread.sleep(1800)
 
                     // 2. Si todo sale bien, notifica el éxito.
                     runOnUiThread { callback.onPrintingSuccess() }
@@ -762,7 +762,7 @@ open class BaseActivity : AppCompatActivity() {
 
                 outputStream.write(byteArrayOf(0x0A, 0x0A))
                 outputStream.flush()
-                Thread.sleep(2000)
+                Thread.sleep(1800)
 
                 // 2. Si todo sale bien, notifica el éxito.
                 runOnUiThread { callback.onPrintingSuccess() }

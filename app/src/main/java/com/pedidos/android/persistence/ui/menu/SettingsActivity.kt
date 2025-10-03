@@ -1,19 +1,25 @@
 package com.pedidos.android.persistence.ui.menu
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 
 import android.os.Bundle
 import android.provider.Settings
+import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.text.Editable
+import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import com.pedidos.android.persistence.R
 import com.pedidos.android.persistence.db.entity.SettingsEntity
+import com.pedidos.android.persistence.ui.cancel.CancelActivity
 
 import kotlinx.android.synthetic.main.settings_activity.*
 import java.util.*
@@ -29,6 +35,7 @@ class SettingsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.settings_activity)
         setSupportActionBar(toolbar)
+        permisosBluetooth()
         val spinner: Spinner = findViewById(R.id.spnSizeImpresora)
         val spinnerTypePrint: Spinner = findViewById(R.id.spnTypeImpresora)
         val sizes = arrayOf("80mm", "58mm","48mm")
@@ -95,7 +102,49 @@ class SettingsActivity : AppCompatActivity() {
         val settingsEntity: SettingsEntity? = intent.getParcelableExtra(SettingsActivity.SETTINGS_KEY)
         setData(settingsEntity!!)
     }
+    fun permisosBluetooth(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Permisos para Android 12 (API 31) y superiores
+            val permissions = arrayOf(
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN
+            )
 
+            requestPermissions( permissions, 1)
+        } else {
+            // Permisos para versiones anteriores
+            val permissions = arrayOf(
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN
+            )
+            requestPermissions( permissions, 1)
+        }
+        // Verificar si la versión de Android es 12 o superior
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            requestPermissions(arrayOf(
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN
+            ), 1)
+            Log.i(CancelActivity.TAG, "Solicitando permisos de Bluetooth")
+            // Verificar si el permiso BLUETOOTH_CONNECT está otorgado
+            if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED  ||
+                checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf( Manifest.permission.BLUETOOTH_CONNECT,
+                    Manifest.permission.BLUETOOTH_SCAN), 1)
+                Log.e(CancelActivity.TAG, "Error checkSelfPermission: ${getString(R.string.bluetooth_permission_required)}")
+                //printOnSnackBar("SetupPrinter: Permiso BLUETOOTH_CONNECT no otorgado. La conexión no puede continuar.")
+                printOnSnackBar(getString(R.string.bluetooth_permission_required))
+                return
+            }
+        }
+    }
+
+    fun printOnSnackBar(content: String) {
+        val view = (findViewById<View>(android.R.id.content) as ViewGroup).getChildAt(0) as ViewGroup
+        Snackbar.make(view, content, Snackbar.LENGTH_INDEFINITE)
+            .setDuration(2000)
+            .setAction("Action", null).show()
+    }
     private fun saveChanges() {
         val settings = SettingsEntity()
         settings.urlbase = edwUrlBase.text.toString()
