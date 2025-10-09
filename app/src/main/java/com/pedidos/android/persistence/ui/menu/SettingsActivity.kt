@@ -30,7 +30,7 @@ class SettingsActivity : AppCompatActivity() {
         const val SETTINGS_KEY = "settings_key"
     }
     var pageSize = "80mm"
-    var typePrint = "SUNMI"
+    var typePrint = "GENERIC"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.settings_activity)

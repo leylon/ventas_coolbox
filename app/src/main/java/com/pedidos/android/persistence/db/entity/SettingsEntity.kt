@@ -9,7 +9,7 @@ class SettingsEntity() : Settings {
     override var logoUrl: String = ""
     override var impresora: String = "Printer_"
     override var pageSize: String = "80mm"
-    override var  typePrint: String = "SUNMI"
+    override var  typePrint: String = "GENERIC"
 
     constructor(parcel: Parcel) : this() {
         urlbase = parcel.readString().toString()
