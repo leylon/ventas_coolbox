@@ -38,9 +38,9 @@ fun ventaProductoEnvioCorreo(@Body body: EnvioCorreoRequest): Call<EnvioCorreoRe
 
             val client = OkHttpClient.Builder()
                 .addInterceptor(logger)
-                .connectTimeout(60, TimeUnit.SECONDS)
-                .readTimeout(60, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS)
+                .connectTimeout(120, TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
+                .writeTimeout(120, TimeUnit.SECONDS)
                 .build()
 
             val gsonBuilder = GsonBuilder()

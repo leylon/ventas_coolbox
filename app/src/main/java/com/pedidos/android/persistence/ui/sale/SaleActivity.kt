@@ -3,10 +3,14 @@ package com.pedidos.android.persistence.ui.sale
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.Dialog
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -19,12 +23,18 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.Editable
 import android.text.TextUtils
+import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import com.google.gson.Gson
 import com.google.zxing.integration.android.IntentIntegrator
@@ -38,6 +48,10 @@ import com.pedidos.android.persistence.model.cotizacion.CotizacionCab
 import com.pedidos.android.persistence.model.cotizacion.CotizacionDet
 import com.pedidos.android.persistence.model.cotizacion.CotizacionRequest
 import com.pedidos.android.persistence.model.cotizacion.Presupuesto
+import com.pedidos.android.persistence.model.firma.ActualizarFirmaRequest
+import com.pedidos.android.persistence.model.firma.FirmaDetail
+import com.pedidos.android.persistence.model.firma.FirmaHead
+import com.pedidos.android.persistence.model.firma.FirmaRequest
 import com.pedidos.android.persistence.model.guide.DataResponse
 import com.pedidos.android.persistence.model.sale.*
 import com.pedidos.android.persistence.ui.BasicApp
@@ -46,19 +60,25 @@ import com.pedidos.android.persistence.ui.ending.EndingActivity
 import com.pedidos.android.persistence.ui.guide.fragment.CityPopUpFragment
 import com.pedidos.android.persistence.ui.menu.MenuActivity
 import com.pedidos.android.persistence.ui.sale.fragment.CotizacionPopUpFragment
+import com.pedidos.android.persistence.ui.sale.fragment.GexDetalleAdapter
 import com.pedidos.android.persistence.ui.sale.fragment.QuestionPopUpFragment
 import com.pedidos.android.persistence.ui.sale.fragment.SendCodPopUpFragment
 import com.pedidos.android.persistence.ui.search.SearchProductActivity
 import com.pedidos.android.persistence.utils.Defaults
+import com.pedidos.android.persistence.utils.DrawCustomView
 import com.pedidos.android.persistence.utils.Formatter
 import com.pedidos.android.persistence.utils.complementProductTempCode
 import com.pedidos.android.persistence.viewmodel.SaleViewModel
 import com.pedidos.android.persistence.viewmodel.SearchProductViewModel
+import kotlinx.android.synthetic.main.ending_activity.tvwOrderDate
+import kotlinx.android.synthetic.main.ending_activity.tvwOrderNumber
 import kotlinx.android.synthetic.main.generated_documents_activity.fltLoading
 import kotlinx.android.synthetic.main.sales_activity.*
 import kotlinx.android.synthetic.main.search_imei_dialog.view.*
 import rx.android.schedulers.AndroidSchedulers
+import java.io.ByteArrayOutputStream
 import java.io.Serializable
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
@@ -85,6 +105,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
     var detalllesCotizacion: CotizacionDet? = null
     var listDetalletCotizacion: MutableList<CotizacionDet> = mutableListOf()
     var nroCotizacion: String = ""
+    var currentSaleEntityLocal: SaleEntity? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithMenu(R.layout.sales_activity)
@@ -721,6 +742,46 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
                 printOnSnackBar(it)
             }
         })
+        viewModel.validaFirma.observe( this, Observer { firmaResponse ->
+            showProgress(false)
+            if (firmaResponse != null) {
+                if (firmaResponse.result) {
+
+                    mostrarFirma(firmaResponse.data)
+
+                }  else {
+
+                    Log.d("DEBUG_FIRMA", "Entrando al ELSE. Preparando Intent...")
+
+                    try {
+                        // IMPORTANTE: Cambia "TuActividadActual" por el nombre de la clase donde estás (ej. SaleActivity)
+                        val intent = Intent(this@SaleActivity, EndingActivity::class.java).apply {
+                            putExtra(EndingActivity.EXTRA_ENTITY, currentSaleEntityLocal)
+                        }
+                        startActivity(intent)
+                    } catch (e: Exception) {
+                        Log.e("DEBUG_FIRMA", "Error al lanzar EndingActivity: ${e.message}")
+                    }
+                }
+            }
+        })
+        viewModel.actualizaFirma.observe( this, Observer { firmaResponse ->
+            showProgress(false)
+            if (firmaResponse != null) {
+                if (firmaResponse.result) {
+                    val message : String = firmaResponse.message ?: "Firma actualizada correctamente"
+                    onError(message)
+                    startActivity(Intent(this@SaleActivity, EndingActivity::class.java).apply {
+                        //btnProcess.isEnabled = true
+                        putExtra(EndingActivity.EXTRA_ENTITY, currentSaleEntityLocal)
+                    })
+
+                   // cobrarPedido()
+                } else {
+                    onError(firmaResponse.message.toString())
+                }
+            }
+        })
     }
 
     @SuppressLint("SetTextI18n")
@@ -894,13 +955,29 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
             currentSaleEntity.email = saleViewModel.saleLiveData?.value?.email ?: ""
             currentSaleEntity.tipodocumentogenera = entity.tipodocumentogenera
            // currentSaleEntity.androidimei = "a9731e8ca60a4207"
+            currentSaleEntityLocal = currentSaleEntity
         }
         //end nulls prevent
-
-        startActivity(Intent(this, EndingActivity::class.java).apply {
+        validarFirma()
+        /*startActivity(Intent(this, EndingActivity::class.java).apply {
             //btnProcess.isEnabled = true
             putExtra(EndingActivity.EXTRA_ENTITY, currentSaleEntity)
-        })
+        })*/
+    }
+
+    private fun validarFirma() {
+        showProgress(true)
+        println("Validar firma para tienda: ${getSession().tienda} , " +
+                //  "pedido: ${viewModel.}, " +
+                "usuario: ${getSession().usuario}")
+        saleViewModel.obtenerValidacionFirmas(
+            FirmaRequest(
+                tienda =  "${getSession().tienda}",
+                pedido = tvwOrderNumber.text.toString(),//"viewModel.saleLiveData.value!!.documento",
+                usuario = "${getSession().usuario}"
+            )
+        )
+
     }
 
     private fun productSearch() {
@@ -1361,6 +1438,214 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
             .setPositiveButton(R.string.ok) { dialog, _ -> dialog.dismiss() }
             .show()
     }
+
+
+    private fun mostrarFirma(firmaResponse: FirmaHead) {
+        // 1. Creamos el Dialog asociado a esta Activity
+        val dialog = Dialog(this)
+
+        // Quitamos el título por defecto de Android para que se vea moderno
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+
+        // 2. Le asignamos tu diseño XML (asumiendo que tu archivo se llama fragment_aceptacion_garantia.xml,
+        // aunque ahora ya no sea un fragmento, el nombre del archivo no importa)
+        dialog.setContentView(R.layout.fragment_aceptacion_garantia)
+
+        // 3. ¡AQUÍ CONTROLAS EL TAMAÑO!
+        // MATCH_PARENT de ancho para que ocupe casi toda la pantalla horizontal
+        // WRAP_CONTENT de alto para que la ventana sea lo más chica posible (solo lo que ocupa el contenido)
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        // Opcional: fondo transparente para que se respeten los bordes curvos si los tuviera
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        // 4. Referenciamos las vistas del XML
+        val tvNombreCompleto = dialog.findViewById<TextView>(R.id.tvNombreCompleto)
+        val tvDescripcion = dialog.findViewById<TextView>(R.id.tvDescripcion)
+        val tvDoi = dialog.findViewById<TextView>(R.id.tvDoi)
+        val etEmail = dialog.findViewById<EditText>(R.id.etEmail)
+        val tvPoliticaLink = dialog.findViewById<TextView>(R.id.tvPoliticaLink)
+        val cbPolitica = dialog.findViewById<CheckBox>(R.id.cbPolitica)
+        val viewFirma = dialog.findViewById<DrawCustomView>(R.id.viewFirma)
+        val tvLimpiar = dialog.findViewById<TextView>(R.id.tvLimpiar)
+        val btnContinuar = dialog.findViewById<Button>(R.id.btnContinuar)
+
+        fun validarBotonContinuar() {
+            // Solo es verdadero si tiene firma Y la política está marcada
+            val esValido = cbPolitica.isChecked && viewFirma.hasSignature()
+
+            btnContinuar.isEnabled = esValido
+            // Bajamos la opacidad a la mitad si está deshabilitado para que se vea gris/apagado
+            btnContinuar.alpha = if (esValido) 1.0f else 0.5f
+        }
+        validarBotonContinuar()
+
+        val btnRechazar = dialog.findViewById<Button>(R.id.btnRechazar)
+        val tvVerDetalle = dialog.findViewById<TextView>(R.id.tvVerDetalle)
+        // 3. Escuchar cambios en el CheckBox
+        cbPolitica.setOnCheckedChangeListener { _, _ ->
+            validarBotonContinuar()
+        }
+        viewFirma.onSignatureChanged = {
+            validarBotonContinuar()
+        }
+        tvLimpiar.setOnClickListener {
+            viewFirma.resetCanvasDrawing()
+        }
+        // 5. Llenamos los datos que vienen del servicio
+        tvNombreCompleto.text = "Nombre completo: ${firmaResponse.noClie}"
+        tvDoi.text = "DOI: ${firmaResponse.nuDocuIden}"
+        etEmail.setText(firmaResponse.deMailClie)
+        tvDescripcion.text ="Deseo incluir Garantía Extendida ${firmaResponse.gexDescripcion} por un valor de ${firmaResponse.gexImport} al artículo ${firmaResponse.gexProducto}. Dejo mi firma en señal de conformidad:"
+
+        // 6. Lógica de los botones
+        tvPoliticaLink.setOnClickListener {
+            // Llamamos a la función para abrir la web (está definida más abajo)
+            mostrarPopupWeb(firmaResponse.urlTermino)
+        }
+        tvVerDetalle.setOnClickListener {
+            // Suponiendo que tu API trae la lista en firmaResponse.detallesGex
+            // Aquí paso una lista simulada basada en tu imagen. Deberás pasar tu lista real.
+
+            mostrarDialogoDetalle(firmaResponse.detalle)
+        }
+        tvLimpiar.setOnClickListener {
+            viewFirma.resetCanvasDrawing()
+        }
+
+        btnContinuar.setOnClickListener {
+            if (cbPolitica.isChecked) {
+                val emailFinal = etEmail.text.toString()
+                val firmaBitmap = viewFirma.getSignatureBitmap()
+
+                // 2. Lo convertimos a Base64 usando nuestra nueva función
+                val firmaBase64 = convertirBitmapABase64(firmaBitmap)
+                // TODO: Aquí ya tienes la firma (firmaBitmap) y el email (emailFinal)
+                // Puedes pasarlos a tu ViewModel para enviarlos al servidor.
+                val formatoHora = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                val horaActual = formatoHora.format(Date())
+                saleViewModel.actualizarFirmas(
+                    ActualizarFirmaRequest(
+                    tienda =  "${getSession().tienda}",
+                    pedido = tvwOrderNumber.text.toString(),
+                    usuario = "${getSession().usuario}",
+                    correoCliente = emailFinal,
+                    firmaCliente = firmaBase64,
+                    aceptaTerminos = cbPolitica.isChecked ,
+                    fecha = tvwOrderDate.text.toString(),
+                    hora = horaActual // Aquí podrías poner la hora actual si quieres
+                )
+                )
+                dialog.dismiss() // Cierra la ventana
+            } else {
+                onError("Debe aceptar la Política de Privacidad")
+            }
+        }
+
+        btnRechazar.setOnClickListener {
+            dialog.dismiss() // Solo cierra la ventana
+        }
+
+        // 7. Finalmente, mostramos el Dialog
+        dialog.show()
+    }
+
+    private fun convertirBitmapABase64(bitmap: Bitmap): String {
+        val outputStream = ByteArrayOutputStream()
+        // Comprimimos en PNG (mantiene mejor la nitidez de los trazos) al 100% de calidad
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+        val byteArray = outputStream.toByteArray()
+        // Usamos NO_WRAP para que el string generado sea continuo y no rompa tu JSON con saltos de línea
+        return Base64.encodeToString(byteArray, Base64.NO_WRAP)
+    }
+    // Función para mostrar la página web de los términos
+    private fun mostrarPopupWeb(url: String) {
+        val webView = WebView(this).apply {
+            webViewClient = WebViewClient()
+            loadUrl(url)
+        }
+
+        AlertDialog.Builder(this, R.style.AppTheme_DIALOG)
+            .setTitle("Política de Privacidad")
+            .setView(webView)
+            .setPositiveButton(R.string.aceptar) { dialog, _ -> dialog.dismiss() }
+            .show()
+    }
+
+    // Cambiamos el parámetro para que reciba tu modelo real
+    private fun mostrarDialogoDetalle(listaInicial: MutableList<FirmaDetail>) {
+        val dialogDetalle = Dialog(this)
+        dialogDetalle.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialogDetalle.setContentView(R.layout.dialog_detalle_gex)
+        dialogDetalle.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+
+        val rvDetalleGex = dialogDetalle.findViewById<RecyclerView>(R.id.rvDetalleGex)
+        val tvTotalItem = dialogDetalle.findViewById<TextView>(R.id.tvTotalItem)
+        val tvTotalGex = dialogDetalle.findViewById<TextView>(R.id.tvTotalGex)
+        val btnCerrar = dialogDetalle.findViewById<Button>(R.id.btnCerrarDetalle)
+
+        rvDetalleGex.layoutManager = LinearLayoutManager(this)
+
+        var listaActual = listaInicial
+
+        // Recalcular usando tu modelo
+        fun recalcularTotales() {
+            var totalItem = 0.0
+            var totalGex = 0.0
+            for (articulo in listaActual) {
+                // Sumamos usando tus campos, protegiendo contra nulos con ?: 0.0
+                totalItem += articulo.prVentCimp ?: 0.0
+                totalGex += articulo.prGex ?: 0.0
+            }
+            tvTotalItem.text = "S/ ${String.format("%.2f", totalItem)}"
+            tvTotalGex.text = "S/ ${String.format("%.2f", totalGex)}"
+        }
+
+        val adapter = GexDetalleAdapter(listaActual) { itemBorrar, posicion ->
+            // --- LÓGICA DE ELIMINACIÓN ---
+            // itemBorrar ahora es un objeto FirmaDetail.
+            // Puedes usar itemBorrar.nuSecu o itemBorrar.coItemGex para enviarlo a tu API
+            // Ejemplo: viewModel.eliminarGarantia(itemBorrar.nuSecu)
+
+            //listaActual.removeAt(posicion)
+            itemBorrar.apply {
+                prGex = 0.0
+                caDocu = 0.0 // Si es nulo, lo dejamos igual
+            }
+            rvDetalleGex.adapter?.notifyItemChanged(posicion) // Solo notificamos el cambio de ese item, no toda la lista
+            //rvDetalleGex.adapter?.notifyItemRemoved(posicion)
+
+            recalcularTotales()
+            deleteGex(itemBorrar)
+        }
+
+        rvDetalleGex.adapter = adapter
+        recalcularTotales()
+
+        btnCerrar.setOnClickListener {
+            dialogDetalle.dismiss()
+        }
+
+        dialogDetalle.show()
+    }
+    fun deleteGex(itemBorrar: FirmaDetail){
+
+        val saleSubItem = SaleSubItemEntity().apply {
+            secuencial = itemBorrar.nuSecuGex!!
+            //codigoventa = productEntity.codigoVenta
+            codigoProducto = itemBorrar.coItemGex!!
+            descripcion = itemBorrar.deItem!!
+            cantidad = 0
+            //precio = productEntity.precio
+            //imei = productEntity.imei
+            //imei2 = productEntity.imei2
+           // monedaSimbolo = productEntity.monedaSimbolo
+           // complementaryRowColor = productEntity.complementaryRowColor
+           // secgaraexte = productEntity.secgaraexte
+           // codgaraexte = productEntity.codgaraexte
+        }
+        saleViewModel.deleteItem(saleSubItem)
+    }
+
 }
 
 

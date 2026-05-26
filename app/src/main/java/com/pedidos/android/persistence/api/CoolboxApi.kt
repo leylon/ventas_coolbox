@@ -9,6 +9,9 @@ import com.pedidos.android.persistence.model.cotizacion.CotizacionPrint
 import com.pedidos.android.persistence.model.cotizacion.CotizacionPrintRequest
 import com.pedidos.android.persistence.model.cotizacion.CotizacionRequest
 import com.pedidos.android.persistence.model.cotizacion.Presupuesto
+import com.pedidos.android.persistence.model.firma.ActualizarFirmaRequest
+import com.pedidos.android.persistence.model.firma.FirmaRequest
+import com.pedidos.android.persistence.model.firma.FirmaResponse
 import com.pedidos.android.persistence.model.guide.*
 import com.pedidos.android.persistence.model.inventary.InventaryGenerateRequest
 import com.pedidos.android.persistence.model.inventary.InventaryRequest
@@ -243,6 +246,13 @@ interface CoolboxApi {
     @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"insertarcotizacionescliente")
     fun crearCotizacion(@Body body: CotizacionPrintRequest): Call<CotizacionPrint>
 
+    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"consultafirmagex")
+    fun consultaFirmaGex(@Body body: FirmaRequest): Call<FirmaResponse>
+
+    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"actualizafirmagex")
+    fun actualizafirmagex(@Body body: ActualizarFirmaRequest): Call<FirmaResponse>
+
+
 
     companion object {
         fun create(urlBase: String): CoolboxApi = create(HttpUrl.parse(urlBase)!!)
@@ -255,9 +265,9 @@ interface CoolboxApi {
 
             val client = OkHttpClient.Builder()
                     .addInterceptor(logger)
-                    .connectTimeout(60, TimeUnit.SECONDS)
-                    .readTimeout(60, TimeUnit.SECONDS)
-                    .writeTimeout(60, TimeUnit.SECONDS)
+                    .connectTimeout(120, TimeUnit.SECONDS)
+                    .readTimeout(120, TimeUnit.SECONDS)
+                    .writeTimeout(120, TimeUnit.SECONDS)
                     .build()
 
             val gsonBuilder = GsonBuilder()

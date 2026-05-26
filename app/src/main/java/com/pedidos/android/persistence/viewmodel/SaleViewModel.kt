@@ -14,10 +14,14 @@ import com.pedidos.android.persistence.model.SelectedTipoDocumento
 import com.pedidos.android.persistence.model.cotizacion.CotizacionCab
 import com.pedidos.android.persistence.model.cotizacion.CotizacionRequest
 import com.pedidos.android.persistence.model.cotizacion.Presupuesto
+import com.pedidos.android.persistence.model.firma.ActualizarFirmaRequest
+import com.pedidos.android.persistence.model.firma.FirmaRequest
+import com.pedidos.android.persistence.model.firma.FirmaResponse
 import com.pedidos.android.persistence.model.sale.*
 import com.pedidos.android.persistence.ui.BasicApp
 import com.pedidos.android.persistence.utils.ApiWrapper
 import com.pedidos.android.persistence.utils.ServicioGenerador
+import com.pedidos.android.persistence.viewmodel.EndingViewModel.Companion
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -30,6 +34,10 @@ class SaleViewModel(application: Application, private var repository: CoolboxApi
     var message = MutableLiveData<String>()
     var generaCotizacion  = MutableLiveData<Boolean>()
     var listTipoDocumento = MutableLiveData<ArrayList<SelectedTipoDocumento>>()
+    var validaFirma = MutableLiveData<FirmaResponse>()
+    var actualizaFirma = MutableLiveData<FirmaResponse>()
+
+
 
     init {
         generaCotizacion.postValue(false)
@@ -380,6 +388,8 @@ class SaleViewModel(application: Application, private var repository: CoolboxApi
 
         })
     }
+
+
     fun findCotizacion(
         cotizacionRequest: CotizacionRequest,
         onSuccess: (presupuesto: Presupuesto) -> Unit,
@@ -423,13 +433,56 @@ class SaleViewModel(application: Application, private var repository: CoolboxApi
 
     }
 
+
+    fun obtenerValidacionFirmas(firmaRequest: FirmaRequest) {
+        showProgress.postValue(true)
+        repository.consultaFirmaGex(firmaRequest).enqueue(object : Callback<FirmaResponse> {
+            override fun onFailure(call: Call<FirmaResponse>, t: Throwable) {
+                Log.e(EndingViewModel.TAG, t.message.toString())
+                showProgress.postValue(false)
+            }
+
+            override fun onResponse(call: Call<FirmaResponse>, response: Response<FirmaResponse>) {
+                if (response.isSuccessful && response.body()!!.result) {
+                    validaFirma.postValue(response.body()!!)
+                } else {
+                    validaFirma.postValue(response.body()!!)
+                    message.postValue(response.body()?.message ?: "Error al validar la firma")
+                }
+                showProgress.postValue(false)
+            }
+
+        })
+    }
+    fun actualizarFirmas(firmaRequest: ActualizarFirmaRequest) {
+        showProgress.postValue(true)
+        repository.actualizafirmagex(firmaRequest).enqueue(object : Callback<FirmaResponse> {
+            override fun onFailure(call: Call<FirmaResponse>, t: Throwable) {
+                Log.e(EndingViewModel.TAG, t.message.toString())
+                showProgress.postValue(false)
+            }
+
+            override fun onResponse(call: Call<FirmaResponse>, response: Response<FirmaResponse>) {
+                if (response.isSuccessful && response.body()!!.result) {
+                    actualizaFirma.postValue(response.body()!!)
+                } else {
+                    actualizaFirma.postValue(response.body()!!)
+                    message.postValue(response.body()?.message ?: "Error al validar la firma")
+                }
+                showProgress.postValue(false)
+            }
+
+        })
+    }
+
+
     companion object {
         val TAG = SaleViewModel::class.java.simpleName!!
 
         class Factory(private var application: Application, urlBase: String) : ViewModelProvider.NewInstanceFactory() {
             private var repository = (application as BasicApp).getApiRepository(urlBase)
 
-            override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return SaleViewModel(application, repository) as T
             }
         }
