@@ -3,62 +3,201 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F4F4F4"
+    android:background="#FFFFFF"
     android:orientation="vertical"
     android:padding="16dp">
-
-    <TextView
-        android:id="@+id/tvTitulo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Aceptación Garantía Extendida"
-        android:textColor="#000000"
-        android:textSize="16sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/tvDescripcion"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="Deseo incluir Garantía Extendida [Descripción GEX] por un valor de S/ XXX al artículo [Descripción]. Dejo mi firma en señal de conformidad:"
-        android:textColor="#555555"
-        android:textSize="14sp" />
-    <TextView
-        android:id="@+id/tvVerDetalle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:padding="4dp"
-        android:text="ver detalle"
-        android:textColor="#0056b3"
-        android:textSize="14sp"
-        android:textStyle="bold" />
-
-    <com.pedidos.android.persistence.utils.DrawCustomView
-        android:id="@+id/viewFirma"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="12dp"
-        android:background="@color/colorBackground" />
-
-    <TextView
-        android:id="@+id/tvLimpiar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:layout_marginTop="4dp"
-        android:padding="4dp"
-        android:text="Limpiar firma"
-        android:textColor="#0056b3"
-        android:textSize="14sp"
-        android:textStyle="bold" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/bg_info_card"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvTitulo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawablePadding="8dp"
+            android:text="Consentimiento de Garantía Extendida"
+            android:textColor="#37474F"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvDescripcion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            tools:text="Confirmo que deseo incluir en esta compra (Total S/ XXX) el servicio de Garantía extendida (Total GEX S/ XX.XX)."
+            android:textColor="#607D8B"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tvVerDetalle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_gravity="end"
+            android:text="Ver detalle"
+            android:textColor="#00897B"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Dejo mi firma en señal de conformidad"
+        android:textColor="#455A64"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_signature_box">
+
+        <LinearLayout
+            android:id="@+id/llPlaceholderFirma"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@android:drawable/ic_menu_edit"
+                android:tint="#9E9E9E" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Digitar mi firma"
+                android:textColor="#9E9E9E"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <com.pedidos.android.persistence.utils.DrawCustomView
+            android:id="@+id/viewFirma"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent" />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+
+
+        <TextView
+            android:id="@+id/tvLimpiar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:drawableStart="@android:drawable/ic_menu_delete"
+            android:drawablePadding="4dp"
+            android:drawableTint="#757575"
+            android:gravity="center_vertical"
+            android:padding="8dp"
+            android:text="Borrar firma"
+            android:textColor="#757575"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_input_field"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_customer_50"
+            android:tint="#757575" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Nombre completo" android:textColor="#757575" android:textSize="11sp" />
+            <TextView android:id="@+id/tvNombreCompleto" android:layout_width="match_parent" android:layout_height="wrap_content" tools:text="JILMER EDUARDO TAFUR" android:textColor="#212121" android:textSize="14sp" android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_input_field"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_resume_white_100"
+            android:tint="#757575" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical">
+            <TextView android:id="@+id/tvTipDoi" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="DNI" android:textColor="#757575" android:textSize="11sp" />
+            <TextView android:id="@+id/tvDoi" android:layout_width="match_parent" android:layout_height="wrap_content" tools:text="41979165" android:textColor="#212121" android:textSize="14sp" android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_input_field"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="4dp"
+            android:src="@android:drawable/sym_action_email"
+            android:tint="#757575" />
+
+        <EditText
+            android:id="@+id/etEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:background="@android:color/transparent"
+            android:hint="Correo (opcional)"
+            android:inputType="textEmailAddress"
+            android:textColor="#212121"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -66,57 +205,23 @@
             android:id="@+id/cbPolitica"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
-
+        <TextView
+            android:id="@+id/tvPoliticaLink1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="2dp"
+            android:text="He leído y acepto la"
+            android:textColor="#757575"
+            android:textSize="13sp" />
         <TextView
             android:id="@+id/tvPoliticaLink"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="He leído y acepto la Política de Privacidad"
-            android:textColor="#0056b3"
-            android:textSize="13sp"
+            android:padding="2dp"
             android:textStyle="bold"
-            android:padding="4dp" />
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/tvNombreCompleto"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        tools:text="Nombre completo: [Nombre del cliente]"
-        android:textColor="#777777"
-        android:textSize="13sp" />
-
-    <TextView
-        android:id="@+id/tvDoi"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:text="DOI: [Tipo y número de documento]"
-        android:textColor="#777777"
-        android:textSize="13sp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginTop="4dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Email: "
-            android:textColor="#777777"
-            android:textSize="13sp"/>
-
-        <EditText
-            android:id="@+id/etEmail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textEmailAddress"
-            android:textSize="13sp"
-            android:textColor="#000000"
-            tools:text="email@cliente.com" />
+            android:text="Política de Privacidad"
+            android:textColor="#00897B"
+            android:textSize="13sp" />
     </LinearLayout>
 
     <LinearLayout
@@ -129,20 +234,24 @@
             android:id="@+id/btnRechazar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:backgroundTint="#FF0000"
-            android:text="RECHAZAR"
-            android:textColor="#FFFFFF" />
+            android:layout_weight="1"
+            android:background="@drawable/bg_btn_outline_red"
+            android:text="Rechazar"
+            android:textAllCaps="false"
+            android:textColor="#E53935" />
 
         <Button
             android:id="@+id/btnContinuar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:backgroundTint="#8BC34A"
-            android:text="CONTINUAR"
+            android:layout_weight="1"
+            android:background="@drawable/bg_btn_outline_green"
+            android:backgroundTint="#00897B"
+            android:text="Aceptar"
+            android:textAllCaps="false"
             android:textColor="#FFFFFF" />
     </LinearLayout>
+
 </LinearLayout>

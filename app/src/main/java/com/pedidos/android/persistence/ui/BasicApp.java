@@ -42,9 +42,9 @@ public class BasicApp extends Application {
 
     public static final String PEDIDO_PAGAR_NUEVO = BuildConfig.URL_PEDIDO_PAGAR_NUEVO;
 
-    public static final String DEFAULT_BASE_URL_DEBUG = "https://wsfacturacion.coolbox.com.pe:9443/SKM/";
-    //public static final String DEFAULT_BASE_URL_DEBUG = "http://192.168.1.2/SKMWSVentaMovil/api/";
-    public static final String DEFAULT_BASE_URL = "https://wsfacturacion.coolbox.com.pe:9443/SKM/";
+    //public static final String DEFAULT_BASE_URL_DEBUG = "https://wsfacturacion.coolbox.com.pe:9443/SKM/";
+    public static final String DEFAULT_BASE_URL_DEBUG = "http://192.168.1.2/SKMWSVentaMovil/api/";
+    public static final String DEFAULT_BASE_URL = "http://192.168.1.2/SKMWSVentaMovil/api/";
 
     private CoolboxApi mrepository;
     private ApiExternas apiExternas;

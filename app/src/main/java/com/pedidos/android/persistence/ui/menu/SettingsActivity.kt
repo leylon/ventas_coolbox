@@ -31,6 +31,8 @@ class SettingsActivity : AppCompatActivity() {
     }
     var pageSize = "80mm"
     var typePrint = "GENERIC"
+    var androidID_imei: String = ""
+    var uuID: String = ""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.settings_activity)
@@ -50,6 +52,13 @@ class SettingsActivity : AppCompatActivity() {
             android.R.layout.simple_spinner_item, // Layout por defecto
             typePrints // Datos
         )
+        androidID_imei =
+            Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+
+        uuID = UUID.randomUUID().toString()
+        tvwAndroid_UUID.text = uuID
+        tvwAndroid_ID.text = androidID_imei
+        bntwSaveChanges.setOnClickListener { saveChanges() }
         spinner.adapter = adapter
         spinnerTypePrint.adapter = adapterTypePrint
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -62,6 +71,8 @@ class SettingsActivity : AppCompatActivity() {
                 settings.impresora = edwImpresora.text.toString()
                 settings.pageSize = selectedSize
                 settings.typePrint = typePrint
+                settings.imei = androidID_imei
+                settings.uuid = uuID
                 val intent = Intent().apply {
                     putExtra(SETTINGS_KEY, settings)
                 }
@@ -82,6 +93,8 @@ class SettingsActivity : AppCompatActivity() {
                 settings.impresora = edwImpresora.text.toString()
                 settings.pageSize = pageSize
                 settings.typePrint = selectedType
+                settings.imei = androidID_imei
+                settings.uuid = uuID
                 val intent = Intent().apply {
                     putExtra(SETTINGS_KEY, settings)
                 }
@@ -92,13 +105,9 @@ class SettingsActivity : AppCompatActivity() {
                 // Acción cuando no se selecciona nada
             }
         }
-        bntwSaveChanges.setOnClickListener { saveChanges() }
-        val androidID: String =
-            Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
 
-        val uuID: String = UUID.randomUUID().toString()
-        tvwAndroid_UUID.text = uuID
-        tvwAndroid_ID.text = androidID
+
+
         val settingsEntity: SettingsEntity? = intent.getParcelableExtra(SettingsActivity.SETTINGS_KEY)
         setData(settingsEntity!!)
     }
@@ -151,6 +160,8 @@ class SettingsActivity : AppCompatActivity() {
         settings.impresora = edwImpresora.text.toString()
         settings.pageSize = pageSize
         settings.typePrint = typePrint
+        settings.imei = androidID_imei
+        settings.uuid = uuID
         //settings.logoUrl = edwImageUrl.text.toString()
 
         val intent = Intent().apply {

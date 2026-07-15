@@ -15,6 +15,7 @@ import com.pedidos.android.persistence.model.cotizacion.CotizacionCab
 import com.pedidos.android.persistence.model.cotizacion.CotizacionRequest
 import com.pedidos.android.persistence.model.cotizacion.Presupuesto
 import com.pedidos.android.persistence.model.firma.ActualizarFirmaRequest
+import com.pedidos.android.persistence.model.firma.FirmaDataResponse
 import com.pedidos.android.persistence.model.firma.FirmaRequest
 import com.pedidos.android.persistence.model.firma.FirmaResponse
 import com.pedidos.android.persistence.model.sale.*
@@ -35,7 +36,7 @@ class SaleViewModel(application: Application, private var repository: CoolboxApi
     var generaCotizacion  = MutableLiveData<Boolean>()
     var listTipoDocumento = MutableLiveData<ArrayList<SelectedTipoDocumento>>()
     var validaFirma = MutableLiveData<FirmaResponse>()
-    var actualizaFirma = MutableLiveData<FirmaResponse>()
+    var actualizaFirma = MutableLiveData<FirmaDataResponse>()
 
 
 
@@ -456,13 +457,13 @@ class SaleViewModel(application: Application, private var repository: CoolboxApi
     }
     fun actualizarFirmas(firmaRequest: ActualizarFirmaRequest) {
         showProgress.postValue(true)
-        repository.actualizafirmagex(firmaRequest).enqueue(object : Callback<FirmaResponse> {
-            override fun onFailure(call: Call<FirmaResponse>, t: Throwable) {
+        repository.actualizafirmagex(firmaRequest).enqueue(object : Callback<FirmaDataResponse> {
+            override fun onFailure(call: Call<FirmaDataResponse>, t: Throwable) {
                 Log.e(EndingViewModel.TAG, t.message.toString())
                 showProgress.postValue(false)
             }
 
-            override fun onResponse(call: Call<FirmaResponse>, response: Response<FirmaResponse>) {
+            override fun onResponse(call: Call<FirmaDataResponse>, response: Response<FirmaDataResponse>) {
                 if (response.isSuccessful && response.body()!!.result) {
                     actualizaFirma.postValue(response.body()!!)
                 } else {

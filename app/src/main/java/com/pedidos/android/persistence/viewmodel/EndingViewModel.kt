@@ -15,6 +15,12 @@ import com.pedidos.android.persistence.model.SelectedOtherPayment
 import com.pedidos.android.persistence.model.cotizacion.CotizacionPrint
 import com.pedidos.android.persistence.model.cotizacion.CotizacionPrintRequest
 import com.pedidos.android.persistence.model.cotizacion.CotizacionRequest
+import com.pedidos.android.persistence.model.firma.ActualizarFirmaRequest
+import com.pedidos.android.persistence.model.firma.FirmaDataResponse
+import com.pedidos.android.persistence.model.firma.FirmaRequest
+import com.pedidos.android.persistence.model.firma.FirmaResponse
+import com.pedidos.android.persistence.model.sale.ValidaCobraRequest
+import com.pedidos.android.persistence.model.sale.ValidaCobraResponse
 import com.pedidos.android.persistence.ui.BasicApp
 import com.pedidos.android.persistence.utils.ApiWrapper
 import com.pedidos.android.persistence.utils.Defaults
@@ -30,7 +36,7 @@ class EndingViewModel(private val repository: CoolboxApi) : ViewModel() {
         class Factory(application: Application, urlBase: String) : ViewModelProvider.NewInstanceFactory() {
             private var repository = (application as BasicApp).getApiRepository(urlBase)
 
-            override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return EndingViewModel(repository) as T
             }
         }
@@ -45,7 +51,10 @@ class EndingViewModel(private val repository: CoolboxApi) : ViewModel() {
     var errorMessages = MutableLiveData<String>()
     var receiptPrintCotizacionLiveData = MutableLiveData<CotizacionPrint>()
     var saveCotizacionLiveData = MutableLiveData<CotizacionPrint>()
+    var validaFirma = MutableLiveData<FirmaResponse>()
+    var actualizaFirma = MutableLiveData<FirmaDataResponse>()
     var message = MutableLiveData<String>()
+    var validadCobra = MutableLiveData<ValidaCobraResponse>()
     init {
         val newSale = SaleEntity().apply {
             clienteCodigo = Defaults.Cliente.documentNumber
@@ -100,6 +109,65 @@ class EndingViewModel(private val repository: CoolboxApi) : ViewModel() {
                 t: Throwable
             ) {
                 Log.e(TAG, t.message.toString())
+                showProgress.postValue(false)
+            }
+
+        })
+    }
+
+     fun obtenerValidacionFirmas(firmaRequest: FirmaRequest) {
+        showProgress.postValue(true)
+        repository.consultaFirmaGex(firmaRequest).enqueue(object : Callback<FirmaResponse> {
+            override fun onFailure(call: Call<FirmaResponse>, t: Throwable) {
+                Log.e(TAG, t.message.toString())
+                showProgress.postValue(false)
+            }
+
+            override fun onResponse(call: Call<FirmaResponse>, response: Response<FirmaResponse>) {
+                if (response.isSuccessful && response.body()!!.result) {
+                    validaFirma.postValue(response.body()!!)
+                } else {
+                    message.postValue(response.body()?.message ?: "Error al validar la firma")
+                }
+                showProgress.postValue(false)
+            }
+
+        })
+    }
+    fun actualizarFirmas(firmaRequest: ActualizarFirmaRequest) {
+        showProgress.postValue(true)
+        repository.actualizafirmagex(firmaRequest).enqueue(object : Callback<FirmaDataResponse> {
+            override fun onFailure(call: Call<FirmaDataResponse>, t: Throwable) {
+                Log.e(TAG, t.message.toString())
+                showProgress.postValue(false)
+            }
+
+            override fun onResponse(call: Call<FirmaDataResponse>, response: Response<FirmaDataResponse>) {
+                if (response.isSuccessful && response.body()!!.result) {
+                    actualizaFirma.postValue(response.body()!!)
+                } else {
+                    message.postValue(response.body()?.message ?: "Error al validar la firma")
+                }
+                showProgress.postValue(false)
+            }
+
+        })
+    }
+    fun validaCobra(validaCobraRequest: ValidaCobraRequest) {
+        showProgress.postValue(true)
+        repository.validabotonCobrar(validaCobraRequest).enqueue(object : Callback<ValidaCobraResponse> {
+            override fun onFailure(call: Call<ValidaCobraResponse>, t: Throwable) {
+                Log.e(TAG, t.message.toString())
+                showProgress.postValue(false)
+            }
+
+            override fun onResponse(call: Call<ValidaCobraResponse>, response: Response<ValidaCobraResponse>) {
+                if (response.isSuccessful && response.body()!!.result) {
+                    validadCobra.postValue(response.body()!!)
+                } else {
+                    validadCobra.postValue(response.body()!!)
+                    //message.postValue(response.body()?.message ?: "Error al validar el Cobro")
+                }
                 showProgress.postValue(false)
             }
 

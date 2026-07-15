@@ -10,6 +10,7 @@ import com.pedidos.android.persistence.model.cotizacion.CotizacionPrintRequest
 import com.pedidos.android.persistence.model.cotizacion.CotizacionRequest
 import com.pedidos.android.persistence.model.cotizacion.Presupuesto
 import com.pedidos.android.persistence.model.firma.ActualizarFirmaRequest
+import com.pedidos.android.persistence.model.firma.FirmaDataResponse
 import com.pedidos.android.persistence.model.firma.FirmaRequest
 import com.pedidos.android.persistence.model.firma.FirmaResponse
 import com.pedidos.android.persistence.model.guide.*
@@ -34,179 +35,179 @@ import java.util.concurrent.TimeUnit
 
 interface CoolboxApi {
     //login
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"login")
+    @POST("login")
     fun login(@Body login: Login): Call<ApiWrapper<LoginResponse>>
 
     //client
-    @GET(BasicApp.DEFAULT_API_VENTA_MOVIL+"client_search")
+    @GET("client_search")
     fun getClients(@Query("codigo") codigo: String, @Query("tipo") documentType: Int): Call<ApiWrapper<ClientResponseEntity>>
 
     //client
-    @GET(BasicApp.DEFAULT_API_VENTA_MOVIL+"client_find")
+    @GET("client_find")
     fun getClientsByReniecSunat(@Query("codigo") codigo: String, @Query("tipo") documentType: Int): Call<ApiWrapper<ClientResponseEntity>>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"clientecrea")
+    @POST("clientecrea")
     fun insertClient(@Body client: ClientEntity): Call<ApiWrapper<ClientResponseEntity>>
 
     //product complementary
-    @GET(BasicApp.DEFAULT_API_VENTA_MOVIL+"productoscomplementarios")
+    @GET("productoscomplementarios")
     fun getProductComplementary(@Query("codigoVenta") codigoProducto: String
                                 , @Query("precioventa") precioVenta : String): Call<ApiWrapper<List<ProductComplementaryEntity>>>
 
-    @GET(BasicApp.DEFAULT_API_VENTA_MOVIL+"ProductosComplementarios")
+    @GET("ProductosComplementarios")
     fun getComplementaryProducts(@Query("codigoVenta") codigoProducto: String
     ): Call<ApiWrapper<List<ProductComplementaryEntity>>>
     //product garantie
-    @GET(BasicApp.DEFAULT_API_VENTA_MOVIL+"garantiaextendida")
+    @GET("garantiaextendida")
     fun getProductsGarantie(@Query("codigoventa") codigoProducto: String
                                 , @Query("precioventa") precioVenta : String): Call<ApiWrapper<List<ProductComplementaryEntity>>>
 
 
     //sales
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"pedido")
+    @POST("pedido")
     fun insertSale(@Body body: SaleEntity): Call<ApiWrapper<SaleEntity>>
 
     // cards
-    @GET(BasicApp.DEFAULT_API_VENTA_MOVIL+"tarjeta?codigo")
+    @GET("tarjeta?codigo")
     fun cardsAvailable(): Call<ApiWrapper<ArrayList<SelectedCreditCard>>>
 
     //other payments
-    @GET(BasicApp.DEFAULT_API_VENTA_MOVIL+"formapago?codigo")
+    @GET("formapago?codigo")
     fun otherPatments(): Call<ApiWrapper<ArrayList<SelectedOtherPayment>>>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"pedidodetalle")
+    @POST("pedidodetalle")
     fun insertSaleSubItem(@Body body: SaleEntity): Call<ApiWrapper<SaleEntity>>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"pedidodetalle2")
+    @POST("pedidodetalle2")
     fun insertSaleSubItem2(@Body body: SaleEntity): Call<ApiWrapper<SaleEntity>>
 
-    @GET(BasicApp.DEFAULT_API_VENTA_MOVIL+"documentoidentidad?codigo")
+    @GET("documentoidentidad?codigo")
     fun tipoDocumentIdentidad(): Call<ApiWrapper<ArrayList<SelectedTipoDocumento>>>
 
-    @GET(BasicApp.DEFAULT_API_VENTA_MOVIL+"Product")
+    @GET("Product")
     fun searchProduct(@Query("codigoVenta") codigoProducto: String,
                       @Query("cotizacion") cotizacion: String,
                       @Query("statusCotizacion") statusCotizacion : Int ): Call<ApiWrapper<ProductEntity>>
 
-    @GET(BasicApp.DEFAULT_API_VENTA_MOVIL+"listaproducto")
+    @GET("listaproducto")
     fun searchProductDescription(@Query("codigoVenta") codigoProducto: String): Call<ApiWrapper<List<ProductEntity>>>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"pedidoimprimir")
+    @POST("pedidoimprimir")
     fun getReceipt(@Body body: ReceiptRequest): Call<ApiWrapper<ReceiptEntity>>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+BasicApp.PEDIDO_PAGAR_NUEVO)
+    @POST(BasicApp.PEDIDO_PAGAR_NUEVO)
     fun payReceiptNew(@Body body: PaymentEntity): Call<ApiWrapper<PaymentResponseEntity>>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"pagolinkintencionpago")
+    @POST("pagolinkintencionpago")
     fun getPagoLink(@Body body : PaymentIntentionsEntity) : Call<PaymentIntentionResponseEntity>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"pagofpayintencionpago")
+    @POST("pagofpayintencionpago")
     fun getFpay(@Body body : PaymentIntentionsEntity) : Call<PaymentIntentionResponseEntity>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"pagofpayconsultapago")
+    @POST("pagofpayconsultapago")
     fun checkPaymentFpay(@Body body: PaymentIntentionResponseEntity) : Call<PaymentIntentionResponseEntity>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"pagofpayreversapago")
+    @POST("pagofpayreversapago")
     fun reverseFpayPayment(@Body body : PaymentIntentionResponseEntity) : Call<PaymentIntentionResponseEntity>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"pagolinkconsultapago")
+    @POST("pagolinkconsultapago")
     fun checkPaymentPLink(@Body body: PaymentIntentionResponseEntity) : Call<PaymentIntentionResponseEntity>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"reimprimirticket")
+    @POST("reimprimirticket")
     fun getReceiptForReprint(@Body body: ReceiptRequest): Call<ApiWrapper<ReceiptEntity>>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"documentopdfimprimir")
+    @POST("documentopdfimprimir")
     fun getReceiptPDF(@Body body: ReceiptRequest): Call<ApiWrapper<ReceiptEntity>>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"pedidopagar")
+    @POST("pedidopagar")
     fun payReceipt(@Body body: PaymentEntity): Call<ApiWrapper<PaymentResponseEntity>>
 
-    @GET(BasicApp.DEFAULT_API_VENTA_MOVIL+"imei")
+    @GET("imei")
     fun checkImei(@Query("codigoventa") saleCode: String, @Query("codigoimei") imei: String): Call<ApiWrapper<CheckImeiResponse>>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"PedidoAnular")
+    @POST("PedidoAnular")
     fun cancelSale(@Body body: CancelSaleEntity): Call<ApiWrapper<CancelSaleResponseEntity>>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"PedidoReporte")
+    @POST("PedidoReporte")
     fun reportOperations(@Body body: OperationReportEntity): Call<ApiWrapper<OperationReportResponseEntity>>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"pedidoCierre")
+    @POST("pedidoCierre")
     fun cashBalance(@Body body: CashBalanceEntity): Call<ApiWrapper<CashBalanceResponseEntity>>
 
     //Generated documents
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"listadodocumentos")
+    @POST("listadodocumentos")
     fun generatedDocuments(@Body body: CashBalanceEntity): Call<ApiWrapper<List<GeneratedDocumentEntity>>>
 
     //List Storage
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"gr/almacen")
+    @POST("gr/almacen")
     fun getStorageGr(@Body body: StorageRequest): Call<List<StorageResponse>>
 
     //List Type Documeto
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"gr/tipodocu")
+    @POST("gr/tipodocu")
     fun getTypeDocumentGuide(@Body body: TypeDocumentRequest): Call<List<DataResponse>>
 
     //Operation of Guide
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"gr/operacion")
+    @POST("gr/operacion")
     fun getOperationGuide(@Body body: OperationGuideRequest): Call<List<OperationGuideResponse>>
 
     //List of Type AuxGuide
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"gr/tipoauxiliar")
+    @POST("gr/tipoauxiliar")
     fun getTypeAuxGuide(@Body body: TypeAuxGuideRequest): Call<List<DataResponse>>
 
     //AuxGuide
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"gr/auxiliar")
+    @POST("gr/auxiliar")
     fun getAuxGuide(@Body body: AuxGuideRequest): Call<List<DataResponse>>
 
     //List Ubigeo
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"gr/ubigeo")
+    @POST("gr/ubigeo")
     fun getUbigeo(@Body body: UbigeoRequest): Call<List<DataResponse>>
 
     //List Type Documents
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"gr/tipodocuiden")
+    @POST("gr/tipodocuiden")
     fun getTypeDocumentId(@Body body: TypeDocumentRequest): Call<List<DataResponse>>
 
     //DocumentId Guide
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"gr/docuiden")
+    @POST("gr/docuiden")
     fun getDocumentIdGuide(@Body body: DocumentIdRequest): Call<List<DocumentIdResponse>>
 
     //DocumentId Drive Guide
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"gr/docuiden")
+    @POST("gr/docuiden")
     fun getDocumentIdAllGuide(@Body body: DocumentIdAllRequest): Call<List<DocumentIdResponse>>
 
 
     //Data Tranport Guide
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"gr/transportista")
+    @POST("gr/transportista")
     fun getDataTranport(@Body body: DocumentTransportGuideRequest): Call<List<DocumentTransportGuideResponse>>
 
     //Data Car Guide
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"gr/vehiculo")
+    @POST("gr/vehiculo")
     fun getPlacaCarGuide(@Body body: PlacaCarGuideRequest): Call<List<DataResponse>>
 
     // Save Guide Head and Detail
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"gr/registroguia")
+    @POST("gr/registroguia")
     fun saveGuide(@Body body: GuideRequest): Call<GuideResponse>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"inventariolista")
+    @POST("inventariolista")
     fun listaInventary(@Body body: InventaryRequest): Call<InventaryResponse>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"inventariogenerar")
+    @POST("inventariogenerar")
     fun generateInventary(@Body body: InventaryGenerateRequest): Call<InventaryResponseStatus>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"pagovale")
+    @POST("pagovale")
     fun pagovale(@Body body: PagoValeRequest): Call<PagoValeResponse>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"listarguiatransferencia")
+    @POST("listarguiatransferencia")
     fun listaGuideTransfer(@Body body: TransferRequest): Call<TransferResponse>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"mostrarguiatransferencia")
+    @POST("mostrarguiatransferencia")
     fun showGuideTranfer(@Body body: TransferShowRequest): Call<TransferShowResponse>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"confirmacionguiatransferencia")
+    @POST("confirmacionguiatransferencia")
     fun confirmarGuideTranfer(@Body body: TransferFinishRequest): Call<GuideResponse>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"venta1producto")
+    @POST("venta1producto")
     fun ventaProducto(@Body body: List<VentaProductoRequest>): Call<VentaProductoResponse>
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"venta1producto")
+    @POST("venta1producto")
     fun ventaProducto(@Body body: VentaProductoRequest): Call<VentaProductoResponse>
 
     @POST(BasicApp.DEFAULT_API_FACTURACION+"venta1producto_enviocorreo")
@@ -215,7 +216,7 @@ interface CoolboxApi {
     @POST(BasicApp.DEFAULT_API_FACTURACION+"enviocodigorespuesta")
     fun envioCodigoRespuesta(@Body body: EnvioCodigoRequest): Call<EnvioCodigoResponse>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"venta1producto_validacodigo")
+    @POST("venta1producto_validacodigo")
     fun ventaProductoValidaCodigo(@Body body: VentaProductoValidaCodigoRequest): Call<VentaProductoValidaCodigoResponse>
 
     @POST(BasicApp.DEFAULT_API_PICKING+"listapedido")
@@ -236,22 +237,24 @@ interface CoolboxApi {
     @POST(BasicApp.DEFAULT_API_PICKING+"guiascompletas")
     fun reportPickado(@Body body: PedidoRequest): Call<ReportPickingResponse>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"ObtenerCotizacionesCliente")
+    @POST("ObtenerCotizacionesCliente")
     fun obtenerCotizacionesCliente(@Body body: CotizacionRequest): Call<Presupuesto>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"imprimircotizacion")
+    @POST("imprimircotizacion")
     fun imprimirCotizacion(@Body body: CotizacionPrintRequest): Call<CotizacionPrint>
 
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"insertarcotizacionescliente")
+    @POST("insertarcotizacionescliente")
     fun crearCotizacion(@Body body: CotizacionPrintRequest): Call<CotizacionPrint>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"consultafirmagex")
+    @POST("consultafirmagex")
     fun consultaFirmaGex(@Body body: FirmaRequest): Call<FirmaResponse>
 
-    @POST(BasicApp.DEFAULT_API_VENTA_MOVIL+"actualizafirmagex")
-    fun actualizafirmagex(@Body body: ActualizarFirmaRequest): Call<FirmaResponse>
+    @POST("actualizafirmagex")
+    fun actualizafirmagex(@Body body: ActualizarFirmaRequest): Call<FirmaDataResponse>
 
+    @POST("botoncobrar")
+    fun validabotonCobrar(@Body body: ValidaCobraRequest): Call<ValidaCobraResponse>
 
 
     companion object {

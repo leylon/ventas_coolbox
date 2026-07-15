@@ -106,6 +106,9 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
     var listDetalletCotizacion: MutableList<CotizacionDet> = mutableListOf()
     var nroCotizacion: String = ""
     var currentSaleEntityLocal: SaleEntity? = null
+    //val dialogFirma = Dialog(this)
+    //val dialogDetalle = Dialog(this)
+    var statusFirma = true
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentViewWithMenu(R.layout.sales_activity)
@@ -187,11 +190,13 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         println("onResume")
         btnProcess.isEnabled = true
         rvwProducts.isEnabled = true
+        statusFirma = true
     }
 
     override fun onStart() {
         super.onStart()
         println("onStart")
+        statusFirma = true
         etwAddProduct.requestFocus()
         //btnProcess.isEnabled = true
     }
@@ -743,6 +748,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
             }
         })
         viewModel.validaFirma.observe( this, Observer { firmaResponse ->
+            btnProcess.isEnabled = true
             showProgress(false)
             if (firmaResponse != null) {
                 if (firmaResponse.result) {
@@ -752,33 +758,47 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
                 }  else {
 
                     Log.d("DEBUG_FIRMA", "Entrando al ELSE. Preparando Intent...")
+                    if (firmaResponse.message.toString().isNotEmpty()) {
+                        onError(firmaResponse.message.toString())
+                    } else {
+                        try {
 
-                    try {
-                        // IMPORTANTE: Cambia "TuActividadActual" por el nombre de la clase donde estás (ej. SaleActivity)
-                        val intent = Intent(this@SaleActivity, EndingActivity::class.java).apply {
-                            putExtra(EndingActivity.EXTRA_ENTITY, currentSaleEntityLocal)
+                            // IMPORTANTE: Cambia "TuActividadActual" por el nombre de la clase donde estás (ej. SaleActivity)
+                            val intent = Intent(this@SaleActivity, EndingActivity::class.java).apply {
+                                putExtra(EndingActivity.EXTRA_ENTITY, currentSaleEntityLocal)
+                            }
+                            startActivity(intent)
+
+                            //statusFirma = false
+                            //processSale()
+                        } catch (e: Exception) {
+                            Log.e("DEBUG_FIRMA", "Error al lanzar EndingActivity: ${e.message}")
                         }
-                        startActivity(intent)
-                    } catch (e: Exception) {
-                        Log.e("DEBUG_FIRMA", "Error al lanzar EndingActivity: ${e.message}")
                     }
+
                 }
             }
         })
         viewModel.actualizaFirma.observe( this, Observer { firmaResponse ->
+            btnProcess.isEnabled = true
             showProgress(false)
             if (firmaResponse != null) {
-                if (firmaResponse.result) {
-                    val message : String = firmaResponse.message ?: "Firma actualizada correctamente"
-                    onError(message)
-                    startActivity(Intent(this@SaleActivity, EndingActivity::class.java).apply {
-                        //btnProcess.isEnabled = true
-                        putExtra(EndingActivity.EXTRA_ENTITY, currentSaleEntityLocal)
-                    })
 
+                if (firmaResponse.result) {
+                    statusFirma = false
+                    //val message : String = firmaResponse.message ?: "Firma actualizada correctamente"
+                    //onError(message)
+                    //startActivity(Intent(this@SaleActivity, EndingActivity::class.java).apply {
+                    //    btnProcess.isEnabled = true
+                    //    putExtra(EndingActivity.EXTRA_ENTITY, currentSaleEntityLocal)
+                    //})
+                    //processSale()
+                    goToResumenPedido(firmaResponse.data)
                    // cobrarPedido()
                 } else {
-                    onError(firmaResponse.message.toString())
+                    if (firmaResponse.message != null && firmaResponse.message.toString().isNotEmpty()) {
+                        onError(firmaResponse.message.toString())
+                    }
                 }
             }
         })
@@ -958,7 +978,14 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
             currentSaleEntityLocal = currentSaleEntity
         }
         //end nulls prevent
-        validarFirma()
+        if (statusFirma){
+            validarFirma()
+        }else{
+            startActivity(Intent(this, EndingActivity::class.java).apply {
+                //btnProcess.isEnabled = true
+                putExtra(EndingActivity.EXTRA_ENTITY, currentSaleEntity)})
+        }
+        //validarFirma()
         /*startActivity(Intent(this, EndingActivity::class.java).apply {
             //btnProcess.isEnabled = true
             putExtra(EndingActivity.EXTRA_ENTITY, currentSaleEntity)
@@ -1442,33 +1469,34 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
 
     private fun mostrarFirma(firmaResponse: FirmaHead) {
         // 1. Creamos el Dialog asociado a esta Activity
-        val dialog = Dialog(this)
+        val dialogFirma = Dialog(this)
 
         // Quitamos el título por defecto de Android para que se vea moderno
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialogFirma.requestWindowFeature(Window.FEATURE_NO_TITLE)
 
         // 2. Le asignamos tu diseño XML (asumiendo que tu archivo se llama fragment_aceptacion_garantia.xml,
         // aunque ahora ya no sea un fragmento, el nombre del archivo no importa)
-        dialog.setContentView(R.layout.fragment_aceptacion_garantia)
+        dialogFirma.setContentView(R.layout.fragment_aceptacion_garantia)
 
         // 3. ¡AQUÍ CONTROLAS EL TAMAÑO!
         // MATCH_PARENT de ancho para que ocupe casi toda la pantalla horizontal
         // WRAP_CONTENT de alto para que la ventana sea lo más chica posible (solo lo que ocupa el contenido)
-        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        dialogFirma.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         // Opcional: fondo transparente para que se respeten los bordes curvos si los tuviera
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialogFirma.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
         // 4. Referenciamos las vistas del XML
-        val tvNombreCompleto = dialog.findViewById<TextView>(R.id.tvNombreCompleto)
-        val tvDescripcion = dialog.findViewById<TextView>(R.id.tvDescripcion)
-        val tvDoi = dialog.findViewById<TextView>(R.id.tvDoi)
-        val etEmail = dialog.findViewById<EditText>(R.id.etEmail)
-        val tvPoliticaLink = dialog.findViewById<TextView>(R.id.tvPoliticaLink)
-        val cbPolitica = dialog.findViewById<CheckBox>(R.id.cbPolitica)
-        val viewFirma = dialog.findViewById<DrawCustomView>(R.id.viewFirma)
-        val tvLimpiar = dialog.findViewById<TextView>(R.id.tvLimpiar)
-        val btnContinuar = dialog.findViewById<Button>(R.id.btnContinuar)
-
+        val tvNombreCompleto = dialogFirma.findViewById<TextView>(R.id.tvNombreCompleto)
+        val tvDescripcion = dialogFirma.findViewById<TextView>(R.id.tvDescripcion)
+        val tvDoi = dialogFirma.findViewById<TextView>(R.id.tvDoi)
+        val etEmail = dialogFirma.findViewById<EditText>(R.id.etEmail)
+        val tvPoliticaLink = dialogFirma.findViewById<TextView>(R.id.tvPoliticaLink)
+        val cbPolitica = dialogFirma.findViewById<CheckBox>(R.id.cbPolitica)
+        val viewFirma = dialogFirma.findViewById<DrawCustomView>(R.id.viewFirma)
+        val tvLimpiar = dialogFirma.findViewById<TextView>(R.id.tvLimpiar)
+        val btnContinuar = dialogFirma.findViewById<Button>(R.id.btnContinuar)
+        val tvTipDoi = dialogFirma.findViewById<TextView>(R.id.tvTipDoi)
+        val llPlaceholderFirma = dialogFirma.findViewById<View>(R.id.llPlaceholderFirma)
         fun validarBotonContinuar() {
             // Solo es verdadero si tiene firma Y la política está marcada
             val esValido = cbPolitica.isChecked && viewFirma.hasSignature()
@@ -1479,34 +1507,56 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         }
         validarBotonContinuar()
 
-        val btnRechazar = dialog.findViewById<Button>(R.id.btnRechazar)
-        val tvVerDetalle = dialog.findViewById<TextView>(R.id.tvVerDetalle)
+        val btnRechazar = dialogFirma.findViewById<Button>(R.id.btnRechazar)
+        val tvVerDetalle = dialogFirma.findViewById<TextView>(R.id.tvVerDetalle)
         // 3. Escuchar cambios en el CheckBox
         cbPolitica.setOnCheckedChangeListener { _, _ ->
             validarBotonContinuar()
         }
         viewFirma.onSignatureChanged = {
             validarBotonContinuar()
+            // Si hay firma, ocultamos el texto de fondo; si la limpian, lo volvemos a mostrar
+            if (viewFirma.hasSignature()) {
+                llPlaceholderFirma.visibility = View.INVISIBLE
+            } else {
+                llPlaceholderFirma.visibility = View.VISIBLE
+            }
         }
         tvLimpiar.setOnClickListener {
             viewFirma.resetCanvasDrawing()
         }
         // 5. Llenamos los datos que vienen del servicio
-        tvNombreCompleto.text = "Nombre completo: ${firmaResponse.noClie}"
-        tvDoi.text = "DOI: ${firmaResponse.nuDocuIden}"
+        tvNombreCompleto.text = "${firmaResponse.noClie}"
+        tvTipDoi.text = "${firmaResponse.tiDocIden}"
+        tvDoi.text = "${firmaResponse.nuDocuIden}"
         etEmail.setText(firmaResponse.deMailClie)
-        tvDescripcion.text ="Deseo incluir Garantía Extendida ${firmaResponse.gexDescripcion} por un valor de ${firmaResponse.gexImport} al artículo ${firmaResponse.gexProducto}. Dejo mi firma en señal de conformidad:"
+        tvDescripcion.text ="Confirmo que deseo incluir en esta compra (${firmaResponse.gexProducto}) el servicio de Garantía extendida (${firmaResponse.gexImport})"
 
         // 6. Lógica de los botones
         tvPoliticaLink.setOnClickListener {
+            showProgress(true)
+            tvPoliticaLink.isEnabled = false
             // Llamamos a la función para abrir la web (está definida más abajo)
-            mostrarPopupWeb(firmaResponse.urlTermino)
+            mostrarPopupWeb(firmaResponse.urlTermino){ status ->
+                tvPoliticaLink.isEnabled = status
+            }
         }
         tvVerDetalle.setOnClickListener {
             // Suponiendo que tu API trae la lista en firmaResponse.detallesGex
             // Aquí paso una lista simulada basada en tu imagen. Deberás pasar tu lista real.
 
-            mostrarDialogoDetalle(firmaResponse.detalle)
+            mostrarDialogoDetalle(firmaResponse.detalle){ nuevoTotalItem, nuevoTotalGex ->
+                val total = nuevoTotalItem + nuevoTotalGex
+                val totalFormateado = String.format("%.2f", total)
+                val itemStr = String.format("%.2f", nuevoTotalItem)
+                val gexStr = String.format("%.2f", nuevoTotalGex)
+
+                // Construimos el nuevo texto actualizado
+                val nuevoTexto = "Confirmo que deseo incluir en esta compra (Total S/ ${totalFormateado}) el servicio de Garantía extendida (Total GEX S/ $gexStr)."
+
+                // Se lo asignamos al TextView de la primera pantalla
+                tvDescripcion.text = nuevoTexto
+            }
         }
         tvLimpiar.setOnClickListener {
             viewFirma.resetCanvasDrawing()
@@ -1535,18 +1585,19 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
                     hora = horaActual // Aquí podrías poner la hora actual si quieres
                 )
                 )
-                dialog.dismiss() // Cierra la ventana
+                dialogFirma.dismiss() // Cierra la ventana
             } else {
                 onError("Debe aceptar la Política de Privacidad")
             }
         }
 
         btnRechazar.setOnClickListener {
-            dialog.dismiss() // Solo cierra la ventana
+            btnProcess.isEnabled = true
+            dialogFirma.dismiss() // Solo cierra la ventana
         }
 
         // 7. Finalmente, mostramos el Dialog
-        dialog.show()
+        dialogFirma.show()
     }
 
     private fun convertirBitmapABase64(bitmap: Bitmap): String {
@@ -1558,21 +1609,26 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         return Base64.encodeToString(byteArray, Base64.NO_WRAP)
     }
     // Función para mostrar la página web de los términos
-    private fun mostrarPopupWeb(url: String) {
+    private fun mostrarPopupWeb(url: String, isOpen: (Boolean) -> Unit) {
         val webView = WebView(this).apply {
             webViewClient = WebViewClient()
             loadUrl(url)
         }
-
+        isOpen(true)
+        //showProgress(false)
         AlertDialog.Builder(this, R.style.AppTheme_DIALOG)
             .setTitle("Política de Privacidad")
             .setView(webView)
-            .setPositiveButton(R.string.aceptar) { dialog, _ -> dialog.dismiss() }
+            .setPositiveButton(R.string.aceptar) { dialog, _ ->
+
+                dialog.dismiss() }
             .show()
     }
 
     // Cambiamos el parámetro para que reciba tu modelo real
-    private fun mostrarDialogoDetalle(listaInicial: MutableList<FirmaDetail>) {
+    private fun mostrarDialogoDetalle(listaInicial: MutableList<FirmaDetail>,
+                                      onTotalesActualizados: (Double, Double) -> Unit // <-- NUEVO PARÁMETRO CALLBACK
+         ) {
         val dialogDetalle = Dialog(this)
         dialogDetalle.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialogDetalle.setContentView(R.layout.dialog_detalle_gex)
@@ -1598,6 +1654,7 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
             }
             tvTotalItem.text = "S/ ${String.format("%.2f", totalItem)}"
             tvTotalGex.text = "S/ ${String.format("%.2f", totalGex)}"
+            onTotalesActualizados(totalItem, totalGex)
         }
 
         val adapter = GexDetalleAdapter(listaActual) { itemBorrar, posicion ->
@@ -1622,7 +1679,10 @@ CotizacionPopUpFragment.newDialoglistenerCotizacion {
         recalcularTotales()
 
         btnCerrar.setOnClickListener {
+            //validarFirma()
             dialogDetalle.dismiss()
+            //dialogFirma.dismiss()
+
         }
 
         dialogDetalle.show()

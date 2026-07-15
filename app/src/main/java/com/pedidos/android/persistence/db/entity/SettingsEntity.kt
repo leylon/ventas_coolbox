@@ -10,6 +10,8 @@ class SettingsEntity() : Settings {
     override var impresora: String = "Printer_"
     override var pageSize: String = "80mm"
     override var  typePrint: String = "GENERIC"
+    override var imei: String = ""
+    override var uuid: String = ""
 
     constructor(parcel: Parcel) : this() {
         urlbase = parcel.readString().toString()
@@ -17,6 +19,8 @@ class SettingsEntity() : Settings {
         impresora = parcel.readString().toString()
         pageSize = parcel.readString().toString()
         typePrint = parcel.readString().toString()
+        imei = parcel.readString().toString()
+        uuid = parcel.readString().toString()
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -25,6 +29,8 @@ class SettingsEntity() : Settings {
         parcel.writeString(impresora)
         parcel.writeString(pageSize)
         parcel.writeString(typePrint)
+        parcel.writeString(imei)
+        parcel.writeString(uuid)
     }
 
     override fun describeContents(): Int {

@@ -8,4 +8,6 @@ interface Settings : Parcelable {
     var impresora: String
     var pageSize: String
     var typePrint: String
+    var imei: String
+    var uuid: String
 }
